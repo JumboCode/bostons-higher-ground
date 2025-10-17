@@ -1,5 +1,8 @@
 "use client";
 import { useState } from "react"; 
+import {FileText} from "./icons"
+
+/* TODO: make a dummy page for toggleable report sidebar */
 
 /*
  * This component represents a single chart entry in the report builder. Given
@@ -8,9 +11,15 @@ import { useState } from "react";
  */
 function ChartEntry({title,chartType}:{title:string, chartType:string}) {
     return (
-        <div className="mx-10 border-2 border-gray-200 py-2 px-8 rounded-xl"> {/*needs something to enlargen box*/}
+        <div className="mx-1 border-2 border-gray-200 py-5 px-8 rounded-xl mb-3"> {/*needs something to enlargen box*/}
             <div className="text-base font-semibold">{title}</div> {/*chart entry title*/}
             <div className="text-sm text-gray-400">{chartType}</div> {/*type of chart subtitle*/}
+            {/*text box for adding notes*/}
+            <input
+                type="text"
+                className="bg-[#F3F3F5] w-full h-14 rounded-xl py-2 px-3 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Add notes..."
+            />
         </div>
     );
 }
@@ -23,33 +32,44 @@ function ChartEntry({title,chartType}:{title:string, chartType:string}) {
  */
 export default function ReportBuilder() {
     /* variable keeping track of #charts we have */
-    const [count, setCount] = useState(0); //UPDATE LATER
+    const [count, setCount] = useState(0); // UPDATE LATER
 
     return (
-        <div>
+        <div className="flex justify-end">
             {/* we use components within our JSX similarly to html tags */}
             
-            <div className="h-full mx-96 my-5 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
-                <div className="text-lg font-bold mb-4">Report Builder</div> {/*main title*/}
-                <div className="text-sm text-gray-500 mb-4">{count} chart added</div> {/*# charts subtitle*/}
-                <hr className="border-gray-200"></hr> {/*line divider*/}
-
+            <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
+                {/* <div className="absolute top-5 w-full"> */}
+                    <div className="text-lg font-bold mb-3">Report Builder</div> {/*main title*/}
+                    <div className="text-sm text-gray-500 mb-4">{count} {count === 1 ? "chart" : "charts"} added</div> {/*# charts subtitle*/}
+                    <hr className="w-full border-gray-200"></hr> {/*line divider*/}
+                {/* </div> */}
+                
                 {/*Chart Section*/}
-                <div className="my-10">
-                    <ChartEntry title="Families Housed Over Time" chartType="Line Chart"/>
-                    <ChartEntry title="Children Housed Over Time" chartType="Bar Chart"/>
-                    
+                <div className="my-8">
+                    {count > 0 ? (
+                        <>
+                            <ChartEntry title="Families Housed Over Time" chartType="Line Chart" />
+                            <ChartEntry title="Children Housed Over Time" chartType="Bar Chart" />
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-gray-400 mt-10">
+                            <FileText stroke="#D1D5DC" width="60" height="60"/>
+                            <p className="mt-8 text-center text-md mb-2">No charts added yet. Click the "+" icon on any chart to add it to your Report</p>
+                        </div>
+                    )}
                 </div>
 
-                <hr className="border-gray-200"></hr> {/*line divider*/}
+                <div className="absolute bottom-5 left-0 w-full">
+                    <hr className="border-gray-200"></hr> {/*line divider*/}
 
-                {/*Footer Buttons */}
-                <div className="mt-5 flex justify-evenly w-full py-2">
-                    <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PDF</button>
-                    <button className="border-2 border-gray-200 py-2 px-8 rounded-full">CSV</button>
-                    <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PNG</button>
+                    {/*Footer Buttons */}
+                    <div className="mt-5 flex justify-evenly w-full py-2">
+                        <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PDF</button>
+                        <button className="border-2 border-gray-200 py-2 px-8 rounded-full">CSV</button>
+                        <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PNG</button>
+                    </div>
                 </div>
-
             </div>
         </div>
     );
