@@ -9,7 +9,7 @@ import { useState } from "react";
 
 type Props = {
     isOpen: boolean;
-    onClose: boolean;
+    onClose: () => void;
 }
 function ForgotPasswordModal({ isOpen, onClose }: Props) {
     
@@ -17,10 +17,10 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className= "bg-[#FFFFFF] w-[448px] h-[248px] rounded-[16px] border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6 relative"
-        >
+        > 
             {/*Close button*/}
             <button
-                onClick = {onClose} 
+                onClick = {onClose}
                 className="absolute top-4 right-4">
                 <X className="w-4 h-4 text-[#555555] opacity-70" />
 
@@ -51,14 +51,14 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                 <div className="flex gap-[12px] mt-[16px] items-center">
                     <button className="w-[193px] h-[36px] rounded-[14px] border-[1px] border-[#0000001A]  py-[8px] px-[16px] font-manrope font-medium leading-[20px] hover:opacity-80 
                         text-[#555555] font-manrope text-[14px]"
-                        onClick = {onClose}
+                        onClick = {() => setIsOpen(false)} 
                         >
                         Cancel
                     </button>
 
                     <button className="w-[193px] h-[36px] rounded-[14px] bg-[#D26879] py-[8px] px-[16px] font-manrope font-medium leading-[20px]
                         text-[#FFFFFF] font-manrope text-[14px]">
-                        Sent Reset Link
+                        Send Reset Link
                     </button>
                 
                 </div>
