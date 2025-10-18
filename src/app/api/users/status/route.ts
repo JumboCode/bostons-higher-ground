@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
 import {eq} from "drizzle-orm";
+import { getUserPermission } from "@/lib/usersFunction";
 
 
 export async function GET(request: Request) {
@@ -22,12 +23,12 @@ export async function GET(request: Request) {
     
     /* Fetch call to SQL database, looks in the entire userInfo table for the info where 
        userInfo.id = curUserId  */
-    const authorized = await db
+    const [result] = await db
         .select({authorized: userInfo.authorized})
         .from (userInfo)
         .where (eq(userInfo.id, curUserId));
 
-    return authorized;
+    return result?.authorized;
 }
 
 export async function POST(request: Request) {
@@ -41,14 +42,19 @@ export async function POST(request: Request) {
     }
 
     /* Grabs the userid associated with the current session */
-    const curUserId = session.user.id;
+    const Id = session.user.id;
+
+    if (! getUserPermission(Id)) {
+        return Response.json({error: "unauthorized"}, {status: 401});
+    }
+
     const new_info = await request.json();
 
     await db
         .update(userInfo)
         .set({authorized: new_info.authorized})
-        .where(eq (userInfo.id, curUserId));
+        .where(eq (userInfo.id, Id));
 
-    return Response.json({result: "success"})
+    return Response.json({result: "success"});
 }
 
