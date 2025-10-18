@@ -35,3 +35,27 @@ export function Download(props: JSX.IntrinsicElements["svg"]) {
         </svg>
     );
 }
+
+export function AdminButton(props: JSX.IntrinsicElements["img"]) {
+    return <img src="./Admin_Button.png" alt="Admin Button" {...props} />;
+}
+
+export function EducationButton(props: JSX.IntrinsicElements["img"]) {
+    return <img src="./Education (1).png" alt="Education Button" {...props} />;
+}
+
+export function HousingButton(props: JSX.IntrinsicElements["img"]) {
+    return <img src="./Housing Button.png" alt="Housing Button" {...props} />;
+}
+
+export function OverviewButton(props: JSX.IntrinsicElements["img"]) {
+    return <img src="./Overview Button.png" alt="Overview Button" {...props} />;
+}
+
+export function ReportButton(props: JSX.IntrinsicElements["img"]) {
+    return <img src="./Report_Button.png" alt="Report Button" {...props} />;
+}
+
+export function SchoolButton(props: JSX.IntrinsicElements["img"]) {
+    return <img src="./School_Button.png" alt="School Button" {...props} />;
+}
