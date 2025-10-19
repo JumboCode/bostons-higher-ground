@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react"; 
-import {FileText} from "./icons"
+import {FileText, X, Trash2} from "./icons"
+import { Close } from 'lucide-react';
 
 /* TODO: make a dummy page for toggleable report sidebar */
 
@@ -30,15 +31,14 @@ function ChartEntry({title,chartType}:{title:string, chartType:string}) {
  * notes to be associated with that chart. Additionally, There should be buttons
  * to download the report/data as a PDF, CSV, or PNG.
  */
-export default function ReportBuilder() {
+export default function ReportBuilder() {    
     /* variable keeping track of #charts we have */
     const [count, setCount] = useState(0); // UPDATE LATER
 
     return (
         <div className="flex justify-end">
-            {/* we use components within our JSX similarly to html tags */}
-            
             <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
+                <Close className="w-8 h-8 #555555"/>
                 {/* <div className="absolute top-5 w-full"> */}
                     <div className="text-lg font-bold mb-3">Report Builder</div> {/*main title*/}
                     <div className="text-sm text-gray-500 mb-4">{count} {count === 1 ? "chart" : "charts"} added</div> {/*# charts subtitle*/}
@@ -65,9 +65,22 @@ export default function ReportBuilder() {
 
                     {/*Footer Buttons */}
                     <div className="mt-5 flex justify-evenly w-full py-2">
-                        <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PDF</button>
-                        <button className="border-2 border-gray-200 py-2 px-8 rounded-full">CSV</button>
-                        <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PNG</button>
+                        {count > 0 ? (
+                        <>
+                            {/* when we have entries, download buttons are functional */}
+                            <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PDF</button>
+                            <button className="border-2 border-gray-200 py-2 px-8 rounded-full">CSV</button>
+                            <button className="border-2 border-gray-200 py-2 px-8 rounded-full">PNG</button>
+                        </>   
+                    ) : (
+                        <>
+                            {/* when we have no entries, download buttons greyed out */}
+                            <button className="text-gray-200 border-2 border-gray-200 py-2 px-8 rounded-full">PDF</button>
+                            <button className="text-gray-200 border-2 border-gray-200 py-2 px-8 rounded-full">CSV</button>
+                            <button className="text-gray-200 border-2 border-gray-200 py-2 px-8 rounded-full">PNG</button>
+                        </>
+                    )}
+                        
                     </div>
                 </div>
             </div>
