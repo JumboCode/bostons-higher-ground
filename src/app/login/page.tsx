@@ -47,7 +47,7 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                 </h2>
 
                 <p className="font-manrope font-regular text-[14px] leading-[20px] text-[#717182] mt-[8px]">
-                    Enter your email address and we'll send you a link to reset your password.
+                    Enter your email address and we&#39;ll send you a link to reset your password.
 
                 </p>
 
@@ -65,7 +65,7 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                 <div className="flex gap-[12px] mt-[16px] items-center">
                     <button className="w-[193px] h-[36px] rounded-[14px] border-[1px] border-[#0000001A]  py-[8px] px-[16px] font-manrope font-medium leading-[20px] hover:opacity-80 
                         text-[#555555] font-manrope text-[14px]"
-                        onClick = {() => setIsOpen(false)} 
+                        onClick={onClose}
                         >
                         Cancel
                     </button>
