@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react"; 
-import {FileText, X, Trash2} from "./icons"
-import { Close } from 'lucide-react';
+import {FileText, Trash2} from "./icons"
+import { X } from 'lucide-react';
 
 /* TODO: make a dummy page for toggleable report sidebar */
 
@@ -38,7 +38,7 @@ export default function ReportBuilder() {
     return (
         <div className="flex justify-end">
             <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
-                <Close className="w-8 h-8 #555555"/>
+                <X className="w-8 h-8 #555555"/>
                 {/* <div className="absolute top-5 w-full"> */}
                     <div className="text-lg font-bold mb-3">Report Builder</div> {/*main title*/}
                     <div className="text-sm text-gray-500 mb-4">{count} {count === 1 ? "chart" : "charts"} added</div> {/*# charts subtitle*/}
