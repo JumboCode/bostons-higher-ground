@@ -12,7 +12,7 @@ function DraftReport() {
         <div className="border-1 flex flex-col flex-grow border-[rgba(0,0,0,0.1)] p-6 rounded-2xl space-y-10 mb-6 bg-white">
             <div className="flex items-center justify-between">
                 <div className="Heading">
-                    <h2 className="text-[#555555] font-semibold text-l">Draft Report</h2>
+                    <h2 className="text-[#555555] font-semibold text-lg">Draft Report</h2>
                     <div className="text-sm text-[#4A5565]">0 charts added from dashboard</div>
                 </div>
                 <div>
@@ -25,6 +25,71 @@ function DraftReport() {
             <div className="flex flex-col space-y-4 items-center">
                 <FileText className="h-12 w-12 text-[#6A7282] stroke-2"/>
                 <div className="text-base text-[#6A7282] text-center leading-6">No charts in draft. Navigate to any dashboard and click the "+" icon on charts to add them here.</div>
+            </div>
+        </div>
+    );
+}
+
+function DraftReportPopulated() {
+    return (
+        <div className="flex flex-col flex-grow bg-white mb-6 border-1 rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
+            <div className="ReportNameEditBar space-y-2">
+                <div className="DraftHeading+NoOfChartsAdded+ClearButton flex flex-row items-center">
+                    <div className="Name+ChartNoDisplay">
+                        <h2 className="text-[#555555] text-lg font-semibold">Draft Report</h2>
+                        <p className="text-sm">3 charts added from dashboard</p>
+                    </div>
+                    <div className="ClearButton ml-auto border-1 border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                        <button className="flex flex-row items-center space-x-4">
+                            <Trash2 className="w-[16] h-[16]"/>
+                            <p className="font-medium text-sm">Clear</p>
+                        </button>
+                    </div>
+                </div>
+                <div className="flex flex-col ReportNameEdit space-y-1">
+                    <div className="text-sm font-medium">
+                        Report Name
+                    </div>
+                    <div className="ReportNameTextField">
+                        <div className="relative w-[448px]">
+                            <Edit3 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                name="reportName"
+                                placeholder="Enter report name (e.g., October 2025 Housing Report)"
+                                className="w-full text-sm pl-9 pr-3 p-2 bg-[#F3F3F5] rounded-2xl font-normal focus:outline-none"
+                            />
+                            </div>
+                    </div>
+                </div>
+            </div>
+            <div className="Reports flex flex-row space-x-3">
+                <div className="Chart w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border-1 border-[#E5E7EB]">
+                    <FileText className="w-[20] h-[20] text-[#E76C82]"/>
+                    <div className="font-semibold text-xs">Housing Pipeline</div>
+                </div>
+                <div className="Chart w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border-1 border-[#E5E7EB]">
+                    <FileText className="w-[20] h-[20] text-[#E76C82]"/>
+                    <div className="font-semibold text-xs">Intakes vs Families Housed</div>
+                </div>
+                <div className="Chart w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border-1 border-[#E5E7EB]">
+                    <FileText className="w-[20] h-[20] text-[#E76C82]"/>
+                    <div className="font-semibold text-xs">Families Housed Over Time</div>
+                </div>
+            </div>
+            <div className="ExportOptions flex flex-row space-x-2">
+                <button className="flex flex-row space-x-4 border-1 border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                    <Download className="w-4 h-4"/>
+                    <div className="font-medium text-sm">Export as PDF</div>
+                </button>
+                <button className="flex flex-row space-x-4 border-1 border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                    <Download className="w-4 h-4"/>
+                    <div className="font-medium text-sm">Export as PDF</div>
+                </button>
+                <button className="flex flex-row space-x-4 border-1 border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                    <Download className="w-4 h-4"/>
+                    <div className="font-medium text-sm">Export as PDF</div>
+                </button>
             </div>
         </div>
     );
@@ -81,6 +146,7 @@ export default function Archive() {
     return (
         <main className="bg-[#F5F5F5] h-screen p-4">
             <DraftReport/>
+            <DraftReportPopulated/>
             <ReportEntry title="Q4 Report 2025" date = {new Date(2025, 0, 4)} schools = "All Schools" category= "Housing" numOfCharts={4}/>
         </main>
     );
