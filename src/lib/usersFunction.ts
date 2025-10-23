@@ -2,7 +2,6 @@
 
 "use server";
 
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
 import {eq} from "drizzle-orm";
