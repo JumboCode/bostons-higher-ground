@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react"; 
 import {FileText, Trash2} from "./icons"
-import { X } from 'lucide-react';
+import { X, GripVertical, FileDown } from 'lucide-react';
 
 /* TODO: make a dummy page for toggleable report sidebar */
 
@@ -12,13 +12,18 @@ import { X } from 'lucide-react';
  */
 function ChartEntry({title,chartType}:{title:string, chartType:string}) {
     return (
-        <div className="mx-1 border-2 border-gray-200 py-5 px-8 rounded-xl mb-3"> {/*needs something to enlargen box*/}
-            <div className="text-base font-semibold">{title}</div> {/*chart entry title*/}
-            <div className="text-sm text-gray-400">{chartType}</div> {/*type of chart subtitle*/}
+        <div className="mx-1 border-2 border-gray-200 py-5 pl-4 pr-8 rounded-xl mb-3"> {/*needs something to enlargen box*/}
+            <div className="flex">
+                <GripVertical color = "#a9a9a9" className="mt-2 mr-3 w-5 h-5 #555555"/>
+                <div>
+                    <div className="text-base font-semibold">{title}</div> {/*chart entry title*/}
+                    <div className="text-sm text-gray-400">{chartType}</div> {/*type of chart subtitle*/}
+                </div>
+            </div>
             {/*text box for adding notes*/}
             <input
                 type="text"
-                className="bg-[#F3F3F5] w-full h-14 rounded-xl py-2 px-3 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="bg-[#F3F3F5] w-full h-14 rounded-xl pl-8 py-2 pr-3 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add notes..."
             />
         </div>
@@ -33,17 +38,18 @@ function ChartEntry({title,chartType}:{title:string, chartType:string}) {
  */
 export default function ReportBuilder() {    
     /* variable keeping track of #charts we have */
-    const [count, setCount] = useState(0); // UPDATE LATER
+    const [count, setCount] = useState(1); // UPDATE LATER
 
     return (
         <div className="flex justify-end">
             <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
-                <X className="w-8 h-8 #555555"/>
-                {/* <div className="absolute top-5 w-full"> */}
+                <div className="flex">
                     <div className="text-lg font-bold mb-3">Report Builder</div> {/*main title*/}
-                    <div className="text-sm text-gray-500 mb-4">{count} {count === 1 ? "chart" : "charts"} added</div> {/*# charts subtitle*/}
-                    <hr className="w-full border-gray-200"></hr> {/*line divider*/}
-                {/* </div> */}
+                    <X color = "#555555" className="ml-auto w-4 h-4 #555555"/>
+                </div>
+                
+                <div className="text-sm text-gray-500 mb-4">{count} {count === 1 ? "chart" : "charts"} added</div> {/*# charts subtitle*/}
+                <hr className="w-full border-gray-200"></hr> {/*line divider*/}
                 
                 {/*Chart Section*/}
                 <div className="my-8">
