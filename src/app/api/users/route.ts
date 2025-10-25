@@ -28,14 +28,9 @@ export async function POST (request: Request) {
     /* Grabs info from client*/
     const body = await request.json();
 
-    /* Tries to insert user profile, catches an error if the email used is not unique */
+    /* Tries to insert user profile, catches an error if the action produces an error */
     try {
         await db.transaction (async (tx) => {
-            tx.insert(user)
-                .values({
-                    id: body.id,
-                    name: body.name,
-                    email: body.email});
             tx.insert(userInfo)
                 .values ({
                     id: body.id,
@@ -45,12 +40,7 @@ export async function POST (request: Request) {
                 });
     }
     catch (error: any) {
-        if (error.code === "23505") {
-            return Response.json({error: "This email is already taken!"})
-        }
-        else {
-            return Response.json({error: "error"})  /* TODO ask what error message to put*/
-        }
+        return Response.json({error: "error"})  /* TODO ask what error message to put*/
     }
 }
 
@@ -75,9 +65,8 @@ export async function DELETE (request: Request) {
     /* Grabs info from client*/
     const body = await request.json();
 
-    /* Deletes profile from user and userinfo */
+    /* Deletes profile from userinfo */
     await db.transaction (async (tx) => {
-        await tx.delete(user).where(eq(user.id, body.id));
         await tx.delete(userInfo).where(eq(userInfo.id, body.id));
     });
 }
