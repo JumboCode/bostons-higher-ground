@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react"; 
 import {FileText, Trash2} from "./icons"
 import { X, GripVertical, FileDown } from 'lucide-react';
@@ -14,7 +13,7 @@ function ChartEntry({title,chartType}:{title:string, chartType:string}) {
     return (
         <div className="mx-1 border-2 border-gray-200 py-5 pl-4 pr-8 rounded-xl mb-3"> {/*needs something to enlargen box*/}
             <div className="flex">
-                <GripVertical color = "#a9a9a9" className="mt-2 mr-3 w-5 h-5 #555555"/>
+                <GripVertical color = "#a9a9a9" className="mt-2 mr-3 w-5 h-5"/>
                 <div>
                     <div className="text-base font-semibold">{title}</div> {/*chart entry title*/}
                     <div className="text-sm text-gray-400">{chartType}</div> {/*type of chart subtitle*/}
@@ -59,7 +58,7 @@ function DownloadButton({doctype, count}:{doctype:string, count:number}) {
  * notes to be associated with that chart. Additionally, There should be buttons
  * to download the report/data as a PDF, CSV, or PNG.
  */
-export default function ReportBuilder() {    
+export default function ReportBuilder({onClose}:{onClose: () => void}) {    
     /* variable keeping track of #charts we have */
     const [count, setCount] = useState(0); // UPDATE this when reading in data
 
@@ -68,7 +67,11 @@ export default function ReportBuilder() {
             <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
                 <div className="flex">
                     <div className="text-xl font-bold mb-3">Report Builder</div> {/*main title*/}
-                    <X color = "#555555" className="ml-auto w-4 h-4 #555555"/>
+                    <button onClick={onClose}
+                        className="ml-auto text-gray-600 hover:text-gray-800"
+                    >
+                        <X className="w-4 h-4"/>
+                    </button>
                 </div>
                 
                 <div className="text-sm text-gray-500 mb-4">{count} {count === 1 ? "chart" : "charts"} added</div> {/*# charts subtitle*/}
