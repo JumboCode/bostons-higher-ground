@@ -58,10 +58,7 @@ function DownloadButton({doctype, count}:{doctype:string, count:number}) {
  * notes to be associated with that chart. Additionally, There should be buttons
  * to download the report/data as a PDF, CSV, or PNG.
  */
-export default function ReportBuilder({onClose}:{onClose: () => void}) {    
-    /* variable keeping track of #charts we have */
-    const [count, setCount] = useState(0); // UPDATE this when reading in data
-
+export default function ReportBuilder({count, onClose}:{count:number, onClose: () => void}) {    
     return (
         <div className="flex justify-end">
             <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
