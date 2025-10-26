@@ -13,7 +13,7 @@ import {useState} from "react";
 
 // Color palette constants
 const SOFT_PINK = "bg-[#DE8F9C]";
-const LIGHT_GRAY = "bg-[#D9D9D9]";
+const LIGHT_GRAY = "bg-[#414141]";
 const DARK_GRAY = "bg-[#555555]"
 
 // used placeholders for icons not found. (to be impelemented using Lucide React)
