@@ -9,6 +9,8 @@
 "use client";
 import Image from "next/image";
 
+import { authClient } from "@/lib/auth-client";
+
 //importing the logo image
 import logo from "./logo.jpg";
 //importing the background image
@@ -28,7 +30,7 @@ const poppins = Poppins({
 
 
 import { X } from "react-feather";
-import { useState } from "react";
+import React, { useState } from "react";
  
 
 type Props = {
@@ -109,6 +111,32 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
  */
 export default function LogIn() {
   const [isOpen, setIsOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null >();
+
+  async function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    try {
+      const result = await authClient.signIn.email(
+        {email: email, 
+        password: password} 
+      )
+
+      if (result.error) {
+        setError(result.error.message ?? "An unknown error occurred")
+      }
+      else {
+        setError(null)
+        console.log( "Successfully logged in!")
+      }
+    }
+    catch (err: any) {
+      setError(err.message || "Something went wrong")
+    }
+
+    
+    }
 
     return (
         <main className="relative min-h-[100dvh] w-full overflow-x-hidden">
@@ -188,7 +216,7 @@ export default function LogIn() {
                 >
                   Sign in to access your dashboard
                 </p>
-
+                
                 {/* Currently a D,v but turn to FORM (visual only) */}
                 <div className="mt-8 space-y-5">
                   {/* EMAIL FIELD */}
@@ -199,11 +227,12 @@ export default function LogIn() {
                     >
                       Email Address
                     </label>
-                    <input
+                    <input 
                       id="email"
                       name="email"
                       type="email"
                       placeholder="you@example.com"
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
                     />
                   </div>
@@ -221,6 +250,7 @@ export default function LogIn() {
                       name="password"
                       type="password"
                       placeholder="••••••••"
+                      onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
                     />
                   </div>
@@ -228,6 +258,7 @@ export default function LogIn() {
                   {/* PRIMARY BUTTON */}
                   <button
                     type="submit"
+                    onClick={handleClick}
                     className={`${manrope.className} mt-1 w-full text-center text-white transition`}
                     style={{
                       backgroundColor: "#E59AA8",
