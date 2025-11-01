@@ -19,7 +19,8 @@ export default function Page() {
             <BriannaWeatherButton />
             <GeorgeWeatherButton />
             <HandeWeatherButton />
-            <KristyWeatherButton />
+            <KristyWeatherButton label= "Kristy's Weather Button"/>
+            
             <VanshWeatherButton />
             <WestWeatherButton />
         </main>
