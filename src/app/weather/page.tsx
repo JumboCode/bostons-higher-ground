@@ -20,7 +20,7 @@ export default function Page() {
             <GeorgeWeatherButton />
             <HandeWeatherButton />
             <KristyWeatherButton />
-            <VanshWeatherButton />
+            <VanshWeatherButton label="Get Weather"/>
             <WestWeatherButton />
         </main>
     );
