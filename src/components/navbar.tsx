@@ -4,8 +4,10 @@
  * mind that we want it to be reusable across different pages in the
  * application. Do you need any props?
  */
+/*
 export default function Navbar() {
     return (
         <nav></nav>
     );
 }
+*/

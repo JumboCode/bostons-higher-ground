@@ -17,7 +17,7 @@ export default function Page() {
             <AaditWeatherButton />
             <AnsonWeatherButton />
             <BriannaWeatherButton />
-            <GeorgeWeatherButton />
+            <GeorgeWeatherButton label = "Weather Button"/>
             <HandeWeatherButton />
             <KristyWeatherButton />
             <VanshWeatherButton />
