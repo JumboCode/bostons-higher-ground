@@ -23,12 +23,8 @@ export async function GET(request: Request) {
     
     /* Fetch call to SQL database, looks in the entire userInfo table for the info where 
        userInfo.id = curUserId  */
-    const [result] = await db
-        .select({authorized: userInfo.authorized})
-        .from (userInfo)
-        .where (eq(userInfo.id, curUserId));
 
-    return result?.authorized;
+    return await getUserPermission(curUserId);
 }
 
 export async function POST(request: Request) {
@@ -52,9 +48,9 @@ export async function POST(request: Request) {
 
     await db
         .update(userInfo)
-        .set({authorized: new_info.authorized})
+        .set({permissions: new_info.permissions})
         .where(eq (userInfo.id, Id));
 
-    return Response.json({result: "success"});
+    return Response.json({result: "success"})
 }
 
