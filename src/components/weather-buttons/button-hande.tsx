@@ -157,7 +157,8 @@ export default function WeatherButton({label}: WeatherButtonProps) {
                 return (
                     <div className={`p-3 rounded-lg transition-colors duration-200 cursor-pointer ${bg} ${hover} ${text}`}>
                     <p>
-                        <strong>Temp:</strong> {weather.temperature}°                            {weather.temperatureUnit}
+                        <strong>Temp:</strong> {weather.temperature}°                            
+                        {weather.temperatureUnit}
                     </p>
                     <p>
                         <strong>Forecast:</strong> {weather.shortForecast}
