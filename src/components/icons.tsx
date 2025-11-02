@@ -36,16 +36,14 @@ export function Download(props: JSX.IntrinsicElements["svg"]) {
     );
 }
 
-// https://feathericons.dev/?search=trash2&iconset=feather&format=strict-tsx
-export function Trash2(props: JSX.IntrinsicElements["svg"]) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" {...props}>
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <line x1="10" x2="10" y1="11" y2="17" />
-        <line x1="14" x2="14" y1="11" y2="17" />
-        </svg>
-    );
+// https://feathericons.dev/?search=x&iconset=feather&format=strict-tsx
+export function X(props: JSX.IntrinsicElements["svg"]) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" {...props}>
+      <line x1="18" x2="6" y1="6" y2="18" />
+      <line x1="6" x2="18" y1="6" y2="18" />
+    </svg>
+  );
 }
 
 // https://feathericons.dev/?search=edit3&iconset=feather&format=strict-tsx
@@ -68,9 +66,17 @@ export function AdminButton(props: JSX.IntrinsicElements["svg"]) {
   );
 }
 
-// export function EducationButton(props: JSX.IntrinsicElements["img"]) {
-//     return <GraduationCap />
-// }
+// https://feathericons.dev/?search=trash2&iconset=feather&format=strict-tsx
+export function Trash2(props: JSX.IntrinsicElements["svg"]) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" {...props}>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  );
+}
 
 // https://feathericons.dev/?search=home&iconset=feather&format=strict-tsx
 export function HousingButton(props: JSX.IntrinsicElements["svg"]) {
@@ -81,12 +87,6 @@ export function HousingButton(props: JSX.IntrinsicElements["svg"]) {
     </svg>
   );
 }
-
-
-// export function OverviewButton(props: JSX.IntrinsicElements["img"]) {
-//     return <img src="./Overview Button.png" alt="Overview Button" {...props} />;
-// }
-
 
 export function ReportButton(props: JSX.IntrinsicElements["svg"]) {
   return (
@@ -99,8 +99,3 @@ export function ReportButton(props: JSX.IntrinsicElements["svg"]) {
     </svg>
   );
 }
-
-
-// export function SchoolButton(props: JSX.IntrinsicElements["img"]) {
-//     return <img src="./School_Button.png" alt="School Button" {...props} />;
-// }
