@@ -27,7 +27,7 @@ export default function WeatherButton({ label }: { label: string } ) {
                 <button onClick={handleClick} className="py-3 px-4 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white transition-colors">{label}</button>
                 { event && (
                     <div className="mt-2 ml-2.5">    
-                        <p className="text-3xl font-semibold underline-offset-5 underline mb-1"> { event.temperature }&deg;{ event.temperatureUnit } </p>
+                        <p className="text-3xl font-semibold underline-offset-8 underline mb-1"> { event.temperature }&deg;{ event.temperatureUnit } </p>
                         <p className="text-lg">{event.shortForecast}</p>
                     </div>
                 )}

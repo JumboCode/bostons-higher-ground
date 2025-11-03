@@ -12,16 +12,7 @@ import {default as WestWeatherButton} from "@/components/weather-buttons/button-
 export default function Page() {
     return (
         <main className="w-screen h-screen flex flex-col justify-center items-center gap-5">
-            <KaiWeatherButton />
-            <AgathaWeatherButton />
-            <AaditWeatherButton />
-            <AnsonWeatherButton />
-            <BriannaWeatherButton />
-            <GeorgeWeatherButton />
-            <HandeWeatherButton />
-            <KristyWeatherButton />
             <VanshWeatherButton label="Get Weather"/>
-            <WestWeatherButton />
         </main>
     );
 }
