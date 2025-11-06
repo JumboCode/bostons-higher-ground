@@ -29,7 +29,7 @@ const poppins = Poppins({
 
 
 
-import { X } from "react-feather";
+// import { X } from "react-feather";
 import React, { useState } from "react";
  
 
@@ -51,7 +51,7 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
             <button
                 onClick = {onClose}
                 className="absolute top-4 right-4">
-                <X className="w-4 h-4 text-[#555555] opacity-70" />
+                {/* <X className="w-4 h-4 text-[#555555] opacity-70" /> */}
 
             </button>
 
