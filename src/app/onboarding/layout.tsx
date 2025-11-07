@@ -22,7 +22,7 @@ export default function OnboardingLayout({ children, } : { children : React.Reac
                             </div>
                             <div>
                                 <a href="../login">
-                                    <button className="border border-[#E76C82] text-[#E76C82] rounded-xl px-4 py-2 font-semibold text-base">Sign In</button>
+                                    <button className="border border-[#E76C82] text-[#E76C82] rounded-xl px-4 py-2 font-semibold text-base hover:cursor-pointer">Sign In</button>
                                 </a>
                             </div>
                         </div>
