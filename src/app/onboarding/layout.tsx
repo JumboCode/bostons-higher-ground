@@ -27,9 +27,7 @@ export default function OnboardingLayout({ children, } : { children : React.Reac
                             </div>
                         </div>
                     </header>
-                    <main className="flex flex-1">
-                        {children} 
-                    </main>
+                    {children}
                     <footer className="py-4">
                         <hr className="my-4 h-0.5 border-t-0 bg-neutral-200"/>
                         <p className="text-center text-[#555555] font-extralight">&copy; 2025 Boston Higher Ground. For authorized staff use only.</p>
