@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client"
 import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
 import {user} from "@/lib/schema";
@@ -30,14 +31,28 @@ export async function POST (request: Request) {
 
     /* Tries to insert user profile, catches an error if the action produces an error */
     try {
-        await db.transaction (async (tx) => {
-            tx.insert(userInfo)
-                .values ({
-                    id: body.id,
-                    userId: body.userId,
-                    authorized: body.authorized,
-                    permissions: body.permissions})
+        const newUser = await authClient.signUp.email({
+            email: body.email,
+            password: crypto.randomUUID(), // temporary password
+            name: body.name
+        });
+        
+        if (!newUser.data) {
+            return Response.json({error: "error"})
+        }
+        else {
+            await db.transaction(async (tx) => {
+                await tx.insert(userInfo).values({
+                    id: newUser.data.user.id,
+                    userId: 
+                    authorized: false,
+                    permissions: 'none',
                 });
+            });
+        }
+
+        
+        console.log(newUser);
     }
     catch (error: any) {
         return Response.json({error: "error"})  /* TODO ask what error message to put*/
