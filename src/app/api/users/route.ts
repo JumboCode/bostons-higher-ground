@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { authClient } from "@/lib/auth-client"
 import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
-import {user} from "@/lib/schema";
 import {eq} from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
 
@@ -43,18 +42,16 @@ export async function POST (request: Request) {
         else {
             await db.transaction(async (tx) => {
                 await tx.insert(userInfo).values({
-                    id: newUser.data.user.id,
-                    userId: 
+                    id: "10",
+                    userId: newUser.data.user.id,
                     authorized: false,
-                    permissions: 'none',
+                    permissions: 'none'
                 });
             });
         }
 
-        
-        console.log(newUser);
     }
-    catch (error: any) {
+    catch (err: unknown) {
         return Response.json({error: "error"})  /* TODO ask what error message to put*/
     }
 }
@@ -82,6 +79,6 @@ export async function DELETE (request: Request) {
 
     /* Deletes profile from userinfo */
     await db.transaction (async (tx) => {
-        await tx.delete(userInfo).where(eq(userInfo.id, body.id));
+        await tx.delete(userInfo).where(eq (userInfo.id, body.id) );
     });
 }
