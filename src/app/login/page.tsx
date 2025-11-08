@@ -131,9 +131,14 @@ export default function LogIn() {
         console.log( "Successfully logged in!")
       }
     }
-    catch (err: any) {
-      setError(err.message || "Something went wrong")
+    catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error("Unknown error", err);
     }
+    }
+
 
     
     }
