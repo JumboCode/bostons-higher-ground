@@ -72,11 +72,3 @@ export default function InviteCard ({ isOpen, onClose }:{ isOpen:boolean, onClos
         </div>
     );
 }
-
-function InvitationSent() {
-    return(
-        <div>
-                
-        </div>
-    );
-}

@@ -14,7 +14,7 @@ const poppins = Poppins({
   weight: ["700"], // bold weight
 });
 
-import {Search, CircleCheckBig, UsersRound, Send, RefreshCcw, MoreVertical} from "lucide-react";
+import {Search, CircleCheckBig, UsersRound, Send, RefreshCcw, MoreVertical, Shield, Eye, Trash2} from "lucide-react";
 
 
 type User = {
@@ -25,6 +25,7 @@ type User = {
 };
 
 export default function Admin(){
+    // for invite staff pop up
     const [isOpen, setIsOpen] = useState(false);
 
     // Hardcoded users array
@@ -89,7 +90,7 @@ export default function Admin(){
                         {/*Invite Staff*/}
                         <button 
                             onClick={() => setIsOpen(true)}
-                            className="pl-[15px] pr-[18px] py-[8px] h-[40px] rounded-[14px] bg-[#E76C82] flex items-center justify-center
+                            className="pl-[15px] pr-[18px] py-[8px] h-[40px] rounded-[14px] bg-[#E76C82] hover:bg-[#d75c6f] flex items-center justify-center
                             text-[#FFFFFF] font-manrope text-[15px] leading-[20px] gap-[12px]">
                                 <Send className="w-[18px] h-[18px]"/>
                                 Invite Staff   
@@ -150,6 +151,9 @@ export default function Admin(){
 }
 
 function UserRow({ user }:{ user:User }) {
+    // for actions pop up
+    const [actionVisible, setActionVisible] = useState(false);
+
     return(
         <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
             {/* Member */}
@@ -160,7 +164,10 @@ function UserRow({ user }:{ user:User }) {
                 <div className="flex flex-col">
                     <span className="font-poppins font-semibold text-[#111827]">{user.name}</span>
                     {user.role && (
-                        <span className="text-[12px] text-[#E76C82]">{user.role}</span>
+                        <span className="flex text-[12px] text-[#E76C82] gap-[3px]">
+                            <Shield className="w-[15px] h-[15px]"/>
+                            {user.role}
+                        </span>
                     )}
                 </div>
             </div>
@@ -181,7 +188,32 @@ function UserRow({ user }:{ user:User }) {
 
             {/* Actions */}
             <div className="text-right w-1/6 ml-auto">
-                <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
+                <button onClick={() => setActionVisible(!actionVisible)}> {/* when action button is clicked, state should become opposite of what it currently is  */}
+                    <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
+                </button>
+            </div>
+
+            <ActionPopUp actionVisible={actionVisible} />
+        </div>
+    );
+}
+
+function ActionPopUp({ actionVisible }:{ actionVisible:boolean }){
+    if (!actionVisible) return null;
+    
+    return(
+        <div className="fixed z-50 flex flex-col left-[1200px] bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-[10px] font-manrope border border-gray-200">
+            <div className="flex gap-[8px] mb-[10px] pr-[30px]">
+                <Eye className="text-[#717182] mt-[2px] w-[20px] h-[20px]"/>
+                View Activity
+            </div>
+            <div className="flex gap-[8px] mb-[10px] pr-[30px]">
+                <Send className="text-[#717182] mt-[2px] w-[20px] h-[20px]"/>
+                Resend Invite
+            </div>
+            <div className="flex gap-[8px] text-[#D9534F] pr-[30px]">
+                <Trash2 className="text-[#717182] mt-[2px] w-[20px] h-[20px]"/>
+                Remove User
             </div>
         </div>
     );
