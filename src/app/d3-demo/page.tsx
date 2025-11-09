@@ -56,9 +56,10 @@ function drawHorizontalBarChart(svgElement: SVGSVGElement, data: pshsDataPoint[]
     const svg = d3.select(svgElement);
     svg.selectAll('*').remove();
   
-    const margin = { top: 30, right: 40, bottom: 40, left: 130 };
-    const width = 374.5 - margin.left - margin.right;
-    const height = 428 - margin.top - margin.bottom;
+    const margin = { top: 10, right: 40, bottom: 90, left: 130 };
+
+    const width = svgElement.clientWidth - margin.left - margin.right;
+    const height = svgElement.clientHeight - margin.top - margin.bottom;
   
     const chart = svg
       .attr('width', width + margin.left + margin.right)
@@ -120,7 +121,7 @@ function drawHorizontalBarChart(svgElement: SVGSVGElement, data: pshsDataPoint[]
       .selectAll('text')
       .style('font-family', 'Poppins')
       .style('font-size', '12px')
-      .style('fill', '#4A5565');
+      .style('fill', '#767676');
   
     chart
       .append('g')
@@ -128,8 +129,47 @@ function drawHorizontalBarChart(svgElement: SVGSVGElement, data: pshsDataPoint[]
       .call(d3.axisBottom(x).ticks(5).tickSize(0))
       .selectAll('text')
       .style('font-family', 'Manrope')
-      .style('font-size', '11px')
-      .style('fill', '#6A7282');
+      .style('font-size', '12px')
+      .style('fill', '#767676');
+
+    // --- Legend ---
+    const legend = chart.append("g")
+    .attr("transform", `translate(${width / 2 - 60}, ${height + 40})`) // position legend centered under chart
+    .attr("class", "legend");
+
+    // Housed legend
+    legend.append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", 14)
+    .attr("height", 14)
+    .attr("fill", "#A7C7E7")
+    .attr("rx", 3);
+
+    legend.append("text")
+    .attr("x", 20)
+    .attr("y", 11)
+    .text("Housed")
+    .style("font-family", "Manrope")
+    .style("font-size", "12px")
+    .style("fill", "#4A5565");
+
+    // Active legend
+    legend.append("rect")
+    .attr("x", 90)
+    .attr("y", 0)
+    .attr("width", 14)
+    .attr("height", 14)
+    .attr("fill", "#F4A6B0")
+    .attr("rx", 3);
+
+    legend.append("text")
+    .attr("x", 110)
+    .attr("y", 11)
+    .text("Active")
+    .style("font-family", "Manrope")
+    .style("font-size", "12px")
+    .style("fill", "#4A5565");
   }
   
 
@@ -138,8 +178,8 @@ function drawLineChart(svgElement: SVGSVGElement, data: fhtDataPoint[]) {
     svg.selectAll('*').remove();
   
     const margin = { top: 30, right: 30, bottom: 40, left: 50 };
-    const width = 773 - margin.left - margin.right;
-    const height = 404 - margin.top - margin.bottom;
+    const width = svgElement.clientWidth - margin.left - margin.right;
+    const height = svgElement.clientHeight - margin.top - margin.bottom;
   
     const chart = svg
       .attr('width', width + margin.left + margin.right)
@@ -160,7 +200,7 @@ function drawLineChart(svgElement: SVGSVGElement, data: fhtDataPoint[]) {
       .nice()
       .range([height, 0]);
   
-    // gridlines
+    // --horizontal gridlines
     chart
       .append('g')
       .attr('class', 'grid')
@@ -170,7 +210,26 @@ function drawLineChart(svgElement: SVGSVGElement, data: fhtDataPoint[]) {
           .tickFormat(() => '')
       )
       .selectAll('line')
-      .attr('stroke', '#E5E7EB');
+      .attr('stroke', '#E5E7EB')
+      .attr('stroke-dasharray', '4,3');
+
+    // -- vertical gridlines (from x-axis)
+    chart
+    .append('g')
+    .attr('class', 'grid grid-x')
+    .attr('transform', `translate(0, ${height})`)
+    .call(
+        d3.axisBottom(x)
+        .tickSize(-height)
+        .tickFormat(() => '')
+    )
+    .selectAll('line')
+    .attr('stroke', '#E5E7EB')
+    .attr('stroke-opacity', 0.6)
+    .attr('stroke-dasharray', '4,3');
+
+    chart.selectAll('.domain').remove();
+
   
     // line
     const line = d3
@@ -194,10 +253,10 @@ function drawLineChart(svgElement: SVGSVGElement, data: fhtDataPoint[]) {
       .join('circle')
       .attr('cx', (d) => x(d.month)!)
       .attr('cy', (d) => y(d.familiesHoused))
-      .attr('r', 5)
+      .attr('r', 10)
       .attr('fill', '#F47C90')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 2);
+      //.attr('stroke', '#fff')
+      //.attr('stroke-width', 2);
   
     // axes
     chart
@@ -228,87 +287,109 @@ export default function D3Demo() {
     if (barRef.current) drawHorizontalBarChart(barRef.current, pshsDataset);
   }, []);
 
-  return (
-    <div className="bg-[#F5F5F5] flex flex-col items-center space-y-12 mt-10 relative">
-      <div className="flex flex-col items-start w-[820px]">
-        <h1 className={poppins.className + " text-3xl font-bold text-[#555555]"}>
-          Overview Dashboard
-        </h1>
-      </div>
-
-      <div className="bg-white w-[773px] h-[404px] rounded-[16px] border-t border-t-[#0000001A] shadow p-6 relative">
-        {fhtDataSet.length > 0 ? (
-          <>
-            <h2
-              className={
-                poppins.className +
-                " text-lg font-semibold mb-2 text-[#555555] text-left"
-              }
-            >
-              New Intakes vs Families Housed (Monthly)
-            </h2>
-            <svg ref={lineRef}></svg>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
-            <Image src={icon} alt="icon" width={40} height={40} />
-            <h1
-              className={
-                poppins.className +
-                " text-base font-semibold mb-2 text-[#4A5565] "
-              }
-            >
-              No data for this filter — try adjusting date or school
-            </h1>
-            <p
-              className={
-                manrope.className +
-                " text-sm text-center font-semibold mb-2 text-[#6A7282] "
-              }
-            >
-              Switch to a different time period or select All Schools
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-center gap-[40px] mt-10 relative">
-        <div className="bg-white w-[374.5px] h-[428px] rounded-[16px] border-t border-t-[#0000001A] shadow p-6">
-          {pshsDataset.length > 0 ? (
-            <>
-              <h2
-                className={
-                  poppins.className +
-                  " text-[18px] font-semibold mb-2 text-[#555555] text-left"
-                }
-              >
-                Partner Schools and Homeless Student Count
-              </h2>
-              <svg ref={barRef}></svg>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
-              <Image src={icon} alt="icon" width={40} height={40} />
-              <h1
-                className={
-                  poppins.className +
-                  " text-base font-semibold mb-2 text-[#4A5565] "
-                }
-              >
-                No data for this filter — try adjusting date or school
-              </h1>
-              <p
-                className={
-                  manrope.className +
-                  " text-sm text-center font-semibold mb-2 text-[#6A7282] "
-                }
-              >
-                Switch to a different time period or select All Schools
-              </p>
+    return (
+        <div className="bg-[#F5F5F5] flex flex-col items-center space-y-12 mt-10 relative">
+            <div className="flex flex-col items-start w-[820px]">
+                <h1 className= {poppins.className + " text-3xl font-bold text-[#555555]"}>
+                    Overview Dashboard
+                </h1>
             </div>
-          )}
+        
+            <div className=" bg-[#FFFFFF] w-[773px] h-[404px] rounded-[16px] border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6 relative">
+                {fhtDataSet.length > 0 ? (
+                    <>  
+                        <h2 
+                        className= {poppins.className + "text-lg font-semibold mb-2 text-[#555555] text-left"}
+                        >
+                        New Intakes vs Families Housed (Monthly)
+                        </h2>
+                        <svg ref={lineRef } className="w-full h-full"></svg>
+
+                    </>
+                ):(
+                    <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                        <Image
+                        src={icon}
+                        alt="icon"
+                        width={40}
+                        height={40}
+                        />
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <h1 className={poppins.className + "text-base font-semibold mb-2 text-[#4A5565] "}>
+                                No data for this filter — try adjusting date or school
+                            </h1>
+                            <p className={manrope.className + " text-sm text-center font-semibold mb-2 text-[#6A7282] "}>
+                                Switch to a different time period or select All Schools
+                            </p>
+                        </div>
+                        
+                    </div>
+                )}
+                    
+            </div>
+            <div className="flex justify-center gap-[40px] mt-10 relative">
+                <div className="bg-[#FFFFFF] w-[374.5px] h-[428px] rounded-[16px] border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6">
+                    {pshsDataset.length > 0 ? (
+                    <>
+                        <h2
+                            className={poppins.className + "text-[18px]  font-semibold mb-2 text-[#555555] text-left"}
+                            >
+                            Partner Schools and Homeless Student Count
+                        </h2>
+                        <svg ref={barRef} className="w-full h-full"></svg>
+                    </>
+                    ) : (
+                    <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                        <Image
+                        src={icon}
+                        alt="icon"
+                        width={40}
+                        height={40}
+                        />
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <h1 className={poppins.className + "text-base font-semibold mb-2 text-[#4A5565] "}>
+                                No data for this filter — try adjusting date or school
+                            </h1>
+                            <p className={manrope.className + " text-sm text-center font-semibold mb-2 text-[#6A7282] "}>
+                                Switch to a different time period or select All Schools
+                            </p>
+                        </div>
+                        
+                    </div>
+                    )}
+                </div>
+
+                <div className="bg-[#FFFFFF] w-[374.5px] h-[428px] rounded-[16px] border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6">
+                    {empthySet.length > 0 ? (
+                        <>
+                            <h2 className= {poppins.className + "text-[18px] font-semibold mb-2 text-[#555555] text-left"}>
+                            Emotional Wellbeing & Improvement by Stage
+                            </h2>
+                            <svg ref={lineRef}></svg>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-center h-full space-y-3">
+                            <Image
+                            src={icon}
+                            alt="icon"
+                            width={40}
+                            height={40}
+                            />
+                            <div className="flex flex-col items-center justify-center text-center">
+                                <h1 className={poppins.className + "text-base font-semibold mb-2 text-[#4A5565] "}>
+                                    No data for this filter — try adjusting date or school
+                                </h1>
+                                <p className={manrope.className + " text-sm text-center font-semibold mb-2 text-[#6A7282] "}>
+                                    Switch to a different time period or select  All Schools 
+                                </p>
+                            </div>
+                            
+                        </div>
+                    )}   
+                </div>
+            </div>
+        
+        
         </div>
-      </div>
-    </div>
-  );
+    );
 }
