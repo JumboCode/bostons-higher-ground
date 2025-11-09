@@ -180,8 +180,8 @@ function UserRow({ user }:{ user:User }) {
             </div>
 
             {/* Actions */}
-            <div className="text-right w-1/6">
-                <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer" />
+            <div className="text-right w-1/6 ml-auto">
+                <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
             </div>
         </div>
     );
