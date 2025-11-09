@@ -151,7 +151,7 @@ export default function Admin(){
 
 function UserRow({ user }:{ user:User }) {
     return(
-        <div className="flex items-center py-3 border-b last:border-b-0  border-[#F0F0F0]">
+        <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
             {/* Member */}
             <div className="flex items-center gap-3 w-1/6">
                 <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold">
@@ -169,7 +169,7 @@ function UserRow({ user }:{ user:User }) {
             <div className="text-gray-400 text-center flex-grow w-1/3">{user.email}</div>
 
             {/* Status */}
-            <div className="text-center w-1/6">
+            <div className="text-center w-1/6 ml-auto">
                 <span
                     className={`px-2 py-1 rounded-full text-[12px] ${
                         user.status === "Active" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"
