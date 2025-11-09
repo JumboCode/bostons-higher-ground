@@ -4,6 +4,11 @@ import { useState } from "react";
 
 
 export default function Page() {
+    type valueProps = {
+        emailAddress: string;
+        tempCode: string;
+    }
+    const [values, setValues] = useState()
     return (
         <main className="flex flex-1 flex-col justify-center items-center space-y-5">
                 <div className="flex flex-col px-16 text-[#555555]">
