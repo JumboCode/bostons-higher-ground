@@ -15,9 +15,9 @@ export default function OnboardingLayout({ children, } : { children : React.Reac
                                 width={50}
                                 height={57}
                                 />
-                                <div>
-                                    <p className="text-[#555555] font-semibold leading-tight text-lg">Boston Higher Ground</p>
-                                    <p className="text-[#555555] font-extralight text-sm">Internal Dashboard</p>
+                                <div className="text-[#555555]">
+                                    <p className="font-semibold leading-tight text-lg">Boston Higher Ground</p>
+                                    <p className="font-extralight text-sm">Internal Dashboard</p>
                                 </div>
                             </div>
                             <div>
