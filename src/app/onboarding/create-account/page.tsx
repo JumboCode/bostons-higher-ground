@@ -53,7 +53,7 @@ export default function CreatePasswordPage() {
   };
 
   return (
-    <main className="flex flex-col grow items-center justify-center min-h-screen bg-gradient-to-br from-white via-[#faedf1] to-[#fdfce8]">
+    <main className="flex flex-col grow items-center justify-center min-h-screen">
       {/* Card Section */}
       <div className="w-md px-8 py-8 rounded-3xl bg-white shadow-[0px_24px_50px_0px_rgba(167,74,91,0.2)] flex flex-col items-center space-y-6">
         <p className="text-3xl font-bold text-[#555] mt-2">Create Password</p>
@@ -140,10 +140,6 @@ export default function CreatePasswordPage() {
           </button>
         </form>
       </div>
-      {/* Footer */}
-      <footer className="mt-6 text-center text-xs text-[#aaa] absolute inset-x-0 bottom-3">
-        © 2025 Higher Ground Boston. For authorized staff use only.
-      </footer>
     </main>
   );
 }
