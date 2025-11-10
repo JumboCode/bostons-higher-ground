@@ -24,11 +24,6 @@ export default function AccountCreatedPage() {
           Login
         </a>
       </div>
-
-      {/* Footer */}
-      <footer className="mt-6 text-center text-xs text-[#aaa] absolute inset-x-0 bottom-3">
-        © 2025 Higher Ground Boston. For authorized staff use only.
-      </footer>
     </main>
   );
 }
