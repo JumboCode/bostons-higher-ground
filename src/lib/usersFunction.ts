@@ -5,6 +5,8 @@
 import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
 import {eq} from "drizzle-orm";
+import {APIError} from "better-auth";
+import { authClient } from "./auth-client";
 
 export async function getUserPermission(userId: string) {
     const [result] = 
@@ -14,4 +16,22 @@ export async function getUserPermission(userId: string) {
             .where(eq (userInfo.id, userId))
 
     return result?.permissions;
+}
+
+// Also contains a function handle better auth errors 
+
+export async function handleBetterAuthError(error: APIError) {
+    if (!error) {
+        return null
+    }
+
+    // need to add to this 
+    switch (error.message) {
+        case "User already exists. Use another email.":
+            return Response.json({error: "User already exists"}, {status: 401});
+        case "Invalid email":
+            return Response.json({error: "invalid input"}, {status: 400});
+        default:
+            return Response.json({error: "unknown server error"}, {status: 500});
+    }
 }
