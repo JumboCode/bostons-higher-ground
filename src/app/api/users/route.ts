@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
 import {eq} from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
-import { BetterAuthError } from "better-auth";
+import { APIError} from "better-auth";
 import { handleBetterAuthError } from "@/lib/usersFunction";
 
 
@@ -40,7 +40,7 @@ export async function POST (request: Request) {
         });
         
         if (!newUser) {
-            return Response.json({error: "error"})
+            return Response.json({error: "Unknown Server Error"}, {status: 500})
         }
         else {
             const userInfoId = crypto.randomUUID();
@@ -57,7 +57,7 @@ export async function POST (request: Request) {
 
     }
     catch (err: unknown) {
-        if (err instanceof BetterAuthError) {
+        if (err instanceof APIError) {
             return handleBetterAuthError(err)
         }
         else {
