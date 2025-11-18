@@ -6,17 +6,22 @@ import SchoolFilterBar from '@/components/SchoolFilterBar';
 
 export default function Schools(){
     return (
+        <>
         
-        <div className="flex">
-            <DashboardTop pageTitle="Schools Dashboard" />
-            <div className="flex gap-[70px] ml-[100px] mt-[250px]">
-                <FastFactCard title="Homeless Students" body="45" subtext="" bgColor="bg-[#FFE5EA99]"/>
-                <FastFactCard title="Families Housed to Date" body="82%" subtext="" bgColor="bg-[#E0F7F4]"/>
-                <FastFactCard title="Average Wait Time" body="92%" subtext="" bgColor="bg-[#FDF6EC]"/>
-            </div>
-            <SchoolFilterBar /> 
-                    
+        <div className="ml-[30px] w-[1050px] mt-[30px]">
+            
+            <DashboardTop pageTitle="Schools Dashboard" title= "Homeless Students" body="45" subtext="" bgColor="bg-[#FFE5EA99]" title1="Families Housed to Date" title2="Average Wait Time" bgColor1="bg-[#E0F7F4]" bgColor2="bg-[#FDF6EC]" body1="82%" body2="92%" subtext1="" subtext2="" mt="mt-[135px]"/>
         </div>
+        <div className="ml-[60px] -mt-[300px] w-[1100px]">
+            <SchoolFilterBar />
+        </div>
+        
+        
+         
+        
+        
+        
+        </>
         
             
 
