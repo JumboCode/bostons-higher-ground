@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import FastFactCard from "@/components/FastFactCard";
 
 
@@ -14,3 +15,22 @@ export default function Schools(){
                 </div>
     );
 }
+=======
+import DashboardTop from '@/components/DashboardTop';
+import SchoolFilterBar from '@/components/SchoolFilterBar';
+
+export default function SchoolsPage() {
+  return (
+    <div className="min-h-screen">
+      
+      {}
+      <DashboardTop pageTitle="Schools Dashboard" />
+      
+      {}
+      <SchoolFilterBar /> 
+      
+      
+    </div>
+  );
+}
+>>>>>>> cd77ad036f3181f1503b026f2bdfdf4818d8f465
