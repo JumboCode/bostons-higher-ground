@@ -90,6 +90,16 @@ const LOCATION_LIST = [
     "West Roxbury",
 ];
 
+type CustomRangeProps = {
+    dateRange: DateRange | undefined;
+    setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
+    closeMenu: () => void;
+};
+
+type FiscalYearProps = {
+  closeMenu: () => void;
+};
+
 export function LocationFilter() {
     const [selected, setSelected] = useState<string[]>([]);
 
@@ -210,20 +220,32 @@ export function SchoolFilter() {
 }
 
 export function DateFilter() {
+    // is popup open
+    const [open, setOpen] = useState(false);
+
     // button content
-    const [dateRange, setDateRange] = useState<string>("11/11/2025 - 12/11/2025");
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: new Date(2025, 10, 11),
+        to: new Date(2025, 11, 11),
+    });
+    // to string
+    const formattedRange =
+    dateRange?.from && dateRange?.to
+        ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
+        : "Select Range";
+
     // what popup will display, default to fiscal year
     const [mode, setMode] = useState<"fiscal" | "custom">("fiscal");
 
     const [timeframe, setTimeFrame] = useState<"thisMonth" | "lastMonth" | "thisFY" | "allTime">("allTime");
 
     return (
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
             {/* button that triggers popup */}
             <DropdownMenuTrigger asChild>
                 <button className={`flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}>
                     <Calendar className="w-[18px] h-[18px]"/>
-                    {dateRange}
+                    {formattedRange}
                 </button>
             </DropdownMenuTrigger>
             
@@ -289,9 +311,12 @@ export function DateFilter() {
                     <hr className="w-full border-t-1 border-[#D9D9D9] mb-[10px]"></hr>
 
                     {mode === "fiscal" ? (
-                    <FiscalYearContent />
+                    <FiscalYearContent closeMenu={() => setOpen(false)}/>
                     ) : (
-                    <CustomRangeContent />
+                    <CustomRangeContent 
+                        dateRange={dateRange}
+                        setDateRange={setDateRange}
+                        closeMenu={() => setOpen(false)} />
                     )}
                 </div>
             </DropdownMenuContent>
@@ -299,7 +324,7 @@ export function DateFilter() {
     );
 }
 
-export function FiscalYearContent () {
+export function FiscalYearContent ({ closeMenu }: FiscalYearProps) {
     const [fiscalYear, setFiscalYear] = useState<"2022" | "2023" | "2024" | "2025">("2024");
     return (
         <div className="flex-row">
@@ -360,19 +385,16 @@ export function FiscalYearContent () {
                 </div>
             </div>
             {/* apply filter button */}
-            <button className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}>
+            <button 
+                onClick={closeMenu}
+                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}>
                 Apply Filter
             </button>
         </div>
     );
 }
 
-export function CustomRangeContent () {
-    const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-        from: new Date(2025, 5, 12),
-        to: new Date(2025, 6, 15),
-    })
-
+export function CustomRangeContent ({ dateRange, setDateRange, closeMenu }: CustomRangeProps) {
     return (
         <div className="w-full flex-row">
             <UiCalendar
@@ -389,7 +411,9 @@ export function CustomRangeContent () {
                 {dateRange?.from ? dateRange.from.toLocaleDateString() : ""} - {dateRange?.to ? dateRange.to.toLocaleDateString() : ""}
             </div>
             {/* apply range button */}
-            <button className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}>
+            <button 
+                onClick={closeMenu}
+                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}>
                 Apply Custom Range
             </button>
         </div>
