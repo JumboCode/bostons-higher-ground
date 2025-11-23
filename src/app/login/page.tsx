@@ -139,8 +139,6 @@ export default function LogIn() {
         console.log(err)
       }
     }
-
-    
     }
 
     return (
