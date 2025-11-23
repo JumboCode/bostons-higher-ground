@@ -113,7 +113,7 @@ export default function LogIn() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null >();
+  const [error, setError] = useState<string | null >(null);
 
   async function handleClick(e: React.MouseEvent) {
     e.preventDefault();
@@ -125,15 +125,16 @@ export default function LogIn() {
 
       if (result.error) {
         setError(result.error.message ?? "An unknown error occurred")
+        return
       }
       //Check email_verified bool in Drizzle Studio
       if (result.data?.user?.emailVerified == false) {
         setError("Invalid or expired code. Please request a new one.")
+        return
       }
-      else {
-        setError(null)
-        console.log( "Successfully logged in!")
-      }
+
+      setError(null)
+      console.log( "Successfully logged in!")
     }
     catch (err: any) {
       setError(err.message || "Something went wrong")
