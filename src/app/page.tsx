@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 
-import { Funnel, ChevronDown } from 'lucide-react';
+import { Funnel, ChevronDown, Calendar } from 'lucide-react';
 
 const SCHOOL_LIST =  [
     "Brighton High School",
@@ -109,7 +109,7 @@ export function LocationFilter() {
     return(
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-max">
-                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-6 py-1 flex items-center justify-between gap-1">
+                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
                     <span className={` text-[#555555] ${manrope.className}`}>{label}</span>
                     <ChevronDown size={16} className="mt-[1px] text-[#717182]"/>
                 </button> 
@@ -168,7 +168,7 @@ export function SchoolFilter() {
     return(
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-max">
-                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-6 py-1 flex items-center justify-between gap-1">
+                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
                     <span className={` text-[#555555] ${manrope.className}`}>{label}</span>
                     <ChevronDown size={16} className="mt-[1px] text-[#717182]"/>
                 </button> 
@@ -206,6 +206,171 @@ export function SchoolFilter() {
     );
 }
 
+export function DateFilter() {
+    // button content
+    const [dateRange, setDateRange] = useState<string>("11/11/2025 - 12/11/2025");
+
+    // what popup will display, default to fiscal year
+    const [mode, setMode] = useState<"fiscal" | "custom">("fiscal");
+
+    return (
+        <DropdownMenu>
+            {/* button that triggers popup */}
+            <DropdownMenuTrigger asChild>
+                <button className={`flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}>
+                    <Calendar className="w-[18px] h-[18px]"/>
+                    {dateRange}
+                </button>
+            </DropdownMenuTrigger>
+            
+            {/* actual popup */}
+            <DropdownMenuContent className="w-[440px] flex-row px-[15px] py-[15px] rounded-xl" align="start" sideOffset={10}>
+                {/* top bar */}
+                <div className="flex rounded-full bg-[#EBEBEB] w-full h-[46px] px-[8px] py-[6px]">
+                    <button
+                        onClick={() => setMode("fiscal")}
+                        className={`w-1/2 justify-center items-center rounded-full text-[15px] ${manrope.className} ${
+                            mode === "fiscal" ? "bg-white text-[#E76C82] shadow" : "text-[#555555]"
+                        }`}
+                    >
+                        Fiscal Year
+                    </button>
+                    <button
+                        onClick={() => setMode("custom")}
+                        className={`w-1/2 justify-center items-center rounded-full text-[15px] ${manrope.className} ${
+                            mode === "custom" ? "bg-white text-[#E76C82] shadow" : "text-[#555555]"
+                        }`}
+                        >
+                        Custom Range
+                    </button>
+                </div>
+                {/* body content */}
+                <div className="mt-4">
+                    {mode === "fiscal" ? (
+                    <FiscalYearContent />
+                    ) : (
+                    <CustomRangeContent />
+                    )}
+                </div>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
+export function FiscalYearContent () {
+    const [timeframe, setTimeFrame] = useState<"thisMonth" | "lastMonth" | "thisFY" | "allTime">("allTime");
+    const [fiscalYear, setFiscalYear] = useState<"2022" | "2023" | "2024" | "2025">("2024");
+    return (
+        <div className="flex-row">
+            {/* timeframe buttons */}
+            <div className="flex mb-[14px] gap-2 h-[30px]">
+                <button
+                    onClick={() => setTimeFrame("thisMonth")}
+                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                        timeframe === "thisMonth" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                    }`}
+                    >
+                    This Month
+                </button>
+                <button
+                    onClick={() => setTimeFrame("lastMonth")}
+                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                        timeframe === "lastMonth" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                    }`}
+                    >
+                    Last Month
+                </button>
+                <button
+                    onClick={() => setTimeFrame("thisFY")}
+                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                        timeframe === "thisFY" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                    }`}
+                    >
+                    This FY
+                </button>
+                <button
+                    onClick={() => setTimeFrame("allTime")}
+                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                        timeframe === "allTime" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                    }`}
+                    >
+                    All Time
+                </button>
+            </div>
+            {/* divider */}
+            <hr className="w-full border-t-1 border-[#D9D9D9] mb-[10px]"></hr>
+            {/* fiscal year selector */}
+            <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
+                Select Fiscal Year
+                <div className="flex mt-[8px] mb-[14px] gap-2 h-[30px]">
+                    <button
+                        onClick={() => setFiscalYear("2022")}
+                        className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] ${manrope.className} ${
+                            fiscalYear === "2022" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                        }`}
+                        >
+                        FY2022
+                    </button>
+                    <button
+                        onClick={() => setFiscalYear("2023")}
+                        className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] ${manrope.className} ${
+                            fiscalYear === "2023" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                        }`}
+                        >
+                        FY2023
+                    </button>
+                    <button
+                        onClick={() => setFiscalYear("2024")}
+                        className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] ${manrope.className} ${
+                            fiscalYear === "2024" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                        }`}
+                        >
+                        FY2024
+                    </button>
+                    <button
+                        onClick={() => setFiscalYear("2025")}
+                        className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] ${manrope.className} ${
+                            fiscalYear === "2025" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                        }`}
+                        >
+                        FY2025
+                    </button>
+                </div>
+            </div>
+            {/* month seletor */}
+            <div className={`mb-[16px] text-[#555555] text-[15px] ${manrope.className}`}>
+                Month 
+                <div className="grid grid-cols-4 gap-2 mt-[6px]">
+                    <button className={`py-[3px] rounded-full border border-[#D9D9D9] ${manrope.className}`}>Jan</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Feb</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Mar</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Apr</button>
+                    <button className={`py-[3px] rounded-full border border-[#D9D9D9] ${manrope.className}`}>May</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Jun</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Jul</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Aug</button>
+                    <button className={`py-[3px] rounded-full border border-[#D9D9D9] ${manrope.className}`}>Sep</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Oct</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Nov</button>
+                    <button className={`rounded-full border border-[#D9D9D9] ${manrope.className}`}>Dec</button>
+                </div>
+            </div>
+            {/* apply filter button */}
+            <button className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}>
+                Apply Filter
+            </button>
+        </div>
+    );
+}
+
+export function CustomRangeContent () {
+    return (
+        <div>
+            halo custom
+        </div>
+    );
+}
+
 export default function Home() {
     return (
         <div className="flex min-h-screen bg-[#F5F5F5]">
@@ -219,14 +384,15 @@ export default function Home() {
                     </div>
                     {/* The three actual filters */}
                     <div className="ml-4">
+                        <DateFilter />
+                    </div>
+                    <div className="ml-4">
                         <SchoolFilter />
                     </div>
                     <div className="ml-4">
                         <LocationFilter />
                     </div>
-                    <div>
-
-                    </div>
+                    
                     {/* Clear Button */}
                     <button className={`flex justify-center items-center ${manrope.className} bg-[#E76C82] text-[#EBEDEF] rounded-2xl ml-auto h-[30px] px-[20px] py-[20px] mr-[25px]`}>
                         Clear
