@@ -113,7 +113,7 @@ export default function LogIn() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null >();
+  const [err, setError] = useState<string | null >();
 
   async function handleClick(e: React.MouseEvent) {
     e.preventDefault();
@@ -131,16 +131,14 @@ export default function LogIn() {
         console.log( "Successfully logged in!")
       }
     }
-    catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error(err.message);
-    } else {
-      console.error("Unknown error", err);
+    catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || "Something went wrong")
+      }
+      else {
+        console.log(err)
+      }
     }
-    }
-
-
-    
     }
 
     return (
