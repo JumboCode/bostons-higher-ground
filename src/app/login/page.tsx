@@ -126,6 +126,10 @@ export default function LogIn() {
       if (result.error) {
         setError(result.error.message ?? "An unknown error occurred")
       }
+      //Check email_verified bool in Drizzle Studio
+      if (result.data?.user?.emailVerified == false) {
+        setError("Invalid or expired code. Please request a new one.")
+      }
       else {
         setError(null)
         console.log( "Successfully logged in!")
@@ -274,6 +278,12 @@ export default function LogIn() {
                   >
                     Sign In
                   </button>
+                  {/*Error Message for Invalid email or password */}
+                  {error && (
+                    <p className="text-red-500 text-sm mt-2 text-center">
+                      {error}
+                    </p>
+                  )}
 
                   {/* FORGOT PASSWORD LINK (wire this to open the modal later) */}
                  <div className="text-center">
