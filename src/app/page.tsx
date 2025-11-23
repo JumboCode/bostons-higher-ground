@@ -1,5 +1,7 @@
 "use client"
 import Navbar from "@/components/navbar";
+import * as React from "react"
+import { type DateRange } from "react-day-picker"
 
 // import font
 import { useState } from "react";
@@ -15,6 +17,7 @@ const poppins = Poppins({
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { Calendar as UiCalendar } from "@/components/ui/calendar"
 
 import {
   DropdownMenu,
@@ -209,9 +212,10 @@ export function SchoolFilter() {
 export function DateFilter() {
     // button content
     const [dateRange, setDateRange] = useState<string>("11/11/2025 - 12/11/2025");
-
     // what popup will display, default to fiscal year
     const [mode, setMode] = useState<"fiscal" | "custom">("fiscal");
+
+    const [timeframe, setTimeFrame] = useState<"thisMonth" | "lastMonth" | "thisFY" | "allTime">("allTime");
 
     return (
         <DropdownMenu>
@@ -246,6 +250,44 @@ export function DateFilter() {
                 </div>
                 {/* body content */}
                 <div className="mt-4">
+                    {/* timeframe buttons */}
+                    <div className="flex mb-[14px] gap-2 h-[30px]">
+                        <button
+                            onClick={() => setTimeFrame("thisMonth")}
+                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                                timeframe === "thisMonth" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                            >
+                            This Month
+                        </button>
+                        <button
+                            onClick={() => setTimeFrame("lastMonth")}
+                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                                timeframe === "lastMonth" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                            >
+                            Last Month
+                        </button>
+                        <button
+                            onClick={() => setTimeFrame("thisFY")}
+                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                                timeframe === "thisFY" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                            >
+                            This FY
+                        </button>
+                        <button
+                            onClick={() => setTimeFrame("allTime")}
+                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
+                                timeframe === "allTime" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                            >
+                            All Time
+                        </button>
+                    </div>
+                    {/* divider */}
+                    <hr className="w-full border-t-1 border-[#D9D9D9] mb-[10px]"></hr>
+
                     {mode === "fiscal" ? (
                     <FiscalYearContent />
                     ) : (
@@ -258,47 +300,9 @@ export function DateFilter() {
 }
 
 export function FiscalYearContent () {
-    const [timeframe, setTimeFrame] = useState<"thisMonth" | "lastMonth" | "thisFY" | "allTime">("allTime");
     const [fiscalYear, setFiscalYear] = useState<"2022" | "2023" | "2024" | "2025">("2024");
     return (
         <div className="flex-row">
-            {/* timeframe buttons */}
-            <div className="flex mb-[14px] gap-2 h-[30px]">
-                <button
-                    onClick={() => setTimeFrame("thisMonth")}
-                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
-                        timeframe === "thisMonth" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
-                    }`}
-                    >
-                    This Month
-                </button>
-                <button
-                    onClick={() => setTimeFrame("lastMonth")}
-                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
-                        timeframe === "lastMonth" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
-                    }`}
-                    >
-                    Last Month
-                </button>
-                <button
-                    onClick={() => setTimeFrame("thisFY")}
-                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
-                        timeframe === "thisFY" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
-                    }`}
-                    >
-                    This FY
-                </button>
-                <button
-                    onClick={() => setTimeFrame("allTime")}
-                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] ${manrope.className} ${
-                        timeframe === "allTime" ? "border-[#E76C82] text-[#E76C82]" : "border-[#D9D9D9] text-[#555555]"
-                    }`}
-                    >
-                    All Time
-                </button>
-            </div>
-            {/* divider */}
-            <hr className="w-full border-t-1 border-[#D9D9D9] mb-[10px]"></hr>
             {/* fiscal year selector */}
             <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
                 Select Fiscal Year
