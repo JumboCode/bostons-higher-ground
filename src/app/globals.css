@@ -4,21 +4,21 @@
 @theme {
     /* 100 colors refer to "light" variants on the figma, and get progressively
      * darker as the number goes up */
-    --color-bhg-yellow: #F5CB6A;      /* primary yellow */
+    --color-bhg-yellow:     #F5CB6A;  /* primary yellow */
     --color-bhg-yellow-100: #FFF8E9;  /* light yellow */
     --color-bhg-yellow-200: #FDE19D;  /* soft yellow */
-    --color-bhg-pink: #E76C82;        /* primary pink */
-    --color-bhg-pink-100: #FFEAEE;    /* light pink */
-    --color-bhg-pink-200: #DE8F9C;    /* soft pink */
-    --color-bhg-mint-100: #E0F7F4;    /* light mint */
-    --color-bhg-mint-200: #85CFCA;    /* soft mint */
+    --color-bhg-pink:       #E76C82;  /* primary pink */
+    --color-bhg-pink-100:   #FFEAEE;  /* light pink */
+    --color-bhg-pink-200:   #DE8F9C;  /* soft pink */
+    --color-bhg-mint-100:   #E0F7F4;  /* light mint */
+    --color-bhg-mint-200:   #85CFCA;  /* soft mint */
     --color-bhg-purple-100: #F0E7ED;  /* light purple */
     --color-bhg-purple-100: #9E6F96;  /* soft purple */
-    --color-bhg-gray-100: #EBEBEB;    /* light gray */
-    --color-bhg-gray-200: #D9D9D9;    /* gray */
-    --color-bhg-gray-300: #555555;    /* dark gray */
-    --color-bhg-error: #D9534F;       /* error/alert */
-    --color-bhg-success: #4CAF50;     /* success */
+    --color-bhg-gray-100:   #EBEBEB;  /* light gray */
+    --color-bhg-gray-200:   #D9D9D9;  /* gray */
+    --color-bhg-gray-300:   #555555;  /* dark gray */
+    --color-bhg-error:      #D9534F;  /* error/alert */
+    --color-bhg-success:    #4CAF50;  /* success */
 }
 
 @custom-variant dark (&:is(.dark *));
