@@ -39,7 +39,7 @@ export default function CreatePasswordPage() {
   const allValid = requirements.every(r => r.isValid);
 
   // Form submit handler
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     if (!allValid) {
@@ -61,7 +61,7 @@ export default function CreatePasswordPage() {
           {/* Password Input */}
           <div>
             <label className="block text-[#555] font-medium">
-              Password <span className="text-[#D9534F]">*</span>
+              Password <span className="text-bhg-error">*</span>
             </label>
             <div className="relative mt-1">
               <input
@@ -85,7 +85,7 @@ export default function CreatePasswordPage() {
           {/* Confirm Password Input */}
           <div>
             <label className="block text-[#555] font-medium">
-              Confirm Password <span className="text-[#D9534F]">*</span>
+              Confirm Password <span className="text-bhg-error">*</span>
             </label>
             <div className="relative mt-1">
               <input
@@ -115,7 +115,7 @@ export default function CreatePasswordPage() {
                   {req.isValid ? (
                     <CircleCheck size={18} className="text-[#76c893]" />
                   ) : (
-                    <X size={18} className="text-[#D9534F]" />
+                    <X size={18} className="text-bhg-error" />
                   )}
                   <span className={req.isValid ? "text-[#555]" : "text-[#aaa]"}>
                     {req.label}
@@ -126,12 +126,12 @@ export default function CreatePasswordPage() {
           </div>
           {/* Error Message */}
           {error && (
-            <div className="text-center text-[#D9534F] text-sm mb-2">{error}</div>
+            <div className="text-center text-bhg-error text-sm mb-2">{error}</div>
           )}
           {/* Submit Button */}
           <button
             type="submit"
-            className={`mt-4 py-3 w-full rounded-xl text-white justify-center bg-[#E76C82] text-lg font-medium transition
+            className={`mt-4 py-3 w-full rounded-xl text-white justify-center bg-bhg-pink text-lg font-medium transition
               ${allValid ? "hover:bg-[#e05a74]" : "opacity-70 cursor-not-allowed"}
             `}
             disabled={!allValid}

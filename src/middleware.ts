@@ -14,8 +14,3 @@ export async function middleware(req: NextRequest) {
 
     return NextResponse.next();
 }
-
-export const config = {
-  runtime: "nodejs", // Required for auth.api calls
-  matcher: ["/onboarding/create-account"], // Specify the routes the middleware applies to
-};
