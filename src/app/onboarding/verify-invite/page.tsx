@@ -2,6 +2,11 @@
 import { regex } from "better-auth";
 import * as Icon from "feather-icons-react";
 import { useState } from "react";
+import { verification } from "@/lib/schema";
+import { db } from "@/lib/db";
+import { user } from "@/lib/schema";
+import {eq} from "drizzle-orm";
+
 
 export default function Page() {
     const [email, setEmail] = useState("");
@@ -52,8 +57,23 @@ export default function Page() {
             setIsTempCodeValid(true);
         }
     };
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        const [userid] = await db
+            .select({id: user.id})
+            .from(user)
+            .where(eq (user.email, email))
+
+        const [otp] = await db
+            .select({value: verification.value})
+            .from(verification)
+            .where(eq (verification.id, userid.id))
+
+        if (otp.value == tempCode) {
+            
+        }
+        
     };
     const togglePopup = () => {
         setTempCodePopup(!tempCodePopup);

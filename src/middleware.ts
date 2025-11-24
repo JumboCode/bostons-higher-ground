@@ -14,3 +14,9 @@ export async function middleware(req: NextRequest) {
 
     return NextResponse.next();
 }
+
+export const config = {
+    runtime: "nodejs",
+    matcher: ["/", "/onboarding/:path*", "/weather"],
+  // TODO config matcher 
+}
