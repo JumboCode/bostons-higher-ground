@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
 
 
-    if (!session && path != "/login" || "/verify" || "/register") {
+    if (!session && path != "/login") {
         return NextResponse.redirect(new URL("/login", req.url))
     }
 
