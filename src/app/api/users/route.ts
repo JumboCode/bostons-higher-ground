@@ -11,20 +11,20 @@ import { handleBetterAuthError } from "@/lib/usersFunction";
 
 /* Adds a user*/
 export async function POST (request: Request) {
-    // const session = await auth.api.getSession({headers:( request.headers) });
+    const session = await auth.api.getSession({headers:( request.headers) });
 
-    // /* If the client is not logged in, return an unauthorized error */
-    // if (!session)  {
-    //     return Response.json({error: "unauthorized"}, {status: 401});
-    // }
+    /* If the client is not logged in, return an unauthorized error */
+    if (!session)  {
+        return Response.json({error: "unauthorized"}, {status: 401});
+    }
 
-    // /* Grabs the userid associated with the current session */
-    // const Id = session.user.id;
+    /* Grabs the userid associated with the current session */
+    const Id = session.user.id;
 
-    // /* If the client is not an admin, return an unauthorized error */
-    // if (! getUserPermission(Id)) {
-    //     return Response.json({error: "unauthorized"}, {status: 401});
-    // }
+    /* If the client is not an admin, return an unauthorized error */
+    if (! getUserPermission(Id)) {
+        return Response.json({error: "unauthorized"}, {status: 401});
+    }
 
     /* Grabs info from client*/
     const body = await request.json();
@@ -90,5 +90,5 @@ export async function DELETE (request: Request) {
     const body = await request.json();
 
     /* Deletes profile from userinfo */
-    await db.delete(userInfo).where(eq (userInfo.id, body.id) );
+    await db.delete(userInfo).where(eq (userInfo.userId, body.id) );
 }

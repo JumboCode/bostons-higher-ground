@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const curUserId = session.user.id;
     
     /* Fetch call to SQL database, looks in the entire userInfo table for the info where 
-       userInfo.id = curUserId  */
+       userInfo.userId = curUserId  */
 
     return await getUserPermission(curUserId);
 }
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     await db
         .update(userInfo)
         .set({permissions: new_info.permissions})
-        .where(eq (userInfo.id, Id));
+        .where(eq (userInfo.userId, Id));
 
     return Response.json({result: "success"})
 }
