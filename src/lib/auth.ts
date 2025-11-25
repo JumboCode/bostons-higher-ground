@@ -20,11 +20,11 @@ export const auth = betterAuth({
 
     plugins: [nextCookies(),
         emailOTP({
-            otpLength: 10,
+            otpLength: 6,
             expiresIn: 15 * 60,
-            sendVerificationOTP: ({email, otp, type}) => {
-                await sendEmail 
+            sendVerificationOTP: async ({email, otp, type}) => {
+                await sendEmail({email, otp, type});
             }
         })
-    ]
+    ],
 });

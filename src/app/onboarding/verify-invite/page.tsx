@@ -1,14 +1,11 @@
 "use client";
-import { regex } from "better-auth";
 import * as Icon from "feather-icons-react";
 import { useState } from "react";
-import { verification } from "@/lib/schema";
-import { db } from "@/lib/db";
-import { user } from "@/lib/schema";
-import {eq} from "drizzle-orm";
+import { useRouter } from "next/navigation";
 
 
 export default function Page() {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [tempCode, setTempCode] = useState("");
     const [isEmailValid, setIsEmailValid] = useState(false);
@@ -18,6 +15,7 @@ export default function Page() {
     const [emailError, setEmailError] = useState("");
     const [tempCodeError, setTempCodeError] = useState("");
     const [tempCodePopup, setTempCodePopup] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -59,21 +57,42 @@ export default function Page() {
     };
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
-        const [userid] = await db
-            .select({id: user.id})
-            .from(user)
-            .where(eq (user.email, email))
+        setIsSubmitting(true);
+        setEmailError("");
+        setTempCodeError("");
 
-        const [otp] = await db
-            .select({value: verification.value})
-            .from(verification)
-            .where(eq (verification.id, userid.id))
+        try {
+            const response = await fetch("/api/verify-invite", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    tempCode,
+                }),
+            });
 
-        if (otp.value == tempCode) {
-            
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle error
+                if (response.status === 401) {
+                    setTempCodeError(data.error || "Invalid email or verification code");
+                } else {
+                    setTempCodeError(data.error || "An error occurred");
+                }
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Verification successful - redirect to create-account
+            router.push("/onboarding/create-account");
+        } catch (error) {
+            console.error("Verification error:", error);
+            setTempCodeError("An error occurred. Please try again.");
+            setIsSubmitting(false);
         }
-        
     };
     const togglePopup = () => {
         setTempCodePopup(!tempCodePopup);
@@ -162,12 +181,12 @@ export default function Page() {
                         )}
                     </div>
                     <button
-                        disabled={!isFormComplete}
+                        disabled={!isFormComplete || isSubmitting}
                         type="submit"
                         className="flex py-2.5 w-full rounded-xl text-white justify-center bg-[#E76C82] space-x-1 hover:cursor-pointer disabled:bg-[#E59AA8] disabled:text-white disabled:cursor-not-allowed"
                     >
-                        <p>Continue</p>
-                        <Icon.ArrowRight className="stroke-2" />
+                        <p>{isSubmitting ? "Verifying..." : "Continue"}</p>
+                        {!isSubmitting && <Icon.ArrowRight className="stroke-2" />}
                     </button>
                 </form>
             </div>
