@@ -76,7 +76,6 @@ export default function Page() {
             const data = await response.json();
 
             if (!response.ok) {
-                // Handle error
                 if (response.status === 401) {
                     setTempCodeError(data.error || "Invalid email or verification code");
                 } else {
@@ -85,8 +84,6 @@ export default function Page() {
                 setIsSubmitting(false);
                 return;
             }
-
-            // Verification successful - redirect to create-account
             router.push("/onboarding/create-account");
         } catch (error) {
             console.error("Verification error:", error);

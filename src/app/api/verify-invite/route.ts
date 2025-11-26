@@ -6,10 +6,6 @@ import { eq, and, gt } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { VERIFICATION_TOKEN_COOKIE } from "@/lib/verification";
 
-/**
- * POST /api/verify-invite
- * Verifies the invite code and sets a verification token cookie
- */
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -22,7 +18,6 @@ export async function POST(request: Request) {
             );
         }
 
-        // Find user by email
         const [userRecord] = await db
             .select({ id: user.id })
             .from(user)
@@ -36,7 +31,6 @@ export async function POST(request: Request) {
             );
         }
 
-        // Check if verification token exists and is valid
         const [verificationRecord] = await db
             .select()
             .from(verification)
@@ -56,13 +50,11 @@ export async function POST(request: Request) {
             );
         }
 
-        // Create response with success
         const response = NextResponse.json({
             success: true,
             message: "Verification successful",
         });
 
-        // Set verification token cookie (expires in 1 hour)
         const expires = new Date();
         expires.setHours(expires.getHours() + 1);
 
