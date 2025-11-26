@@ -1,8 +1,3 @@
-/**
- * @file auth.ts
- * @description auth code that gets executed on the back end
- */
-
 import { betterAuth, email } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
