@@ -53,7 +53,7 @@ export default function CreatePasswordPage() {
   };
 
   return (
-    <main className="flex flex-col grow items-center justify-center min-h-screen">
+    <main className="flex flex-col grow items-center justify-center  min-h-screen -mt-[150px]">
       {/* Card Section */}
       <div className="w-md px-8 py-8 rounded-3xl bg-white shadow-[0px_24px_50px_0px_rgba(167,74,91,0.2)] flex flex-col items-center space-y-6">
         <p className="text-3xl font-bold text-[#555] mt-2">Create Password</p>
