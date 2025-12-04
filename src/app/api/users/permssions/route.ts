@@ -24,7 +24,8 @@ export async function GET(request: Request) {
     /* Fetch call to SQL database, looks in the entire userInfo table for the info where 
        userInfo.id = curUserId  */
 
-    return await getUserPermission(curUserId);
+    const permission = await getUserPermission(curUserId);
+    return Response.json({ permission });
 }
 
 export async function POST(request: Request) {
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
     /* Grabs the userid associated with the current session */
     const Id = session.user.id;
 
-    if (! getUserPermission(Id)) {
+    if (!getUserPermission(Id)) {
         return Response.json({error: "unauthorized"}, {status: 401});
     }
 

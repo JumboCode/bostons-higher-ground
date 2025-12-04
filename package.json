@@ -37,7 +37,7 @@
     "@types/node": "^20.19.24",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "drizzle-kit": "^0.18.1",
+    "drizzle-kit": "^0.20.0",
     "eslint": "^9.39.1",
     "@eslint/eslintrc": "^3",
     "@types/d3": "^7.4.3",
