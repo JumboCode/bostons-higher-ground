@@ -123,8 +123,8 @@ export default function LogIn() {
                 setError(null);
                 console.log("Successfully logged in!");
             }
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
+        } catch (err) {
+            setError("Something went wrong");
         }
     }
 
