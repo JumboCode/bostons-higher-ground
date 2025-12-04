@@ -35,7 +35,7 @@ async function seedHousingData() {
     console.log(`✅ Seeded ${NUM_RECORDS} dummy housing records.`);
 }
 
-export async function GET() {
-    await seedHousingData();
-    return new Response("success!");
-}
+// export async function GET() {
+//     await seedHousingData();
+//     return new Response("success!");
+// }
