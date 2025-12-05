@@ -10,6 +10,7 @@
 // Import your image components
 import { House, FileText, Settings } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 
 // Color palette constants
 const SOFT_PINK = "bg-[#DE8F9C]";
@@ -36,7 +37,7 @@ export default function Navbar() {
         >
             {/* Logo Area */}
             <div className="flex flex-col items-start px-6 py-6 border-b border-[#F5F5F5]">
-                <img
+                <Image
                     src="/Logo.png"
                     alt="Boston Higher Ground logo"
                     className="w-52 h-10 mb-2"

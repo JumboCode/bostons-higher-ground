@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         .from (userInfo)
         .where (eq (userInfo.userId, curUserId));
 
-    return result?.authorized;
+    return Response.json({ authorized: result?.authorized });
 }
 
 export async function POST(request: Request) {

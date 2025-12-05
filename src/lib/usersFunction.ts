@@ -19,10 +19,6 @@ export async function getUserPermission(userId: string) {
 
 // Also contains a function handle better auth errors 
 export async function handleBetterAuthError(error: APIError) {
-    if (!error) {
-        return null
-    }
-
     // need to add to this 
     switch (error.message) {
         case "User already exists. Use another email.":

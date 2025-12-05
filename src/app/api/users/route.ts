@@ -41,8 +41,7 @@ export async function POST (request: Request) {
         
         if (!newUser) {
             return Response.json({error: "Unknown Server Error"}, {status: 500})
-        }
-        else {
+        } else {
             const userInfoId = crypto.randomUUID();
 
             await db.insert(userInfo).values({
@@ -52,9 +51,8 @@ export async function POST (request: Request) {
                 permissions: 'none'
             });
 
+            return Response.json({success: true, user: newUser.user})
         }
-        return Response.json({success: true, user: newUser.user})
-
     }
     catch (err: unknown) {
         if (err instanceof APIError) {
@@ -63,7 +61,6 @@ export async function POST (request: Request) {
         else {
             return Response.json({error: "Unknown server error"}, {status: 500})
         }
-
           /* TODO ask what error message to put*/
     }
 }
