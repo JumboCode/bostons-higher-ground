@@ -1,8 +1,7 @@
-"use server";
-
 import { db } from "./db";
 import { verification, user } from "./schema";
 import { eq, and, gt } from "drizzle-orm";
+import { NextRequest } from "next/server";
 
 export const VERIFICATION_TOKEN_COOKIE = "verification_token";
 
@@ -40,8 +39,7 @@ export async function verifyCodeToken(
 }
 
 export function hasVerificationToken(
-    request: any,
-    email?: string
+    request: NextRequest,
 ): boolean {
     try {
         let cookieHeader: string = "";

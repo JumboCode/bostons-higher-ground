@@ -25,6 +25,7 @@ function betterAuth(password: string, confirmPassword: string) {
     "Passwords match": password !== "" && password === confirmPassword,
   };
 }
+
 export default function CreatePasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -32,6 +33,7 @@ export default function CreatePasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+
   // Use betterAuth to get password requirements validation
   const requirements = betterAuth(password, confirmPassword);
   const allValid = Object.values(requirements).every(Boolean);
@@ -48,6 +50,7 @@ export default function CreatePasswordPage() {
       router.push("/onboarding/account-created");
     }, 600);
   };
+
   return (
     <main className="flex flex-col grow items-center justify-center min-h-screen">
       <div className="w-md px-8 py-8 rounded-3xl bg-white shadow-[0px_24px_50px_0px_rgba(167,74,91,0.2)] flex flex-col items-center space-y-6">
@@ -64,7 +67,7 @@ export default function CreatePasswordPage() {
                 className="bg-[#F3F3F5] py-2 px-3 rounded-xl w-full pr-10 outline-none"
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
               />
               <button
                 type="button"
@@ -88,7 +91,7 @@ export default function CreatePasswordPage() {
                 className="bg-[#F3F3F5] py-2 px-3 rounded-xl w-full pr-10 outline-none"
                 placeholder="Re-enter your password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={e => setConfirmPassword(e.target.value)}
               />
               <button
                 type="button"

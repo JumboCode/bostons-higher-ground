@@ -4,7 +4,7 @@ import { CircleCheck } from "lucide-react";
 
 export default function AccountCreatedPage() {
   return (
-    <main className="flex flex-col grow items-center justify-center min-h-screen">
+    <main className="-mt-[200px] flex flex-col grow items-center justify-center min-h-screen">
       {/* Centered confirmation card */}
       <div className="w-md px-8 py-10 rounded-3xl bg-white shadow-[0px_24px_50px_0px_rgba(167,74,91,0.2)] flex flex-col items-center space-y-6">
         <CircleCheck

@@ -98,7 +98,7 @@ export default function Page() {
     const isFormComplete = email.length && tempCode;
 
     return (
-        <main className="flex flex-1 flex-col justify-center items-center space-y-5">
+        <main className="flex flex-1 flex-col justify-center items-center space-y-5 -mt-[200px]">
             <div className="flex flex-col px-16 text-[#555555]">
                 <p className="text-center text-3xl font-bold">Welcome</p>
                 <p className="text-center text-base font-extralight">
@@ -180,7 +180,7 @@ export default function Page() {
                     <button
                         disabled={!isFormComplete || isSubmitting}
                         type="submit"
-                        className="flex py-2.5 w-full rounded-xl text-white justify-center bg-[#E76C82] space-x-1 hover:cursor-pointer disabled:bg-[#E59AA8] disabled:text-white disabled:cursor-not-allowed"
+                        className="flex py-2.5 w-full rounded-xl text-white justify-center bg-[#E76C82] space-x-1 hover:cursor-pointer disabled:bg-[#E59AA8] disabled:text-white disabled:cursor-not-allowed hover:bg-[#e05a74]"
                     >
                         <p>{isSubmitting ? "Verifying..." : "Continue"}</p>
                         {!isSubmitting && <Icon.ArrowRight className="stroke-2" />}
