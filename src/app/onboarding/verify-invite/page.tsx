@@ -1,9 +1,11 @@
 "use client";
-import { regex } from "better-auth";
 import * as Icon from "feather-icons-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 
 export default function Page() {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [tempCode, setTempCode] = useState("");
     const [isEmailValid, setIsEmailValid] = useState(false);
@@ -13,6 +15,7 @@ export default function Page() {
     const [emailError, setEmailError] = useState("");
     const [tempCodeError, setTempCodeError] = useState("");
     const [tempCodePopup, setTempCodePopup] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -52,8 +55,41 @@ export default function Page() {
             setIsTempCodeValid(true);
         }
     };
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setEmailError("");
+        setTempCodeError("");
+
+        try {
+            const response = await fetch("/api/verify-invite", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    tempCode,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    setTempCodeError(data.error || "Invalid email or verification code");
+                } else {
+                    setTempCodeError(data.error || "An error occurred");
+                }
+                setIsSubmitting(false);
+                return;
+            }
+            router.push("/onboarding/create-account");
+        } catch (error) {
+            console.error("Verification error:", error);
+            setTempCodeError("An error occurred. Please try again.");
+            setIsSubmitting(false);
+        }
     };
     const togglePopup = () => {
         setTempCodePopup(!tempCodePopup);
@@ -142,12 +178,12 @@ export default function Page() {
                         )}
                     </div>
                     <button
-                        disabled={!isFormComplete}
+                        disabled={!isFormComplete || isSubmitting}
                         type="submit"
                         className="flex py-2.5 w-full rounded-xl text-white justify-center bg-[#E76C82] space-x-1 hover:cursor-pointer disabled:bg-[#E59AA8] disabled:text-white disabled:cursor-not-allowed hover:bg-[#e05a74]"
                     >
-                        <p>Continue</p>
-                        <Icon.ArrowRight className="stroke-2" />
+                        <p>{isSubmitting ? "Verifying..." : "Continue"}</p>
+                        {!isSubmitting && <Icon.ArrowRight className="stroke-2" />}
                     </button>
                 </form>
             </div>
