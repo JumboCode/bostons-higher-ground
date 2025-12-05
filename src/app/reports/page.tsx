@@ -1,5 +1,4 @@
 import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
-import { string } from "better-auth";
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -30,7 +29,7 @@ function DraftReport() {
                 <FileText className="h-12 w-12 text-[#6A7282] stroke-2" />
                 <div className="text-base text-[#6A7282] text-center leading-6">
                     No charts in draft. Navigate to any dashboard and click the
-                    "+" icon on charts to add them here.
+                    &quot;+&quot; icon on charts to add them here.
                 </div>
             </div>
         </div>

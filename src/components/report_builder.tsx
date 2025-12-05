@@ -1,4 +1,3 @@
-import { useState } from "react"; 
 import {FileText, Trash2} from "./icons"
 import { X, GripVertical, FileDown } from 'lucide-react';
 
@@ -84,7 +83,7 @@ export default function ReportBuilder({count, onClose}:{count:number, onClose: (
                     ) : (
                         <div className="flex flex-col items-center justify-center text-gray-400 mt-10">
                             <FileText stroke="#D1D5DC" width="60" height="60"/>
-                            <p className="mt-8 text-center text-md mb-2">No charts added yet. Click the "+" icon on any chart to add it to your Report</p>
+                            <p className="mt-8 text-center text-md mb-2">No charts added yet. Click the &quot;+&quot; icon on any chart to add it to your Report</p>
                         </div>
                     )}
                 </div>

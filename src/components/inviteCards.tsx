@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 
 export default function InviteCard ({ isOpen, onClose }:{ isOpen:boolean, onClose: () => void}){
-    if(!isOpen) return null;
-
     const [formData, setFormData] = useState({ name: "", email: "" });
+
+    if(!isOpen) return null;
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
