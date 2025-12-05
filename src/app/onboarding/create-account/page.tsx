@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, CircleCheck, X } from "lucide-react";
-// Shared ErrorMessage component with consistent styling and aria-live for accessibility
+
 function ErrorMessage({ message }: { message: string }) {
   if (!message) return null;
   return (
@@ -80,7 +80,7 @@ export default function CreatePasswordPage() {
           {/* Confirm Password Input */}
           <div>
             <label className="block text-[#555] font-medium">
-              Confirm Password <span className="text-[#D9534F]">*</span>
+              Confirm Password <span className="text-bhg-error">*</span>
             </label>
             <div className="relative mt-1">
               <input
