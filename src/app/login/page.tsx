@@ -41,7 +41,7 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
     const hasEmail = email.trim().length > 0;
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="bg-[#FFFFFF] w-md h-[248px] rounded-2xl border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6 relative">
+            <div className="bg-[#FFFFFF] w-[448px] h-[248px] rounded-2xl border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6 relative">
                 {/*Close button*/}
                 <button onClick={onClose} className="absolute top-4 right-4">
                     <X className="w-4 h-4 text-[#555555] opacity-70" />
@@ -49,16 +49,16 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
 
                 <div className="absolute top-[25px] left-[25px] w-[398px] h-[66px]">
                     {/*Reset Password Heading*/}
-                    <h2 className="font-poppins font-semibold text-[18px] leading-[18px] text-[#555555]">
+                    <h2 className={`${poppins.className} font-semibold text-[18px] leading-[18px] text-[#555555]`}>
                         Reset Password
                     </h2>
 
-                    <p className="font-manrope font-regular text-[14px] leading-5 text-[#717182] mt-2">
-                        Enter your email address and we&#39;ll send you a link
+                    <p className={`${manrope.className} font-regular text-[14px] leading-5 text-[#717182] mt-2`}>
+                        Enter your email address and we'll send you a link
                         to reset your pass.
                     </p>
 
-                    <p className="font-manrope font-medium text-[14px] leading-5 w-[92px] h-5 mt-4 text-[#555555]">
+                    <p className={`${manrope.className} font-medium text-[14px] leading-5 w-[92px] h-5 mt-4 text-[#555555]`}>
                         Email Address
                     </p>
 
@@ -68,12 +68,11 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
-                    ></input>
+                    />
 
                     <div className="flex gap-3 mt-4 items-center">
                         <button
-                            className="w-[193px] h-9 rounded-[14px] border border-[#0000001A]  py-2 px-4 font-manrope font-medium leading-5 hover:opacity-80 
-                        text-[#555555] font-manrope text-[14px]"
+                            className="w-[193px] h-9 rounded-[14px] border border-[#0000001A] py-2 px-4 font-manrope font-medium leading-5 hover:opacity-80 text-[#555555] text-[14px]"
                             onClick={onClose}
                         >
                             Cancel
@@ -81,7 +80,7 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
 
                         <button
                             type="button"
-                            className="w-[193px] h-9 rounded-[14px] bg-[#D26879] py-2 px-4 font-manrope font-medium leading-5 text-[#FFFFFF] font-manrope text-[14px]"
+                            className="w-[193px] h-9 rounded-[14px] bg-[#D26879] py-2 px-4 font-manrope font-medium leading-5 text-[#FFFFFF] text-[14px]"
                             style={{
                                 backgroundColor: hasEmail
                                     ? "#E76C82"
@@ -107,14 +106,30 @@ export default function LogIn() {
     const [isOpen, setIsOpen] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>();
+    const [error, setError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
     async function handleClick(e: React.MouseEvent) {
         e.preventDefault();
+        
+        // Client-side validation
+        const newErrors: { email?: string; password?: string } = {};
+        if (!email.trim()) newErrors.email = "Email is required";
+        if (!password.trim()) newErrors.password = "Password is required";
+        
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        // Clear errors for API attempt
+        setErrors({});
+        setError(null);
+
         try {
             const result = await authClient.signIn.email({
-                email: email,
-                password: password,
+                email: email.trim(),
+                password: password.trim(),
             });
 
             if (result.error) {
@@ -189,7 +204,7 @@ export default function LogIn() {
                         Welcome Back
                     </h1>
                     <p
-                        className={`${manrope.className} mt-1 text-center text-sm text-neutral-500'`}
+                        className={`${manrope.className} mt-1 text-center text-sm text-neutral-500`}
                         style={{
                             color: "#4A5565",
                             fontWeight: 400,
@@ -218,9 +233,18 @@ export default function LogIn() {
                                 name="email"
                                 type="email"
                                 placeholder="you@example.com"
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                                value={email}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+                                }}
+                                className={`w-full rounded-xl border ${errors.email ? 'border-red-300 bg-red-50' : 'border-neutral-200 bg-neutral-100/70'} px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100`}
                             />
+                            {errors.email && (
+                                <p className="mt-1 text-xs text-red-600 font-medium" role="alert">
+                                    {errors.email}
+                                </p>
+                            )}
                         </div>
 
                         {/* PASSWORD FIELD */}
@@ -236,16 +260,25 @@ export default function LogIn() {
                                 name="password"
                                 type="password"
                                 placeholder="••••••••"
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                                value={password}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+                                }}
+                                className={`w-full rounded-xl border ${errors.password ? 'border-red-300 bg-red-50' : 'border-neutral-200 bg-neutral-100/70'} px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100`}
                             />
+                            {errors.password && (
+                                <p className="mt-1 text-xs text-red-600 font-medium" role="alert">
+                                    {errors.password}
+                                </p>
+                            )}
                         </div>
 
                         {/* PRIMARY BUTTON */}
                         <button
                             type="submit"
                             onClick={handleClick}
-                            className={`${manrope.className} mt-1 w-full text-center text-white transition`}
+                            className={`${manrope.className} mt-1 w-full text-center text-white`}
                             style={{
                                 backgroundColor: "#E59AA8",
                                 width: "318px",
@@ -270,7 +303,7 @@ export default function LogIn() {
                         <div className="text-center">
                             <button
                                 type="button"
-                                className={`${manrope.className} underline-offset-4 hover:underline`}
+                                className={`${manrope.className}`}
                                 onClick={() => setIsOpen(true)}
                                 style={{
                                     color: "#E76C82",
@@ -297,7 +330,6 @@ export default function LogIn() {
             </section>
 
             {/* Modal shell included but hidden */}
-
             <ForgotPasswordModal
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
