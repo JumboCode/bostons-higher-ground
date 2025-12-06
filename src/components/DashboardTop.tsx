@@ -24,13 +24,11 @@ interface DashboardTopProps {
 const DashboardTop: React.FC<DashboardTopProps> = ({ pageTitle, title, body, subtext, bgColor, title1, title2, bgColor1, bgColor2, body1, body2, subtext1, subtext2, mt}) => {
   return (
     <>
-    <div className="w-full flex flex-col p-8 ml-10">
+    <div className="w-full flex flex-col p-10">
       
       {}
-      <div className="flex justify-between items-center mb-10">
+      <div className="w-full flex justify-between items-center mb-10">
         <h1 className="text-4xl font-extrabold text-[#555555] gap-8">{pageTitle}</h1>
-        
-        {}
         <button className="flex items-center border border-[#E76C82] text-[#E76C82] py-2 px-4 rounded-lg transition-colors hover:bg-pink-50">
           <div className="w-[16px]">
             <RefreshCcw/>

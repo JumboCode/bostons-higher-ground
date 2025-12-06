@@ -1,46 +1,47 @@
-/*
- * This component represents the navbar that will consistently visible as users
- * navigate the application. As you are building out this component, keep in
- * mind that we want it to be reusable across different pages in the
- * application. Do you need any props?
- */
-
 "use client";
 
 // Import your image components
 import { House, FileText, Settings } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // Color palette constants
 const SOFT_PINK = "bg-[#DE8F9C]";
 const LIGHT_GRAY = "bg-[#414141]";
-const DARK_GRAY = "bg-[#555555]";
 
 // used placeholders for icons not found. (to be impelemented using Lucide React)
 const TAB_CONFIG = [
-    { name: "Overview", Icon: House },
-    { name: "Housing", Icon: House },
-    { name: "Education", Icon: House },
-    { name: "Schools", Icon: House },
-    { name: "Reports", Icon: FileText },
-    { name: "Admin", Icon: Settings },
+    { name: "Overview", Icon: House, href: "/reports/overview" },
+    { name: "Housing", Icon: House, href: "/reports/housing" },
+    { name: "Education", Icon: House, href: "/reports/education" },
+    { name: "Schools", Icon: House, href: "/reports/schools" },
+    { name: "Reports", Icon: FileText, href: "/reports" },
+    { name: "Admin", Icon: Settings, href: "/admin" },
 ];
 
 export default function Navbar() {
+    const pathname = usePathname();
     const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
 
+    useEffect(() => {
+        
+    }, [pathname]);
+
     return (
         <nav
-            className={`w-[280px] min-h-screen ${DARK_GRAY} text-white flex flex-col`}
+            className={`w-[280px] min-h-screen bg-bhg-gray-300 text-white flex flex-col`}
         >
             {/* Logo Area */}
-            <div className="flex flex-col items-start px-6 py-6 border-b border-[#F5F5F5]">
+            <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">
                 <Image
                     src="/Logo.png"
                     alt="Boston Higher Ground logo"
                     className="w-52 h-10 mb-2"
+                    width={52}
+                    height={10}
                 />
             </div>
 
@@ -48,10 +49,11 @@ export default function Navbar() {
             <div className="h-4" />
 
             <ul className="flex flex-col gap-4 px-5">
-                {TAB_CONFIG.map(({ name, Icon }) => {
+                {TAB_CONFIG.map(({ name, Icon, href }) => {
                     const isSelected = selected === name;
                     return (
-                        <li
+                        <Link
+                            href={href}
                             key={name}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
@@ -71,7 +73,7 @@ export default function Navbar() {
                                 <Icon className="w-6 h-6 mr-4" />
                                 <span className="text-base">{name}</span>
                             </div>
-                        </li>
+                        </Link>
                     );
                 })}
             </ul>

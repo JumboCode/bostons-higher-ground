@@ -2,37 +2,27 @@ import React from 'react';
 
 import NavBar from "@/components/navbar";
 import ReportBuilderToggle from "@/components/report_builder_toggle";
+import { authClient } from '@/lib/auth-client';
 
-
-export default function Layout({ children }: {children: React.ReactNode}){
+export default async function Layout({ children }: {children: React.ReactNode}){
+    const session = await authClient.getSession()
+    const userName = session.data?.user.name;
+    
     return(
         <>
-        
-
-        <div className="relative w-full h-full min-h-screen flex ">
-            <div className="fixed h-full ">
-                <NavBar/>
-            </div>
-            <div className=" absolute w-[1222px] h-[64px] bg-white border-b border-gray-200 flex items-center gap-[100px] px-[20px] ml-[280px] opacity-100">
-    
-            </div>
-            
-            
-            <div className="bg-[#F5F5F5] min-h-screen w-screen overflow-x-hidden">
-                <div className="ml-[250px] mr-[80px] p-4">
-                    {children}
+        <div className="flex">
+            <NavBar/>
+            <div className="bg-[#F5F5F5] w-full flex-col">
+                <div className="min-h-[40px] bg-white top-0 flex justify-end px-5 py-3">
+                    {userName || "John Doe"}
                 </div>
+                {children}
             </div>
-
-            
             
         </div>
-        <div className="fixed right-6 top-6 z-[999999] pointer-events-auto">
+        <div className="absolute right-0 top-0 z-50 pointer-events-auto">
             <ReportBuilderToggle/>
         </div>
-        
-        
         </>
-        
     );
 }

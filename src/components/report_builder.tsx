@@ -59,8 +59,10 @@ function DownloadButton({doctype, count}:{doctype:string, count:number}) {
  */
 export default function ReportBuilder({count, onClose}:{count:number, onClose: () => void}) {    
     return (
-        <div className="flex justify-end">
-            <div className="relative h-dvh w-1/3 px-10 py-10 rounded-l-lg border-4 border-indigo-500">
+        <div className="z-50 bg-black/50 backdrop-blur-xs flex justify-end w-screen h-screen">
+            {/* Allow users to click outside of report builder to close it */}
+            <div className="w-full h-full bg-none" onClick={onClose}/>
+            <div className="relative h-full w-1/3 min-w-[400px] px-10 py-10 rounded-l-lg bg-white">
                 <div className="flex">
                     <div className="text-xl font-bold mb-3">Report Builder</div> {/*main title*/}
                     <button onClick={onClose}
