@@ -3,6 +3,7 @@
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 import { Poppins, Manrope } from "next/font/google";
+import { date } from "drizzle-orm/mysql-core";
 
 // const poppins = Poppins({
 //   subsets: ["latin"],
@@ -48,26 +49,30 @@ export default function BarChart({ data }: { data: housingRecord[] }) {
 
 //d3 chart code
 function drawBarChart(svgElement: SVGSVGElement, data: housingRecord[] ) { //the code makes horizontal bar chart, need to change it to make it vertical
-        const svg = d3.select(svgElement);
-        svg.selectAll('*').remove();
+  const svg = d3.select(svgElement);
+  svg.selectAll('*').remove();
 
-        //prep data
-        const monthNames = ["Jan", "Feb", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  //prep data
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
+                      "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-        //count intakes per month
-        const monthCounts = d3.rollups(
-          data,
-          v => v.length,
-          d => {
-            if (!d.intakeDate) return "Unknown";
-            return new Date(d.intakeDate).getMonth()
-          }
-        )
-        .filter(([m]) => m !== "Unknown")
-        .map(([month, count]) => ({
-        month: monthNames[Number(month)],
-        count
-  }));
+  //count intakes per month
+  const monthCounts = d3.rollups(
+    data,
+    v => v.length,
+    d => {
+      if (!d.intakeDate) return -1;
+      return new Date(d.intakeDate).getMonth()
+    }
+  )
+  .filter(([m]) => m !== -1)
+  .map(([monthIndex, count]) => ({
+    monthIndex,
+    month: monthNames[monthIndex],
+  count
+}));
+  monthCounts.sort((a,b) => a.monthIndex-b.monthIndex);
+
   // --- Dimensions ---
   const margin = { top: 10, right: 10, bottom: 50, left: 55 };
   const width = svgElement.clientWidth - margin.left - margin.right;
@@ -92,18 +97,42 @@ function drawBarChart(svgElement: SVGSVGElement, data: housingRecord[] ) { //the
     .nice()
     .range([height, 0]);
 
-  // --- Gridlines ---
-  chart
+  // --- Horizontal Gridlines ---
+  const yGrid = chart
     .append("g")
-    .attr("class", "grid")
     .call(
       d3.axisLeft(y)
-        .ticks(6)
         .tickSize(-width)
         .tickFormat(() => "")
-    )
-    .selectAll("line")
-    .attr("stroke", "#E5E7EB");
+    );
+
+  yGrid.select(".domain").remove();
+  yGrid.selectAll("line")
+    .attr("stroke", "#E5E7EB")
+    .attr("stroke-dasharray", "4 4")
+    .attr("stroke-width", 1);
+
+  // Remove bottom gridline so solid X-axis shows
+  yGrid.select("line:last-of-type").remove();
+
+  // --- Vertical Gridlines ---
+  const xGrid = chart
+    .append("g")
+    .attr("transform", `translate(0, ${height})`)
+    .call(
+      d3.axisBottom(x)
+        .tickSize(-height)
+        .tickFormat(() => "")
+    );
+
+  xGrid.select(".domain").remove();
+  xGrid.selectAll("line")
+    .attr("stroke", "#E5E7EB")
+    .attr("stroke-dasharray", "4 4")
+    .attr("stroke-width", 1);
+  
+  // Remove left-most vertical gridline so solid Y-axis shows
+  xGrid.select("line:first-of-type").remove();
 
   // --- Bars ---
   chart
@@ -118,22 +147,49 @@ function drawBarChart(svgElement: SVGSVGElement, data: housingRecord[] ) { //the
     .attr("fill", "#D28A93") // pinkish like screenshot
     .attr("rx", 4);
 
-  // --- X Axis ---
-  chart
-    .append("g")
-    .attr("transform", `translate(0, ${height})`)
-    .call(d3.axisBottom(x))
-    .selectAll("text")
-    .style("font-size", "12px")
-    .style("font-family", "Manrope")
-    .style("fill", "#6B6B6B");
+// --- X Axis ---
+const xAxis = chart
+  .append("g")
+  .attr("transform", `translate(0, ${height})`)
+  .call(d3.axisBottom(x));
 
-  // --- Y Axis ---
-  chart
-    .append("g")
-    .call(d3.axisLeft(y))
-    .selectAll("text")
-    .style("font-size", "12px")
-    .style("font-family", "Manrope")
-    .style("fill", "#6B6B6B");
+xAxis.selectAll("text")
+  .style("font-size", "12px")
+  .style("font-family", "Manrope")
+  .style("fill", "#6B6B6B");
+xAxis.select(".domain")
+  .attr("stroke", "black")
+  .attr("stroke-width", 1);
+
+// --- Y Axis ---
+const yAxis = chart
+  .append("g")
+  .call(d3.axisLeft(y));
+
+yAxis.selectAll("text")
+  .style("font-size", "12px")
+  .style("font-family", "Manrope")
+  .style("fill", "#6B6B6B");
+yAxis.select(".domain")
+  .attr("stroke", "black")
+  .attr("stroke-width", 1);
+  
+// --- Dashed Top + Right Borders ---
+chart.append("line")
+  .attr("x1", 0)
+  .attr("x2", width)
+  .attr("y1", 0)
+  .attr("y2", 0)
+  .attr("stroke", "#E5E7EB")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4 4");
+
+chart.append("line")
+  .attr("x1", width)
+  .attr("x2", width)
+  .attr("y1", 0)
+  .attr("y2", height)
+  .attr("stroke", "#E5E7EB")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4 4");
 }
