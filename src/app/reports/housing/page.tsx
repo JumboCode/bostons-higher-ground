@@ -1,10 +1,8 @@
 import DashboardTop from '@/components/DashboardTop';
-import * as d3 from "d3";
 import { getAllData } from '@/lib/getAllData';
 import { Poppins, Manrope } from "next/font/google";
-import icon from "./Icon.png";
-import Image from "next/image";
 import BarChart from "./barchart";
+import LineChart from "./linechart"
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -39,6 +37,7 @@ export default function Housing(){
         <div className="ml-[30px] w-[1050px] mt-[30px]">
             <DashboardTop pageTitle="Housing Dashboard" title= "Total Families Enrolled" body="224" subtext="All-time enrollment" bgColor="bg-[#E0F7F4]" title1="Families Housed to Date" title2="Average Wait Time" bgColor1="bg-[#F0E7ED]" bgColor2="bg-[#FFF8E9]" body1="158" body2="48 days" subtext1="70.5% success rate" subtext2="Intake to housed" mt="-mt-[10px]" />
             <BarChart data={final_Data} />
+            {/* <LineChart data={final_Data}/> */}
         </div>        
     );
 }
