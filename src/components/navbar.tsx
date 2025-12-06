@@ -41,6 +41,8 @@ export default function Navbar() {
                     src="/Logo.png"
                     alt="Boston Higher Ground logo"
                     className="w-52 h-10 mb-2"
+                    width={200}
+                    height={1000}
                 />
             </div>
 
