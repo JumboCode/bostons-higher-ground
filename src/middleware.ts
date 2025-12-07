@@ -34,7 +34,7 @@ export async function middleware(req: NextRequest) {
     if (ADMIN_ROUTES.some((route) => path.startsWith(route))) {
         const userIsAdmin = await isAdmin(session.user.id);
         if (!userIsAdmin) {
-            return NextResponse.redirect(new URL("/", req.url));
+            return NextResponse.redirect(new URL("/reports/overview", req.url));
         }
     }
 

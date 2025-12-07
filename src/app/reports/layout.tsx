@@ -18,18 +18,16 @@ export default async function Layout({
 
     return (
         <>
-            <div className="flex">
-                <NavBar />
-                <div className="bg-[#F5F5F5] w-full flex-col">
-                    <div className="min-h-[40px] bg-white top-0 flex justify-end px-5 py-3">
-                        {userName || "John Doe"}
-                    </div>
-                    {children}
+            <NavBar />
+
+            <div className="ml-[280px] bg-[#F5F5F5] min-h-screen flex flex-col">
+                <div className="min-h-[40px] bg-white flex justify-end px-5 py-3 sticky top-0 z-30">
+                    {userName || "John Doe"}
                 </div>
+
+                <div className="flex-1">{children}</div>
             </div>
-            <div className="absolute right-0 top-0 z-50 pointer-events-auto">
-                <ReportBuilderToggle />
-            </div>
+            <ReportBuilderToggle />
         </>
     );
 }
