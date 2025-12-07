@@ -26,7 +26,7 @@
     "feather-icons": "^4.29.2",
     "feather-icons-react": "^0.9.0",
     "lucide-react": "^0.553.0",
-    "next": "15.5.4",
+    "next": "15.5.7",
     "pg": "^8.16.3",
     "react": "19.1.0",
     "react-day-picker": "^9.11.1",
