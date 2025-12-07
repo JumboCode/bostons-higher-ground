@@ -7,7 +7,7 @@ import InviteCard from "../../components/inviteCards";
 import { Manrope } from "next/font/google";
 const manrope = Manrope({ subsets:["latin"] });
 
-// import popins
+// import poppins
 import { Poppins } from "next/font/google";
 const poppins = Poppins({
   subsets: ["latin"],
@@ -15,7 +15,6 @@ const poppins = Poppins({
 });
 
 import {Search, CircleCheckBig, UsersRound, Send, RefreshCcw, MoreVertical, Shield, Eye, Trash2} from "lucide-react";
-
 
 type User = {
     name: string;
@@ -41,9 +40,7 @@ export default function Admin(){
 
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] ">
-
             <NavBar />
-
             <div className="relative flex-1 overflow-x-hidden min-h-[717px]">
                 {/*Top bar*/}
                 <div className="w-full h-[64px] border-b border-[#E5E7EB] bg-[#FFFFFF]"></div>

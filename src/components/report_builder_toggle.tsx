@@ -16,7 +16,7 @@ export default function ReportBuilderToggle() {
                     <button
                         id="showRBbutton"
                         onClick={() => setShowRB(true)}
-                        className="flex-col h-1/8 text-gray-600 hover:text-gray-800 px-4 py-3 rounded-lg shadow-md transition-all"
+                        className="flex-col h-1/8 bg-white drop-shadow-md text-gray-600 hover:text-gray-800 px-4 py-3 rounded-lg shadow-md transition-all"
                     >
                         <FileText className="justify-self-center ml-1 mr-2 my-1 w-5 h-5"/>
                         Report
