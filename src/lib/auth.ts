@@ -13,13 +13,14 @@ export const auth = betterAuth({
         enabled: true,
     },
 
-    plugins: [nextCookies(),
+    plugins: [
+        nextCookies(),
         emailOTP({
             otpLength: 6,
             expiresIn: 15 * 60,
-            sendVerificationOTP: async ({email, otp, type}) => {
-                await sendEmail({email, otp, type});
-            }
-        })
+            sendVerificationOTP: async ({ email, otp, type }) => {
+                await sendEmail({ email, otp, type });
+            },
+        }),
     ],
 });
