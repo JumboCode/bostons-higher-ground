@@ -67,8 +67,9 @@ export default function Schools() {
                     subtext1=""
                     subtext2=""
                     mt="mt-10"
-                    children={<SchoolFilterBar />}
-                />
+                >
+                    <SchoolFilterBar />
+                </DashboardTop>
             </div>
             <div className="p-20">
                 <Chart

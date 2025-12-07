@@ -102,6 +102,7 @@ export default function LogIn() {
 
             if (result.error) {
                 setError(result.error.message ?? "An unknown error occurred");
+                console.error(error);
             } else {
                 setError(null);
                 console.log("Successfully logged in!");

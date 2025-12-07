@@ -11,21 +11,6 @@ import { handleBetterAuthError } from "@/lib/usersFunction";
 
 /* Adds a user*/
 export async function POST (request: Request) {
-    // const session = await auth.api.getSession({headers:( request.headers) });
-
-    // /* If the client is not logged in, return an unauthorized error */
-    // if (!session)  {
-    //     return Response.json({error: "unauthorized"}, {status: 401});
-    // }
-
-    // /* Grabs the userid associated with the current session */
-    // const Id = session.user.id;
-
-    // /* If the client is not an admin, return an unauthorized error */
-    // if (! getUserPermission(Id)) {
-    //     return Response.json({error: "unauthorized"}, {status: 401});
-    // }
-
     /* Grabs info from client*/
     const body = await request.json();
 
@@ -40,10 +25,7 @@ export async function POST (request: Request) {
         });
         
         if (!newUser) {
-            return Response.json({
-                success: false,
-                error: "Error signing up user"},
-                {status: 500});
+            return Response.json({ success: false, error: "Error signing up user"}, {status: 500});
         } else {
             const userInfoId = crypto.randomUUID();
 
@@ -59,7 +41,8 @@ export async function POST (request: Request) {
     }
     catch (err: unknown) {
         if (err instanceof APIError) {
-            return handleBetterAuthError(err)
+            // return handleBetterAuthError(err)
+            return Response.json({error: err.message || "Unknown server error" }, {status: 500})
         }
         else {
             return Response.json({error: "Unknown server error"}, {status: 500})
