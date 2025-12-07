@@ -1,7 +1,7 @@
 "use client";
 
 import { House, FileText, Settings } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
@@ -24,8 +24,6 @@ export default function Navbar({ userName }: { userName: string }) {
     const pathname = usePathname();
     const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
-
-    useEffect(() => {}, [pathname]);
 
     return (
         <nav

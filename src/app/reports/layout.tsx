@@ -33,10 +33,9 @@ export default async function Layout({
                     </div>
                     {children}
                 </div>
+                <div className="flex-1">{children}</div>
             </div>
-            <div className="absolute right-0 top-0 z-50 pointer-events-auto">
-                <ReportBuilderToggle />
-            </div>
+            <ReportBuilderToggle />
         </>
     );
 }
