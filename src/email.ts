@@ -1,1 +1,0 @@
-import nodemailer from "node-module/nodemailer";
