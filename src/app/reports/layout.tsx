@@ -19,12 +19,10 @@ export default async function Layout({
     return (
         <>
             <NavBar />
-
             <div className="ml-[280px] bg-[#F5F5F5] min-h-screen flex flex-col">
-                <div className="min-h-[40px] bg-white flex justify-end px-5 py-3 sticky top-0 z-30">
+                <div className="min-h-[40px] bg-white flex justify-end px-5 py-3 sticky top-0 z-30 shadow-sm">
                     {userName || "John Doe"}
                 </div>
-
                 <div className="flex-1">{children}</div>
             </div>
             <ReportBuilderToggle />
