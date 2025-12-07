@@ -6,13 +6,16 @@ import { emailOTP } from "better-auth/plugins";
 import { sendEmail } from "./email";
 
 export const auth = betterAuth({
+    trustedOrigins: [
+        "http://localhost:3000",
+        ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])
+    ],
     database: drizzleAdapter(db, {
         provider: "pg",
     }),
     emailAndPassword: {
         enabled: true,
     },
-
     plugins: [
         nextCookies(),
         emailOTP({
