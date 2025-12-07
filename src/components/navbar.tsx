@@ -26,9 +26,7 @@ export default function Navbar() {
     const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
 
-    useEffect(() => {
-        
-    }, [pathname]);
+    useEffect(() => {}, [pathname]);
 
     return (
         <nav
@@ -37,7 +35,7 @@ export default function Navbar() {
             {/* Logo Area */}
             <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">
                 <Image
-                    src="/Logo.png"
+                    src="/Logo.svg"
                     alt="Boston Higher Ground logo"
                     className="w-52 h-10 mb-2"
                     width={52}

@@ -4,24 +4,19 @@ import { NextResponse, NextRequest } from "next/server";
 import { isAdmin } from "./lib/checkPermissions";
 import { hasVerificationToken } from "./lib/verification";
 
-const PUBLIC_ROUTES = [
-    "/login",
-    "/onboarding/verify-invite",
-];
+const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite"];
 
-const VERIFICATION_REQUIRED_ROUTES = [
-    "/onboarding/create-account",
-];
+const VERIFICATION_REQUIRED_ROUTES = ["/onboarding/create-account"];
 
 const ADMIN_ROUTES = ["/admin"];
 
 export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
-    const session = await auth.api.getSession({ headers: req.headers });
 
     if (PUBLIC_ROUTES.includes(path)) {
         return NextResponse.next();
     }
+    const session = await auth.api.getSession({ headers: req.headers });
 
     if (!session) {
         return NextResponse.redirect(new URL("/login", req.url));

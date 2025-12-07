@@ -134,7 +134,7 @@ export default function LogIn() {
             <section className="min-h-screen flex items-center justify-center">
                 <div
                     style={{
-                        width: "384px",
+                        width: "450px",
                         height: "695px",
                         borderRadius: "24px",
                         backgroundColor: "#FFFFFF",
@@ -190,7 +190,10 @@ export default function LogIn() {
                     </p>
 
                     {/* Currently a D,v but turn to FORM (visual only) */}
-                    <form className="mt-8 space-y-5" onSubmit={handleFormSubmit}>
+                    <form
+                        className="mt-8 space-y-5"
+                        onSubmit={handleFormSubmit}
+                    >
                         {/* EMAIL FIELD */}
                         <div>
                             <label
@@ -234,7 +237,6 @@ export default function LogIn() {
                             className={`${manrope.className} mt-1 w-full text-center text-white transition`}
                             style={{
                                 backgroundColor: "#E59AA8",
-                                width: "318px",
                                 height: "48px",
                                 borderRadius: "14px",
                                 transform: "rotate(0deg)",
