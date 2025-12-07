@@ -47,7 +47,7 @@ filtered_Data.forEach((d) => {
 });
 
 export default function Schools() {
-    console.log(filtered_Data);
+    // console.log(filtered_Data);
     return (
         <>
             <div className="w-full">

@@ -40,7 +40,7 @@ export default function Admin(){
 
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] ">
-            <NavBar />
+            <NavBar userName="TODO"/>
             <div className="relative flex-1 overflow-x-hidden min-h-[717px]">
                 {/*Top bar*/}
                 <div className="w-full h-[64px] border-b border-[#E5E7EB] bg-[#FFFFFF]"></div>

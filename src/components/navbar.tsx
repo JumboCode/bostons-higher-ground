@@ -1,13 +1,12 @@
 "use client";
 
-// Import your image components
 import { House, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
-// Color palette constants
 const SOFT_PINK = "bg-[#DE8F9C]";
 const LIGHT_GRAY = "bg-[#414141]";
 
@@ -21,7 +20,7 @@ const TAB_CONFIG = [
     { name: "Admin", Icon: Settings, href: "/admin" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ userName }: { userName: string }) {
     const pathname = usePathname();
     const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
@@ -30,7 +29,7 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`w-[280px] min-h-screen bg-bhg-gray-300 text-white flex flex-col`}
+            className={`w-[280px] h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col`}
         >
             {/* Logo Area */}
             <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">
@@ -43,10 +42,7 @@ export default function Navbar() {
                 />
             </div>
 
-            {/* Spacer */}
-            <div className="h-4" />
-
-            <ul className="flex flex-col gap-4 px-5">
+            <ul className="flex flex-col gap-4 p-5">
                 {TAB_CONFIG.map(({ name, Icon, href }) => {
                     const isSelected = selected === name;
                     return (
@@ -75,6 +71,11 @@ export default function Navbar() {
                     );
                 })}
             </ul>
+            
+            <button onClick={async () => {
+                await authClient.signOut()
+            }}
+            className="cursor-pointer underline">{userName}</button>
         </nav>
     );
 }

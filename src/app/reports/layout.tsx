@@ -4,7 +4,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import NavBar from "@/components/navbar";
 import ReportBuilderToggle from "@/components/report_builder_toggle";
-import { authClient } from "@/lib/auth-client";
+import FilterBar from "@/components/FilterBar";
+import { redirect } from "next/navigation";
 
 export default async function Layout({
     children,
@@ -14,6 +15,11 @@ export default async function Layout({
     const session = await auth.api.getSession({
         headers: await headers(),
     });
+
+    if (!session) {
+        redirect("/login");
+    }
+
     const userName = session?.user.name;
 
     return (
@@ -21,7 +27,8 @@ export default async function Layout({
             <div className="flex">
                 <NavBar />
                 <div className="bg-[#F5F5F5] w-full flex-col">
-                    <div className="min-h-[40px] bg-white top-0 flex justify-end px-5 py-3">
+                    <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between px-5 py-3">
+                        <FilterBar />
                         {userName || "John Doe"}
                     </div>
                     {children}
