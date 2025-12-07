@@ -25,11 +25,11 @@ export default async function Layout({
     return (
         <>
             <div className="flex">
-                <NavBar />
+                <NavBar userName={userName}/>
                 <div className="bg-[#F5F5F5] w-full flex-col">
-                    <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between px-5 py-3">
+                    <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between py-3 drop-shadow-sm">
                         <FilterBar />
-                        {userName || "John Doe"}
+                        {/* {userName || "John Doe"} */}
                     </div>
                     {children}
                 </div>

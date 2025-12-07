@@ -4,7 +4,7 @@ import { House, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 const SOFT_PINK = "bg-[#DE8F9C]";
@@ -73,7 +73,8 @@ export default function Navbar({ userName }: { userName: string }) {
             </ul>
             
             <button onClick={async () => {
-                await authClient.signOut()
+                await authClient.signOut();
+                redirect("/");
             }}
             className="cursor-pointer underline">{userName}</button>
         </nav>
