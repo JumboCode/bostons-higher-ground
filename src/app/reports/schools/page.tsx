@@ -1,10 +1,11 @@
-import FastFactCard from "@/components/FastFactCard";
 import DashboardTop from "@/components/DashboardTop";
 import SchoolFilterBar from "@/components/SchoolFilterBar";
 import { getAllData } from "@/lib/getAllData";
-import { Poppins, Manrope } from "next/font/google";
-import { filter } from "d3";
-import { dateDuration } from "drizzle-orm/gel-core";
+import Chart from "@/components/chart";
+import PartnerAndHomeless from "./partnerandhomeless";
+import SchoolsByCityChart from "./schoolsbycity";
+import HousingSourceChart from "./housingsource";
+import StudentsByCityChart from "./studentsbycity";
 
 // Grabbing all data from the database
 const data = await getAllData();
@@ -65,11 +66,39 @@ export default function Schools() {
                     body2="92%"
                     subtext1=""
                     subtext2=""
-                    mt="mt-[135px]"
+                    mt="mt-10"
+                    children={<SchoolFilterBar />}
                 />
             </div>
-            <div className="-mt-[300px] pl-10 pr-30 w-full">
-                <SchoolFilterBar />
+            <div className="p-20">
+                <Chart
+                    title="Partner Schools & Homeless Student Counts"
+                    appliedFilters="Fiscal Year 2025"
+                >
+                    <PartnerAndHomeless data={data} />
+                </Chart>
+                <Chart
+                    title="Schools by City"
+                    appliedFilters="Fiscal Year 2025"
+                >
+                    <div className="w-[600px]">
+                        <SchoolsByCityChart data={data} />
+                    </div>
+                </Chart>
+                <Chart
+                    title="Housing Sources"
+                    appliedFilters="Fiscal Year 2025"
+                >
+                    <HousingSourceChart data={data} />
+                </Chart>
+                <Chart
+                    title="Students by City"
+                    appliedFilters="Fiscal Year 2025"
+                >
+                    <div className="w-[600px]">
+                        <StudentsByCityChart data={data} />
+                    </div>
+                </Chart>
             </div>
         </>
     );

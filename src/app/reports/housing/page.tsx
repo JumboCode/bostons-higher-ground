@@ -5,6 +5,7 @@ import FamilyIntakeBarChart from "./barchart";
 import LineChart from "./linechart";
 import DaysHousedBarChart from "./barchart2";
 import Chart from "@/components/chart";
+import LocationBarChart from "./locationchart";
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -73,6 +74,13 @@ export default function Housing() {
                     appliedFilters="Fiscal Year 2025"
                 >
                     <DaysHousedBarChart data={final_Data} />
+                </Chart>
+
+                <Chart
+                    title="Active vs Housed Families by Location"
+                    appliedFilters="Fiscal Year 2025"
+                >
+                    <LocationBarChart data={final_Data} />
                 </Chart>
             </div>
         </div>
