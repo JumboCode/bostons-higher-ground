@@ -1,7 +1,7 @@
 "use client";
 
 import { House, FileText, Settings } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
@@ -25,9 +25,11 @@ export default function Navbar({ userName }: { userName: string }) {
     const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
 
+    useEffect(() => {}, [pathname]);
+
     return (
         <nav
-            className={`w-[280px] h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col`}
+            className={`w-[280px] h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
         >
             {/* Logo Area */}
             <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">

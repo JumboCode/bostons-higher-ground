@@ -19,7 +19,7 @@ export default function Chart({ title, children, appliedFilters }: ChartProps) {
     };
 
     return (
-        <div className="bg-white rounded-3xl shadow-sm p-8 mb-6 w-fit">
+        <div className="bg-white rounded-3xl shadow-sm p-8 mb-6 w-full max-w-[900px]">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-gray-800">

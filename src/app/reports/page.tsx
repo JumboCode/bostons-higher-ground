@@ -54,10 +54,8 @@ function DraftReportPopulated() {
                         </button>
                     </div>
                 </div>
-                <div className="flex flex-col ReportNameEdit space-y-1 pt-5">
-                    <div className="text-[#555555] text-sm font-medium">
-                        Report Name
-                    </div>
+                <div className="flex flex-col ReportNameEdit space-y-1">
+                    <div className="text-sm font-medium">Report Name</div>
                     <div className="ReportNameTextField">
                         <div className="relative w-full">
                             <SquarePen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -93,15 +91,15 @@ function DraftReportPopulated() {
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
+                    <Download className="w-4 h-4"/>
                     <div className="font-medium text-sm">Export as PDF</div>
                 </button>
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
+                    <Download className="w-4 h-4"/>
                     <div className="font-medium text-sm">Export as CSV</div>
                 </button>
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
+                    <Download className="w-4 h-4"/>
                     <div className="font-medium text-sm">Export as PNG</div>
                 </button>
             </div>
@@ -196,15 +194,11 @@ function ReportEntry({
 export default function Archive() {
     return (
         <main className="bg-[#F5F5F5] p-10 flex flex-col overflow-scroll gap-y-8">
-            <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
-                Reports
-            </h1>
+            <h1 className="text-4xl font-extrabold text-[#555555] gap-8">Reports</h1>
             {/* <DraftReport /> */}
             <DraftReportPopulated />
             <div className="flex flex-col gap-y-4">
-                <h2 className="text-xl font-extrabold text-[#555555] gap-8">
-                    Archived Reports
-                </h2>
+                <h2 className="text-xl font-extrabold text-[#555555] gap-8">Archived Reports</h2>
                 <ReportEntry
                     title="Q4 Report 2025"
                     date={new Date(2025, 0, 4)}

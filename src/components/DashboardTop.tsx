@@ -17,6 +17,7 @@ interface DashboardTopProps {
     bgColor1: string;
     bgColor2: string;
     mt: string;
+    children?: React.ReactNode;
 }
 
 const DashboardTop: React.FC<DashboardTopProps> = ({
@@ -34,6 +35,7 @@ const DashboardTop: React.FC<DashboardTopProps> = ({
     subtext1,
     subtext2,
     mt,
+    children,
 }) => {
     return (
         <>
@@ -58,6 +60,8 @@ const DashboardTop: React.FC<DashboardTopProps> = ({
                     </button>
                 </div>
             </div>
+
+            <div>{children}</div>
 
             <div className="flex">
                 <div className={`flex gap-[70px] ml-20 ${mt}`}>

@@ -27,15 +27,16 @@ export default async function Layout({
             <div className="flex">
                 <NavBar userName={userName}/>
                 <div className="bg-[#F5F5F5] w-full flex-col">
-                    <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between py-3 drop-shadow-sm">
+                    <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between py-3 drop-shadow-sm z-50">
                         <FilterBar />
                         {/* {userName || "John Doe"} */}
                     </div>
                     {children}
                 </div>
-                <div className="flex-1">{children}</div>
             </div>
-            <ReportBuilderToggle />
+            <div className="absolute right-0 top-0 z-50 pointer-events-auto">
+                <ReportBuilderToggle />
+            </div>
         </>
     );
 }

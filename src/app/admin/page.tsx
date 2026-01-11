@@ -3,17 +3,6 @@ import { useState } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/inviteCards";
 
-// import font
-import { Manrope } from "next/font/google";
-const manrope = Manrope({ subsets:["latin"] });
-
-// import poppins
-import { Poppins } from "next/font/google";
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["700"], // bold weight
-});
-
 import {Search, CircleCheckBig, UsersRound, Send, RefreshCcw, MoreVertical, Shield, Eye, Trash2} from "lucide-react";
 
 type User = {
