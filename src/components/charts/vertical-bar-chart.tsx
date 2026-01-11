@@ -41,6 +41,7 @@ export function VerticalBarChart({
 
         if (!data.length) return;
 
+        const targetHeight = height ?? 420;
         const margin: Margin = {
             top: 10,
             right: 10,
@@ -52,7 +53,7 @@ export function VerticalBarChart({
             height: innerHeight,
             outerWidth,
             outerHeight,
-        } = computeInnerDimensions(svgEl, width, height, margin);
+        } = computeInnerDimensions(svgEl, width, targetHeight, margin);
 
         const chart = svg
             .attr("width", outerWidth)
@@ -195,7 +196,7 @@ export function VerticalBarChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full h-[380px]"}
+            className={className ?? "w-full max-w-[900px] h-[420px]"}
             role="img"
         />
     );

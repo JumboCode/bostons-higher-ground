@@ -53,11 +53,14 @@ export function HorizontalBarChart({
             new Set(data.flatMap((d) => d.series.map((s) => s.label)))
         );
         const seriesCount = Math.max(seriesKeys.length, 1);
+        const legendSpace = seriesKeys.length > 1 ? 60 : 0;
 
+        const targetHeight =
+            height ?? Math.max(360, data.length * 52 + 120 + legendSpace);
         const margin: Margin = {
             top: 20,
             right: 80,
-            bottom: xLabel ? 70 : 50,
+            bottom: (xLabel ? 70 : 50) + legendSpace,
             left: yLabel ? 160 : 140,
         };
         const {
@@ -65,7 +68,7 @@ export function HorizontalBarChart({
             height: innerHeight,
             outerWidth,
             outerHeight,
-        } = computeInnerDimensions(svgEl, width, height ?? 500, margin);
+        } = computeInnerDimensions(svgEl, width, targetHeight, margin);
 
         const chart = svg
             .attr("width", outerWidth)
@@ -221,7 +224,8 @@ export function HorizontalBarChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full h-[500px]"}
+            className={className ?? "w-full max-w-[900px]"}
+            style={{ overflow: "visible" }}
             role="img"
         />
     );

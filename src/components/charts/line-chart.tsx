@@ -40,6 +40,7 @@ export function LineChart({
         svg.selectAll("*").remove();
         if (!data.length) return;
 
+        const targetHeight = height ?? 420;
         const margin: Margin = {
             top: 10,
             right: 10,
@@ -51,7 +52,7 @@ export function LineChart({
             height: innerHeight,
             outerWidth,
             outerHeight,
-        } = computeInnerDimensions(svgEl, width, height, margin);
+        } = computeInnerDimensions(svgEl, width, targetHeight, margin);
 
         const chart = svg
             .attr("width", outerWidth)
@@ -207,7 +208,7 @@ export function LineChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full h-[380px]"}
+            className={className ?? "w-full max-w-[900px] h-[420px]"}
             role="img"
         />
     );

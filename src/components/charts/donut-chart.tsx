@@ -31,10 +31,12 @@ export function DonutChart({
         svg.selectAll("*").remove();
         if (!data.length) return;
 
-        const outerWidth = width ?? (svgEl.clientWidth || 500);
-        const outerHeight = height ?? (svgEl.clientHeight || 500);
+        const outerWidth = width ?? (svgEl.clientWidth || 640);
+        const legendSpace = 100;
+        const contentHeight = height ?? (svgEl.clientHeight || 420);
+        const outerHeight = contentHeight + legendSpace;
         const margin = 40;
-        const radius = Math.min(outerWidth, outerHeight) / 2 - margin;
+        const radius = Math.min(outerWidth, contentHeight) / 2 - margin;
         const innerRadius = radius * 0.6;
 
         const chart = svg
@@ -166,7 +168,8 @@ export function DonutChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full h-[500px]"}
+            className={className ?? "w-full max-w-[900px] h-[520px]"}
+            style={{ overflow: "visible" }}
             role="img"
         />
     );
