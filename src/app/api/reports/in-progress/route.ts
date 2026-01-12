@@ -25,6 +25,31 @@ function parseChartEntry(input: unknown): ChartEntry | null {
     };
 }
 
+export async function GET(request: Request) {
+    const session = await auth.api.getSession({ headers: request.headers });
+
+    if (!session) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+
+    const existing = await db.query.inProgressReports.findFirst({
+        where: eq(inProgressReports.userId, userId),
+    });
+
+    const charts: ChartEntry[] = Array.isArray(existing?.charts)
+        ? (existing!.charts as ChartEntry[])
+        : [];
+
+    return Response.json({
+        success: true,
+        reportId: existing?.id ?? null,
+        charts,
+        chartCount: charts.length,
+    });
+}
+
 export async function POST(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers });
 

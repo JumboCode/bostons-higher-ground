@@ -1,13 +1,40 @@
 "use client";
+"use client";
+
 import { useState, useEffect } from "react";
 import ReportBuilder from "./report_builder";
 import { FileText, Circle } from "lucide-react";
 
 export default function ReportBuilderToggle() {
-    /* if we are showing the report side bar */
     const [showRB, setShowRB] = useState(false);
-    /* number of graphs added to report */
     const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const res = await fetch("/api/reports/in-progress");
+                if (!res.ok) return;
+                const data = (await res.json()) as {
+                    chartCount?: number;
+                    charts?: { title: string; filters: string | null }[];
+                };
+                const nextCount =
+                    typeof data.chartCount === "number"
+                        ? data.chartCount
+                        : Array.isArray(data.charts)
+                          ? data.charts.length
+                          : 0;
+                setCount(nextCount);
+            } catch {
+                // ignore
+            }
+        };
+
+        fetchCount();
+        const onUpdate = () => fetchCount();
+        window.addEventListener("report-updated", onUpdate);
+        return () => window.removeEventListener("report-updated", onUpdate);
+    }, []);
 
     // Prevent body scroll when report builder is open
     useEffect(() => {
@@ -62,8 +89,8 @@ export default function ReportBuilderToggle() {
             ) : (
                 <>
                     <ReportBuilder
-                        count={count}
                         onClose={() => setShowRB(false)}
+                        onCountChange={setCount}
                     />
                 </>
             )}

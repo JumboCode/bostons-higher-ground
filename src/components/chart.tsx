@@ -34,6 +34,7 @@ export default function Chart({
                           filters: appliedFilters ?? null,
                       }),
                   });
+                  window.dispatchEvent(new Event("report-updated"));
               } catch (error) {
                   console.error("Failed to add chart to report", error);
               }
