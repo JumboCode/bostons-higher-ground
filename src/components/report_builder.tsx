@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -6,24 +7,61 @@ import {
     GripVertical,
     FileDown,
     FileText as FileTextIcon,
+    ArrowUp,
+    ArrowDown,
 } from "lucide-react";
 
 function ChartEntry({
     title,
     filters,
+    onDelete,
+    onMoveUp,
+    onMoveDown,
+    canMoveUp,
+    canMoveDown,
 }: {
     title: string;
     filters: string | null;
+    onDelete: () => Promise<void> | void;
+    onMoveUp: () => Promise<void> | void;
+    onMoveDown: () => Promise<void> | void;
+    canMoveUp: boolean;
+    canMoveDown: boolean;
 }) {
     return (
-        <div className="mx-1 border-2 border-gray-200 py-5 pl-4 pr-8 rounded-xl mb-3">
-            <div className="flex">
-                <GripVertical color="#a9a9a9" className="mt-2 mr-3 w-5 h-5" />
-                <div>
+        <div className="group mx-1 border-2 border-gray-200 py-5 pl-4 pr-8 rounded-xl mb-3 transition-colors hover:border-gray-300">
+            <div className="flex items-start gap-2">
+                <GripVertical color="#a9a9a9" className="mt-1.5 w-5 h-5" />
+                <div className="flex-1">
                     <div className="text-base font-semibold">{title}</div>
                     <div className="text-sm text-gray-400">
                         {filters ? filters : "No filters applied"}
                     </div>
+                </div>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={onMoveUp}
+                        disabled={!canMoveUp}
+                        className="text-gray-500 hover:text-gray-800 disabled:opacity-30"
+                        aria-label="Move chart up"
+                    >
+                        <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={onMoveDown}
+                        disabled={!canMoveDown}
+                        className="text-gray-500 hover:text-gray-800 disabled:opacity-30"
+                        aria-label="Move chart down"
+                    >
+                        <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        className="text-gray-500 hover:text-gray-800"
+                        aria-label="Remove chart from report"
+                    >
+                        ×
+                    </button>
                 </div>
             </div>
         </div>
@@ -102,6 +140,76 @@ export default function ReportBuilder({
         };
     }, [onCountChange]);
 
+    const handleDelete = async (index: number) => {
+        setCharts((prev) => {
+            const next = prev.filter((_, i) => i !== index);
+            onCountChange?.(next.length);
+            return next;
+        });
+
+        try {
+            const res = await fetch("/api/reports/in-progress", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ index }),
+            });
+            if (!res.ok) {
+                const retry = await fetch("/api/reports/in-progress");
+                if (retry.ok) {
+                    const data = (await retry.json()) as {
+                        charts?: ReportChartEntry[];
+                    };
+                    const nextCharts = Array.isArray(data.charts)
+                        ? data.charts
+                        : [];
+                    setCharts(nextCharts);
+                    onCountChange?.(nextCharts.length);
+                }
+            }
+        } catch {
+            // ignore network errors for now
+        }
+
+        window.dispatchEvent(new Event("report-updated"));
+    };
+
+    const handleMove = async (fromIndex: number, toIndex: number) => {
+        if (toIndex < 0 || toIndex >= charts.length) return;
+
+        setCharts((prev) => {
+            const next = [...prev];
+            const [moved] = next.splice(fromIndex, 1);
+            next.splice(toIndex, 0, moved);
+            onCountChange?.(next.length);
+            return next;
+        });
+
+        try {
+            const res = await fetch("/api/reports/in-progress", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fromIndex, toIndex }),
+            });
+            if (!res.ok) {
+                const retry = await fetch("/api/reports/in-progress");
+                if (retry.ok) {
+                    const data = (await retry.json()) as {
+                        charts?: ReportChartEntry[];
+                    };
+                    const nextCharts = Array.isArray(data.charts)
+                        ? data.charts
+                        : [];
+                    setCharts(nextCharts);
+                    onCountChange?.(nextCharts.length);
+                }
+            }
+        } catch {
+            // ignore network errors for now
+        }
+
+        window.dispatchEvent(new Event("report-updated"));
+    };
+
     const count = charts.length;
 
     return (
@@ -130,6 +238,11 @@ export default function ReportBuilder({
                                 key={`${chart.title}-${idx}`}
                                 title={chart.title}
                                 filters={chart.filters}
+                                onDelete={() => handleDelete(idx)}
+                                onMoveUp={() => handleMove(idx, idx - 1)}
+                                onMoveDown={() => handleMove(idx, idx + 1)}
+                                canMoveUp={idx > 0}
+                                canMoveDown={idx < charts.length - 1}
                             />
                         ))
                     ) : (
