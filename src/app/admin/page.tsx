@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
@@ -26,9 +26,10 @@ type User = {
 export default function Admin() {
     // for invite staff pop up
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Hardcoded users array
-    const [users, setUsers] = useState<User[]>([
+    const users: User[] = [
         {
             name: "Alice Johnson",
             email: "alice@example.com",
@@ -42,10 +43,14 @@ export default function Admin() {
             status: "Active",
         },
         { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
-    ]);
+    ];
+    const numMembers = users.length;
 
-    // numMembers
-    const [numMembers, setNumMembers] = useState(users.length);
+    const filteredUsers = useMemo(() => (
+        users.filter((user) =>
+            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+    ), [searchQuery]);
 
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] ">
@@ -109,6 +114,8 @@ export default function Admin() {
                         <input
                             type="text"
                             placeholder="Search by name or email..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full mt-[12px] top-[66px] h-[55px] rounded-[14px] border border-[#D9D9D9] px-[44px] py-[12px] pr-[16px] outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
                         ></input>
                     </div>
@@ -130,9 +137,10 @@ export default function Admin() {
 
                         {/* Rows */}
                         <div className="flex flex-col gap-2 overflow-auto max-h-[60vh]">
-                            {users.map((user, idx) => (
-                                <UserRow key={idx} user={user} />
-                            ))}
+                            {filteredUsers.length > 0 ?
+                                filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
+                             : <p>No users found.</p>
+                            }
                         </div>
                     </div>
                 </div>

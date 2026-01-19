@@ -253,8 +253,8 @@ export default function ReportBuilder({
                                 height="60"
                             />
                             <p className="mt-8 text-center text-md mb-2">
-                                No charts added yet. Click the "+" icon on any
-                                chart to add it to your Report
+                                No charts added yet. Click the &quot;+&quot;
+                                icon on any chart to add it to your Report
                             </p>
                         </div>
                     )}

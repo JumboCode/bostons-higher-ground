@@ -7,7 +7,6 @@ import {
     DEFAULT_COLORS,
     DEFAULT_FONT,
     DEFAULT_GRID,
-    DEFAULT_TEXT,
     type Margin,
 } from "./chart-base";
 

@@ -3,29 +3,30 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { userInfo } from "@/lib/schema";
-import {eq} from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
-import { APIError} from "better-auth";
-import { handleBetterAuthError } from "@/lib/usersFunction";
-
+import { APIError } from "better-auth";
 
 /* Adds a user*/
-export async function POST (request: Request) {
+export async function POST(request: Request) {
     /* Grabs info from client*/
     const body = await request.json();
 
     /* Tries to insert user profile, catches an error if the action produces an error */
     try {
         const newUser = await auth.api.signUpEmail({
-           body : {
-            email: body.email,
-            password: crypto.randomUUID(), // temporary password
-            name: body.name
-           }
+            body: {
+                email: body.email,
+                password: crypto.randomUUID(), // temporary password
+                name: body.name,
+            },
         });
-        
+
         if (!newUser) {
-            return Response.json({ success: false, error: "Error signing up user"}, {status: 500});
+            return Response.json(
+                { success: false, error: "Error signing up user" },
+                { status: 500 }
+            );
         } else {
             const userInfoId = crypto.randomUUID();
 
@@ -33,45 +34,49 @@ export async function POST (request: Request) {
                 id: userInfoId,
                 userId: newUser.user.id,
                 authorized: false,
-                permissions: 'none'
+                permissions: "none",
             });
 
-            return Response.json({success: true, user: newUser.user})
+            return Response.json({ success: true, user: newUser.user });
         }
-    }
-    catch (err: unknown) {
+    } catch (err: unknown) {
         if (err instanceof APIError) {
             // return handleBetterAuthError(err)
-            return Response.json({error: err.message || "Unknown server error" }, {status: 500})
-        }
-        else {
-            return Response.json({error: "Unknown server error"}, {status: 500})
+            return Response.json(
+                { error: err.message || "Unknown server error" },
+                { status: 500 }
+            );
+        } else {
+            return Response.json(
+                { error: "Unknown server error" },
+                { status: 500 }
+            );
         }
         /* TODO ask what error message to put*/
     }
 }
 
 /* Deletes a user */
-export async function DELETE (request: Request) {
-    const session = await auth.api.getSession({headers:( request.headers) });
+export async function DELETE(request: Request) {
+    const session = await auth.api.getSession({ headers: request.headers });
 
     /* Grabs the userid associated with the current session */
 
-    if (!session)  {
-        return Response.json({error: "unauthorized"}, {status: 401});
+    if (!session) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
     /* Grabs the userid associated with the current session */
     const Id = session.user.id;
 
-     /* If the client is not an admin, return an unauthorized error */
-    if (! getUserPermission(Id)) {
-        return Response.json({error: "unauthorized"}, {status: 401});
+    /* If the client is not an admin, return an unauthorized error */
+    if (!getUserPermission(Id)) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
     /* Grabs info from client*/
     const body = await request.json();
 
     /* Deletes profile from userinfo */
-    await db.delete(userInfo).where(eq (userInfo.id, body.id) );
+    await db.delete(userInfo).where(eq(userInfo.id, body.id));
 }

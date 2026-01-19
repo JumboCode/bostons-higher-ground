@@ -1,4 +1,4 @@
-import { betterAuth, email } from "better-auth";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
 import { nextCookies } from "better-auth/next-js";
@@ -8,7 +8,9 @@ import { sendEmail } from "./email";
 export const auth = betterAuth({
     trustedOrigins: [
         "http://localhost:3000",
-        ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])
+        ...(process.env.VERCEL_URL
+            ? [`https://${process.env.VERCEL_URL}`]
+            : []),
     ],
     database: drizzleAdapter(db, {
         provider: "pg",

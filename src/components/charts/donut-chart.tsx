@@ -51,10 +51,6 @@ export function DonutChart({
         const total = data.reduce((sum, d) => sum + d.value, 0);
 
         const palette = colors.length ? colors : DEFAULT_COLORS;
-        const colorScale = d3
-            .scaleOrdinal<string>()
-            .domain(data.map((d) => d.label))
-            .range(palette);
 
         const pie = d3
             .pie<DonutDatum>()

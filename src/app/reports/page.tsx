@@ -6,35 +6,6 @@ import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
  * go into their next report, but for now you only need to make the interface
  * drawn on the figma for the case when no charts are selected.
  */
-function DraftReport() {
-    return (
-        <div className="border flex flex-col grow border-[rgba(0,0,0,0.1)] p-6 rounded-2xl space-y-10 mb-6 bg-white">
-            <div className="flex items-center justify-between">
-                <div className="Heading">
-                    <h2 className="text-[#555555] font-semibold text-lg">
-                        Draft Report
-                    </h2>
-                    <div className="text-sm text-[#4A5565]">
-                        0 charts added from dashboard
-                    </div>
-                </div>
-                <div>
-                    <button className="Clear flex flex-row space-x-4 items-center border px-3 py-2 rounded-xl border-[rgba(0,0,0,0.1)] hover:bg-bhg-gray-100 duration-200 cursor-pointer">
-                        <Trash2 className="w-4 h-4 stroke-[1.33] text-[#555555]" />
-                        <div className="text-sm text-[#555555]">Clear</div>
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col space-y-4 items-center">
-                <FileText className="h-12 w-12 text-[#6A7282] stroke-2" />
-                <div className="text-base text-[#6A7282] text-center leading-6">
-                    No charts in draft. Navigate to any dashboard and click the
-                    &quot;+&quot; icon on charts to add them here.
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function DraftReportPopulated() {
     return (
@@ -91,15 +62,15 @@ function DraftReportPopulated() {
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4"/>
+                    <Download className="w-4 h-4" />
                     <div className="font-medium text-sm">Export as PDF</div>
                 </button>
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4"/>
+                    <Download className="w-4 h-4" />
                     <div className="font-medium text-sm">Export as CSV</div>
                 </button>
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4"/>
+                    <Download className="w-4 h-4" />
                     <div className="font-medium text-sm">Export as PNG</div>
                 </button>
             </div>
@@ -194,11 +165,15 @@ function ReportEntry({
 export default function Archive() {
     return (
         <main className="bg-[#F5F5F5] p-10 flex flex-col overflow-scroll gap-y-8">
-            <h1 className="text-4xl font-extrabold text-[#555555] gap-8">Reports</h1>
+            <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
+                Reports
+            </h1>
             {/* <DraftReport /> */}
             <DraftReportPopulated />
             <div className="flex flex-col gap-y-4">
-                <h2 className="text-xl font-extrabold text-[#555555] gap-8">Archived Reports</h2>
+                <h2 className="text-xl font-extrabold text-[#555555] gap-8">
+                    Archived Reports
+                </h2>
                 <ReportEntry
                     title="Q4 Report 2025"
                     date={new Date(2025, 0, 4)}
