@@ -4,11 +4,13 @@
 
 import React from "react";
 import { Download, Plus } from "lucide-react";
+import type { FilterState } from "@/lib/filterStore";
 
 interface ChartProps {
     title: string;
     children: React.ReactNode;
-    appliedFilters?: string;
+    appliedFilters?: string; // human-readable display string
+    filterState?: Partial<FilterState>; // raw filter state to persist
     onAddToReport?: () => Promise<void> | void;
 }
 
@@ -16,6 +18,7 @@ export default function Chart({
     title,
     children,
     appliedFilters,
+    filterState,
     onAddToReport,
 }: ChartProps) {
     const handleDownload = () => {
@@ -31,7 +34,9 @@ export default function Chart({
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                           title,
-                          filters: appliedFilters ?? null,
+                          filters: filterState
+                              ? JSON.stringify(filterState)
+                              : (appliedFilters ?? null),
                       }),
                   });
                   window.dispatchEvent(new Event("report-updated"));

@@ -92,6 +92,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title="Family Intake Over Time"
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <FamilyIntakeBarChart data={filteredData} />
                 </Chart>
@@ -99,6 +100,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title="Families Housed Over Time"
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <LineChart data={filteredData} />
                 </Chart>
@@ -106,6 +108,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title="Days to House Distribution"
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <DaysHousedBarChart data={filteredData} />
                 </Chart>
@@ -113,6 +116,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title="Active vs Housed Families by Location"
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <LocationBarChart data={filteredData} />
                 </Chart>
