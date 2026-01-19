@@ -33,21 +33,22 @@ export async function verifyCodeToken(
             .limit(1);
 
         return !!verificationRecord;
-    } catch (error) {
+    } catch {
         return false;
     }
 }
 
-export function hasVerificationToken(
-    request: NextRequest,
-): boolean {
+export function hasVerificationToken(request: NextRequest): boolean {
     try {
-        let cookieHeader: string = "";
+        let cookieHeader = "";
         if (request && typeof request === "object") {
             if ("cookies" in request && request.cookies) {
-                const cookieValue = request.cookies.get(VERIFICATION_TOKEN_COOKIE);
+                const cookieValue = request.cookies.get(
+                    VERIFICATION_TOKEN_COOKIE
+                );
                 return !!cookieValue;
-            } else if ("get" in request && typeof request.get === "function") {
+            }
+            if ("get" in request && typeof request.get === "function") {
                 cookieHeader = request.get("cookie") || "";
             }
         } else if (typeof request === "string") {
@@ -62,8 +63,7 @@ export function hasVerificationToken(
         }
 
         return false;
-    } catch (error) {
+    } catch {
         return false;
     }
 }
-

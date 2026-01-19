@@ -28,7 +28,7 @@ export default function Admin() {
     const [isInviteOpen, setIsInviteOpen] = useState(false);
 
     // Hardcoded users array
-    const [users, setUsers] = useState<User[]>([
+    const users: User[] = [
         {
             name: "Alice Johnson",
             email: "alice@example.com",
@@ -42,10 +42,9 @@ export default function Admin() {
             status: "Active",
         },
         { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
-    ]);
+    ];
 
-    // numMembers
-    const [numMembers, setNumMembers] = useState(users.length);
+    const numMembers = users.length;
 
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] ">

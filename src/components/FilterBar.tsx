@@ -1,5 +1,4 @@
 "use client";
-import Navbar from "@/components/navbar";
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
 
@@ -7,12 +6,6 @@ import { type DateRange } from "react-day-picker";
 import { useEffect, useMemo, useState } from "react";
 import { Manrope } from "next/font/google";
 const manrope = Manrope({ subsets: ["latin"] });
-
-import { Poppins } from "next/font/google";
-const poppins = Poppins({
-    subsets: ["latin"],
-    weight: ["700"], // bold weight
-});
 
 import useFilters from "@/lib/filterStore";
 
