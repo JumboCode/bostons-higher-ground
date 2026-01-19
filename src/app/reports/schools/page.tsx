@@ -1,32 +1,9 @@
-import FastFactCard from "@/components/FastFactCard";
-import DashboardTop from '@/components/DashboardTop';
-import SchoolFilterBar from '@/components/SchoolFilterBar';
+import { getAllData } from "@/lib/getAllData";
+import SchoolsClient from "./schools-client";
 
+// Grabbing all data from the database
+const data = await getAllData();
 
-
-export default function Schools(){
-    return (
-        <>
-        
-        <div className="ml-[30px] w-[1050px] mt-[30px]">
-            
-            <DashboardTop pageTitle="Schools Dashboard" title= "Homeless Students" body="45" subtext="" bgColor="bg-[#FFE5EA99]" title1="Families Housed to Date" title2="Average Wait Time" bgColor1="bg-[#E0F7F4]" bgColor2="bg-[#FDF6EC]" body1="82%" body2="92%" subtext1="" subtext2="" mt="mt-[135px]"/>
-        </div>
-        <div className="ml-[60px] -mt-[300px] w-[1100px]">
-            <SchoolFilterBar />
-        </div>
-        
-        
-         
-        
-        
-        
-        </>
-        
-            
-
-    
-    );
+export default function Schools() {
+    return <SchoolsClient data={data} />;
 }
-
-

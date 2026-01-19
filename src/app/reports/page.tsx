@@ -6,35 +6,6 @@ import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
  * go into their next report, but for now you only need to make the interface
  * drawn on the figma for the case when no charts are selected.
  */
-function DraftReport() {
-    return (
-        <div className="border flex flex-col grow border-[rgba(0,0,0,0.1)] p-6 rounded-2xl space-y-10 mb-6 bg-white">
-            <div className="flex items-center justify-between">
-                <div className="Heading">
-                    <h2 className="text-[#555555] font-semibold text-lg">
-                        Draft Report
-                    </h2>
-                    <div className="text-sm text-[#4A5565]">
-                        0 charts added from dashboard
-                    </div>
-                </div>
-                <div>
-                    <button className="Clear flex flex-row space-x-4 items-center border p-2 rounded-xl border-[rgba(0,0,0,0.1)]">
-                        <Trash2 className="w-4 h-4 stroke-[1.33] text-[#555555]" />
-                        <div className="text-sm text-[#555555]">Clear</div>
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col space-y-4 items-center">
-                <FileText className="h-12 w-12 text-[#6A7282] stroke-2" />
-                <div className="text-base text-[#6A7282] text-center leading-6">
-                    No charts in draft. Navigate to any dashboard and click the
-                    &quot;+&quot; icon on charts to add them here.
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function DraftReportPopulated() {
     return (
@@ -57,7 +28,7 @@ function DraftReportPopulated() {
                 <div className="flex flex-col ReportNameEdit space-y-1">
                     <div className="text-sm font-medium">Report Name</div>
                     <div className="ReportNameTextField">
-                        <div className="relative w-md">
+                        <div className="relative w-full">
                             <SquarePen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
@@ -69,38 +40,38 @@ function DraftReportPopulated() {
                     </div>
                 </div>
             </div>
-            <div className="Reports flex flex-row space-x-3">
-                <div className="Chart w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB]">
+            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
+                <div className="w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB] hover:bg-bgh-gray-100 duration-200 cursor-pointer">
                     <FileText className="w-[20] h-[20] text-[#E76C82]" />
                     <div className="font-semibold text-xs">
                         Housing Pipeline
                     </div>
                 </div>
-                <div className="Chart w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB]">
+                <div className="w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB] hover:bg-bgh-gray-100 duration-200 cursor-pointer">
                     <FileText className="w-[20] h-[20] text-[#E76C82]" />
                     <div className="font-semibold text-xs">
                         Intakes vs Families Housed
                     </div>
                 </div>
-                <div className="Chart w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB]">
+                <div className="w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB] hover:bg-bgh-gray-100 duration-200 cursor-pointer">
                     <FileText className="w-[20] h-[20] text-[#E76C82]" />
                     <div className="font-semibold text-xs">
                         Families Housed Over Time
                     </div>
                 </div>
             </div>
-            <div className="ExportOptions flex flex-row space-x-2">
-                <button className="flex flex-row space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+            <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
                     <Download className="w-4 h-4" />
                     <div className="font-medium text-sm">Export as PDF</div>
                 </button>
-                <button className="flex flex-row space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
                     <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PDF</div>
+                    <div className="font-medium text-sm">Export as CSV</div>
                 </button>
-                <button className="flex flex-row space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
                     <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PDF</div>
+                    <div className="font-medium text-sm">Export as PNG</div>
                 </button>
             </div>
         </div>
@@ -165,8 +136,7 @@ function ReportEntry({
                             {/*schools*/}
                             <div className="text-xs">&middot;</div> {/*dot*/}
                             <div className="text-[#4A5565] text-xs border border-gray-300 rounded-full px-2">
-                                {" "}
-                                {category}{" "}
+                                {" " + category + " "}
                             </div>{" "}
                             {/*housing*/}
                             <div className="text-xs">&middot;</div> {/*dot*/}
@@ -180,7 +150,7 @@ function ReportEntry({
                 </div>
 
                 <div className="button">
-                    <Download className="stroke-[1.33px] text-gray-600" />
+                    <Download className="stroke-[1.33px] text-gray-600 h-[18px] mx-2" />
                 </div>
             </div>
         </div>
@@ -194,16 +164,24 @@ function ReportEntry({
  */
 export default function Archive() {
     return (
-        <main className="bg-[#F5F5F5] h-screen p-4">
-            <DraftReport />
+        <main className="bg-[#F5F5F5] p-10 flex flex-col overflow-scroll gap-y-8">
+            <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
+                Reports
+            </h1>
+            {/* <DraftReport /> */}
             <DraftReportPopulated />
-            <ReportEntry
-                title="Q4 Report 2025"
-                date={new Date(2025, 0, 4)}
-                schools="All Schools"
-                category="Housing"
-                numOfCharts={4}
-            />
+            <div className="flex flex-col gap-y-4">
+                <h2 className="text-xl font-extrabold text-[#555555] gap-8">
+                    Archived Reports
+                </h2>
+                <ReportEntry
+                    title="Q4 Report 2025"
+                    date={new Date(2025, 0, 4)}
+                    schools="All Schools"
+                    category="Housing"
+                    numOfCharts={4}
+                />
+            </div>
         </main>
     );
 }

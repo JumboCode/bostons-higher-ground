@@ -1,15 +1,14 @@
+import { getAllData } from "@/lib/getAllData";
+import OverviewClient from "./overview-client";
 
-import DashboardTop from '@/components/DashboardTop';
+const data = await getAllData();
 
-export default function Overview(){
-    return(
-        
-        <div className="ml-[30px] w-[1050px] mt-[30px]">
-            <DashboardTop pageTitle="Overview Dashboard" title= "Total Families Enrolled" body="224" subtext="All-time enrollment" bgColor="bg-[#E0F7F4]" title1="Families Housed to Date" title2="Average Wait Time" bgColor1="bg-[#F0E7ED]" bgColor2="bg-[#FFF8E9]" body1="158" body2="48 days" subtext1="70.5% success rate" subtext2="Intake to housed" mt="-mt-[10px]" />
-        </div>
-        
-        
-        
-        
-    );
+const final_Data = data.map((d) => ({
+    ...d,
+    intakeMonth: d.intakeDate ? new Date(d.intakeDate).getMonth() : null,
+    housedMonth: d.dateHoused ? new Date(d.dateHoused).getMonth() : null,
+}));
+
+export default function Overview() {
+    return <OverviewClient data={final_Data} />;
 }
