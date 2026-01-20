@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { userInfo } from "@/lib/schema";
+import { userInfo, user, housingRecords } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
 import { APIError } from "better-auth";
@@ -79,4 +79,38 @@ export async function DELETE(request: Request) {
 
     /* Deletes profile from userinfo */
     await db.delete(userInfo).where(eq(userInfo.id, body.id));
+}
+
+// Gets a user 
+
+export async function GET(request: Request) {
+    /* Checks if a user is logged in */
+    const session = await auth.api.getSession({headers: request.headers});
+
+    if (!session) {
+        return Response.json({error: "unauthorized"}, {status: 401});
+    }
+
+     /* Grabs the userid associated with the current session */
+    const Id = session.user.id;
+
+    /* If the client is not an admin, return an unauthorized error */
+    if (!getUserPermission(Id)) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    /* Grabs data table */
+    const allUsers = await db
+        .select({
+            id: userInfo.userId,
+            name: user.name,
+            email: user.email,
+            status: housingRecords.currentStatus,
+        })
+        .from(userInfo)
+        .leftJoin(user, eq(user.id, userInfo.userId))
+        .leftJoin(housingRecords, eq(housingRecords.id, userInfo.userId));
+
+    return allUsers;
+    
 }
