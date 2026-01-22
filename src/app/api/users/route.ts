@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { userInfo, user, housingRecords } from "@/lib/schema";
+import { userInfo, user } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
 import { APIError } from "better-auth";
@@ -105,11 +105,10 @@ export async function GET(request: Request) {
             id: userInfo.userId,
             name: user.name,
             email: user.email,
-            status: housingRecords.currentStatus,
+            status: userInfo.authorized,
         })
         .from(userInfo)
-        .leftJoin(user, eq(user.id, userInfo.userId))
-        .leftJoin(housingRecords, eq(housingRecords.id, userInfo.userId));
+        .leftJoin(user, eq(user.id, userInfo.userId));
 
     return allUsers;
     
