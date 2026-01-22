@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
@@ -17,40 +17,92 @@ import {
 } from "lucide-react";
 
 type User = {
+    id: string;
     name: string;
     email: string;
     status: "Active" | "Pending";
     role?: string;
 };
 
+type ApiUserRow = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  status: string | null;
+  role?: string | null;
+};
+
+type GetUsersResponse = {
+  users: ApiUserRow[];
+};
+
+//changes this function to get actual users
 export default function Admin() {
     // for invite staff pop up
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);  
+    
+    
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
     // Hardcoded users array
-    const users: User[] = [
-        {
-            name: "Alice Johnson",
-            email: "alice@example.com",
-            status: "Active",
-            role: "Admin",
-        },
-        { name: "Bob Smith", email: "bob@example.com", status: "Pending" },
-        {
-            name: "Charlie Brown",
-            email: "charlie@example.com",
-            status: "Active",
-        },
-        { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
-    ];
+    // const users: User[] = [
+    //     {
+    //         name: "Alice Johnson",
+    //         email: "alice@example.com",
+    //         status: "Active",
+    //         role: "Admin",
+    //     },
+    //     { name: "Bob Smith", email: "bob@example.com", status: "Pending" },
+    //     {
+    //         name: "Charlie Brown",
+    //         email: "charlie@example.com",
+    //         status: "Active",
+    //     },
+    //     { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
+    // ];
+
+    useEffect(() => {
+        async function load() {
+            try{
+                setLoading(true);
+                setError(null);
+
+                const res = await fetch('/api/users'); 
+                if(!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data?.error ?? "Failed to fetch users");
+                }
+                const data = await res.json();
+                const mapped: User[] = (data.users ?? []).map((u:ApiUserRow) => ({
+                    id: u.id,
+                    name: u.name ?? "(no name)",
+                    email: u.email ?? "(no email)",
+                    status: u.status === "Active" ? "Active" : "Pending", // adapt if status differs
+                    role: u.role ?? undefined,
+                }));
+
+                setUsers(mapped);
+            } catch (e: unknown){
+                const message = e instanceof Error ? e.message : "Error loading users";
+                setError(message);
+            }finally {
+                setLoading(false);
+            }
+            
+        }
+        load();
+    }, []);
+
     const numMembers = users.length;
 
     const filteredUsers = useMemo(() => (
         users.filter((user) =>
             user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-    ), [searchQuery]);
+    ), [users, searchQuery]);
 
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] ">
@@ -179,6 +231,22 @@ function UserRow({ user }: { user: User }) {
     // for actions pop up
     const [actionVisible, setActionVisible] = useState(false);
 
+    const popupRef = useRef<HTMLDivElement | null>(null);
+
+    //added the pup-up to close when clicked outside function
+    useEffect(() => {
+        if(!actionVisible) return;
+
+        function handleClickOutside(e: MouseEvent) {
+            if(popupRef.current && !popupRef.current.contains(e.target as Node)) {
+                setActionVisible(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    }, [actionVisible]);
+
     return (
         <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
             {/* Member */}
@@ -219,20 +287,26 @@ function UserRow({ user }: { user: User }) {
 
             {/* Actions */}
             <div className="text-right w-1/6 ml-auto">
-                <button onClick={() => setActionVisible(!actionVisible)}>
+                <button onClick={() => setActionVisible((v)=>!v)}> 
                     {" "}
                     {/* when action button is clicked, state should become opposite of what it currently is  */}
                     <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
                 </button>
             </div>
 
-            <ActionPopUp actionVisible={actionVisible} />
+            <ActionPopUp 
+                actionVisible={actionVisible} 
+                userId={user.id}
+                popupRef={popupRef}
+            />
         </div>
     );
 }
 
-function ActionPopUp({ actionVisible, userId }: { actionVisible: boolean; userId: string }) {
+function ActionPopUp({ actionVisible, userId, popupRef }: { actionVisible: boolean; userId: string; popupRef: React.RefObject<HTMLDivElement | null>;}) {
+    
     if (!actionVisible) return null;
+    
     async function handleRemove(){
         //CHECKS IF WE REALLY WANT TO REMOVE THE USER
         const ok = confirm("Remove this user?");
@@ -258,26 +332,30 @@ function ActionPopUp({ actionVisible, userId }: { actionVisible: boolean; userId
     }
 
     return (
-        <div className="fixed z-50 flex flex-col left-[1200px] bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-[10px] font-manrope border border-gray-200">
-            <div className="flex gap-[8px] mb-[10px] pr-[30px]">
+        <div
+            ref={popupRef}
+            className="fixed z-50 flex flex-col left-[1200px] bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-[10px] font-manrope border border-gray-200"
+        >
+            <button  type="button"  className="flex gap-[8px] mb-[10px] pr-[30px]">
                 <Eye className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
                 View Activity
-            </div>
-            <div className="flex gap-[8px] mb-[10px] pr-[30px]">
+            </button>
+
+            <button type="button" className="flex gap-[8px] mb-[10px] pr-[30px]">
                 <Send className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
                 Resend Invite
-            </div>
-            <div className="flex gap-[8px] text-[#D9534F] pr-[30px]">
-                {/* The button is new here */}
-                <button
-                    type="button"
-                    onClick={handleRemove}
-                    className="flex gap-[8px] text-[#D9534F] pr-[30px] w-full text-left"
-                >
-                <Trash2 className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
-                Remove User
-                </button>
-            </div>
+            </button>
+
+
+            <button
+                type="button"
+                onClick={handleRemove}
+                className="flex gap-[8px] text-[#D9534F] pr-[30px] w-full text-left"
+            >
+            <Trash2 className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
+            Remove User
+            </button>
         </div>
     );
+        
 }
