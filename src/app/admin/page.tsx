@@ -231,8 +231,31 @@ function UserRow({ user }: { user: User }) {
     );
 }
 
-function ActionPopUp({ actionVisible }: { actionVisible: boolean }) {
+function ActionPopUp({ actionVisible, userId }: { actionVisible: boolean; userId: string }) {
     if (!actionVisible) return null;
+    async function handleRemove(){
+        //CHECKS IF WE REALLY WANT TO REMOVE THE USER
+        const ok = confirm("Remove this user?");
+        if(!ok) return;
+
+        //GETS THE BACKEND REQUEST FROM ROUTES FILE
+        const res = await fetch("/api/users", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: userId }),
+        });
+
+        //IF THERE IS A PROBLEM
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ?? "Failed to remove user");
+            return;
+        }
+
+        // Minimal: reload page or refresh data
+        // Later: remove user from state instead of reloading.
+        window.location.reload();
+    }
 
     return (
         <div className="fixed z-50 flex flex-col left-[1200px] bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-[10px] font-manrope border border-gray-200">
@@ -245,8 +268,15 @@ function ActionPopUp({ actionVisible }: { actionVisible: boolean }) {
                 Resend Invite
             </div>
             <div className="flex gap-[8px] text-[#D9534F] pr-[30px]">
+                {/* The button is new here */}
+                <button
+                    type="button"
+                    onClick={handleRemove}
+                    className="flex gap-[8px] text-[#D9534F] pr-[30px] w-full text-left"
+                >
                 <Trash2 className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
                 Remove User
+                </button>
             </div>
         </div>
     );

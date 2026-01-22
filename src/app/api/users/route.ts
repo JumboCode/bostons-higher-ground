@@ -70,13 +70,26 @@ export async function DELETE(request: Request) {
     const Id = session.user.id;
 
     /* If the client is not an admin, return an unauthorized error */
-    if (!getUserPermission(Id)) {
+    const isAdmin = await getUserPermission(Id);
+    if (!isAdmin) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
     /* Grabs info from client*/
-    const body = await request.json();
+    let body: { id?: string };
+    try {
+        body = await request.json();
+    } catch {
+        return Response.json({ error: "invalid_json" }, { status: 400 });
+    }
+
+    if (!body.id) {
+        return Response.json({ error: "missing_id" }, { status: 400 });
+    }
 
     /* Deletes profile from userinfo */
     await db.delete(userInfo).where(eq(userInfo.id, body.id));
+
+    return Response.json({ success: true });
+
 }
