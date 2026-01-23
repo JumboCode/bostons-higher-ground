@@ -59,6 +59,9 @@ importers:
       html2canvas:
         specifier: ^1.4.1
         version: 1.4.1
+      html2canvas-pro:
+        specifier: ^1.6.6
+        version: 1.6.6
       lucide-react:
         specifier: ^0.553.0
         version: 0.553.0(react@19.1.0)
@@ -2329,6 +2332,10 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  html2canvas-pro@1.6.6:
+    resolution: {integrity: sha512-5mRhTXZhv4B0kIcsn3bFBjol2o8vzP35mhtxdXBGPA3V3gZd6Sa2PIIFbT//DiqAX8UuywlcJit5jRKej4nV4Q==}
+    engines: {node: '>=16.0.0'}
 
   html2canvas@1.4.1:
     resolution: {integrity: sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA==}
@@ -5355,6 +5362,11 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  html2canvas-pro@1.6.6:
+    dependencies:
+      css-line-break: 2.1.0
+      text-segmentation: 1.0.3
 
   html2canvas@1.4.1:
     dependencies:
