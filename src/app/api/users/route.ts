@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
 import { APIError } from "better-auth";
 
+
 /* Adds a user*/
 export async function POST(request: Request) {
     /* Grabs info from client*/

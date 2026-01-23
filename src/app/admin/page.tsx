@@ -4,6 +4,7 @@ import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
 
+
 import {
     Search,
     CircleCheckBig,
@@ -299,15 +300,39 @@ function UserRow({ user }: { user: User }) {
             <ActionPopUp 
                 actionVisible={actionVisible} 
                 userId={user.id}
+                userEmail={user.email}
                 popupRef={popupRef}
             />
         </div>
     );
 }
 
-function ActionPopUp({ actionVisible, userId, popupRef }: { actionVisible: boolean; userId: string; popupRef: React.RefObject<HTMLDivElement | null>;}) {
+function ActionPopUp({ actionVisible, userId, userEmail, popupRef }: { actionVisible: boolean; userId: string; userEmail: string; popupRef: React.RefObject<HTMLDivElement | null>;}) {
     
     if (!actionVisible) return null;
+
+    async function handleResend(){
+        //CHECKS IF THE ADMIN WANTS TO RESEND INVITE
+        const ok = confirm("Do you want to resend invite?");
+        if(!ok) return;
+        
+        //FETCHING THE RESEND POST FUNCTION FROM THE BACKEND
+        const res = await fetch("/api/users/email", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ email: userEmail }),
+        });
+
+        if(!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ?? "Failed to resend invite");
+            return;
+        }
+
+        alert("Invite resent.");
+        window.location.reload();
+    }
+    
     
     async function handleRemove(){
         //CHECKS IF WE REALLY WANT TO REMOVE THE USER
@@ -343,7 +368,11 @@ function ActionPopUp({ actionVisible, userId, popupRef }: { actionVisible: boole
                 View Activity
             </button>
 
-            <button type="button" className="flex gap-[8px] mb-[10px] pr-[30px]">
+            <button 
+                type="button" 
+                onClick={handleResend} 
+                className="flex gap-[8px] mb-[10px] pr-[30px]"
+            >
                 <Send className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
                 Resend Invite
             </button>
