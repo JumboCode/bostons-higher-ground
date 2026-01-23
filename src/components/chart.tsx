@@ -1,10 +1,9 @@
 "use client";
 
-"use client";
-
 import React from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
+import html2canvas from 'html2canvas-pro';
 
 interface ChartProps {
     title: string;
@@ -22,7 +21,24 @@ export default function Chart({
     onAddToReport,
 }: ChartProps) {
     const handleDownload = () => {
-        console.log("Download chart:", title);
+        //initializing element
+        const element = document.getElementById("chartElement");
+        if (!element) {
+            return;
+        }
+        //chart container to canvas
+        html2canvas(element, {useCORS: true,}).then((canvas)=>{
+            //generate image
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.href = image;
+            console.log(link.href);
+            link.download = title + ".png";
+            // programmatically click the link so that the image automatically downloads
+            link.click();
+        }).catch(err=> {
+            console.error("Unable to take screenshot.")
+        })
     };
 
     const handleAdd = onAddToReport
@@ -46,7 +62,7 @@ export default function Chart({
           };
 
     return (
-        <div className="bg-white rounded-3xl shadow-sm p-8 mb-6 w-full max-w-[900px]">
+        <div id="chartElement" className="bg-white rounded-3xl shadow-sm p-8 mb-6 w-full max-w-[900px]">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-gray-800">
