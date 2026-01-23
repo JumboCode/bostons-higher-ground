@@ -3,7 +3,7 @@
 import React from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 interface ChartProps {
     title: string;
@@ -21,20 +21,19 @@ export default function Chart({
     onAddToReport,
 }: ChartProps) {
     const handleDownload = () => {
-        console.log("Download chart:", title); //debugging message
-
         //initializing element
         const element = document.getElementById("chartElement");
         if (!element) {
             return;
         }
         //chart container to canvas
-        html2canvas(element).then((canvas)=>{
+        html2canvas(element, {useCORS: true,}).then((canvas)=>{
             //generate image
             const image = canvas.toDataURL("image/png");
             const link = document.createElement("a");
             link.href = image;
-            link.download = "section.png";
+            console.log(link.href);
+            link.download = title + ".png";
             // programmatically click the link so that the image automatically downloads
             link.click();
         }).catch(err=> {
