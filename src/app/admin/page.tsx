@@ -26,10 +26,10 @@ type User = {
 
 type ApiUserRow = {
   id: string;
-  name: string | null;
-  email: string | null;
-  status: string | null;
-  role?: string | null;
+  name: string;
+  email: string;
+  status: boolean;
+  role?: string;
 };
 
 type GetUsersResponse = {
@@ -64,6 +64,7 @@ export default function Admin() {
     //     { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
     // ];
 
+
     useEffect(() => {
         async function load() {
             try{
@@ -76,14 +77,15 @@ export default function Admin() {
                     throw new Error(data?.error ?? "Failed to fetch users");
                 }
                 const data = await res.json();
-                const mapped: User[] = (data.users ?? []).map((u:ApiUserRow) => ({
+            
+                const mapped: User[] = data.map((u:ApiUserRow) => ({
                     id: u.id,
                     name: u.name ?? "(no name)",
                     email: u.email ?? "(no email)",
-                    status: u.status === "Active" ? "Active" : "Pending", // adapt if status differs
+                    status: u.status === true ? "Active" : "Pending", // adapt if status differs
                     role: u.role ?? undefined,
                 }));
-
+                console.log(mapped);
                 setUsers(mapped);
             } catch (e: unknown){
                 const message = e instanceof Error ? e.message : "Error loading users";
