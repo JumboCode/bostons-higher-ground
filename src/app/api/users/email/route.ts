@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         otp,
         type: "invite",
     });
-
+    // console.log(`[Email] Sending "invite" OTP to ${body.email}: ${otp}`);
     //SAYS ALL WORKED
     return Response.json({ success: true });
 

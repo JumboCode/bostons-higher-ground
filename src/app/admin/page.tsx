@@ -110,34 +110,34 @@ export default function Admin() {
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] ">
             <NavBar userName="TODO" />
-            <div className="relative flex-1 overflow-x-hidden min-h-[717px]">
+            <div className="flex-1 overflow-x-hidden min-h-screen flex flex-col">
                 {/*Top bar*/}
-                <div className="w-full h-[64px] border-b border-[#E5E7EB] bg-[#FFFFFF]"></div>
+                <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div>
 
                 {/*Title*/}
-                <div className="mt-[20px] mx-[45px] flex items-center justify-between">
+                <div className="mt-5 mx-[45px] flex items-center justify-between">
                     <h1 className="text-[#555555] text-[28px] leading-[42px] font-poppins font-bold ">
                         Admin Settings
                     </h1>
-                    <button className="px-[10px] py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2">
+                    <button className="px-2.5 py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2">
                         <RefreshCcw className="w-[17px] h-[17px] text-[#E76C82]" />
                         Update Data
                     </button>
                 </div>
 
                 {/*Alert Box */}
-                <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-[16px] px-4 flex items-center">
-                    <CircleCheckBig className="w-[16px] h-[16px] text-[#555555]" />
-                    <p className="font-manrope text-[14px] text-[#555555] leading-[20px] pl-[10px]">
+                <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-2xl px-4 flex items-center">
+                    <CircleCheckBig className="w-4 h-4 text-[#555555]" />
+                    <p className="font-manrope text-[14px] text-[#555555] leading-5 pl-2.5">
                         Last sync from Salesforce: Today at 12:44AM
                     </p>
                 </div>
 
                 {/*Table*/}
-                <div className="mt-[25px] mx-[45px] h-[538px] border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col">
+                <div className="mt-[25px] mx-[45px] h-f border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-6 flex flex-col">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-[12px]">
-                            <div className="w-[45px] h-[45px] rounded-[16px] bg-[#F0E7ED] flex items-center justify-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-[45px] h-[45px] rounded-2xl bg-[#F0E7ED] flex items-center justify-center">
                                 <UsersRound className="w-[25px] h-[25px] text-[#E76C82]" />
                             </div>
 
@@ -155,8 +155,8 @@ export default function Admin() {
                         {/*Invite Staff*/}
                         <button
                             onClick={() => setIsInviteOpen(true)}
-                            className="pl-[15px] pr-[18px] py-[8px] h-[40px] rounded-[14px] bg-[#E76C82] hover:bg-[#d75c6f] flex items-center justify-center
-                            text-[#FFFFFF] font-manrope text-[15px] leading-[20px] gap-[12px]"
+                            className="pl-[15px] pr-[18px] py-2 h-10 rounded-[14px] bg-[#E76C82] hover:bg-[#d75c6f] flex items-center justify-center
+                            text-[#FFFFFF] font-manrope text-[15px] leading-5 gap-3"
                         >
                             <Send className="w-[18px] h-[18px]" />
                             Invite Staff
@@ -164,23 +164,23 @@ export default function Admin() {
                     </div>
 
                     {/*Search bar*/}
-                    <div className="relative pt-[10px]">
-                        <Search className="mt-[25px] absolute left-[12px] top-[13.5px] w-[20px] h-[20px] text-[#ABABAB]" />
+                    <div className="relative pt-2.5">
+                        <Search className="mt-[25px] absolute left-3 top-[13.5px] w-5 h-5 text-[#ABABAB]" />
                         <input
                             type="text"
                             placeholder="Search by name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full mt-[12px] top-[66px] h-[55px] rounded-[14px] border border-[#D9D9D9] px-[44px] py-[12px] pr-[16px] outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                            className="w-full mt-3 top-[66px] h-[55px] rounded-[14px] border border-[#D9D9D9] px-11 py-3 pr-4 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
                         ></input>
                     </div>
 
                     {/* ALL USERS!! */}
-                    <div className="mt-[35px] mx-[8px] flex flex-col">
+                    <div className="mt-[35px] mx-2 flex flex-col">
                         {/* Header */}
                         <div className="flex w-full text-[#555555] font-manrope font-semibold mb-3">
                             <span className="text-left w-1/6">Member</span>
-                            <span className="text-center flex-grow w-1/3">
+                            <span className="text-center grow w-1/3">
                                 Email
                             </span>
                             <span className="text-center w-1/6">Status</span>
@@ -191,7 +191,7 @@ export default function Admin() {
                         <div className="border-b border-[#E0E0E0] mb-3"></div>
 
                         {/* Rows */}
-                        <div className="flex flex-col gap-2 overflow-auto max-h-[60vh]">
+                        <div className="flex flex-col gap-2 overflow-y-auto overflow-x-visible max-h-[60vh]">
                             {filteredUsers.length > 0 ?
                                 filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
                              : <p>No users found.</p>
@@ -199,21 +199,20 @@ export default function Admin() {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Footer */}
-            <div className="absolute bottom-0 left-[0px] flex w-full">
-                {/* Spacer for NavBar */}
-                <div className="w-[286px]" />
-
-                {/* Main content footer */}
-                <div className="flex-1 h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px]">
-                    <footer className="text-[12px] text-[#6A7282]">
-                        © 2025 Higher Ground Boston. For authorized staff use
-                        only.
-                    </footer>
+                {/* Footer */}
+                {/* Moved footer inside this div as it was over the users, made changes to className so that its responsive to the page  */}
+                <div className="mt-auto w-full border-t border-[#E5E7EB] bg-[#F5F5F5]">
+                    {/* Main content footer */}
+                    <div className="h-[66px] flex items-center justify-center px-8">
+                        <footer className="text-[12px] text-[#6A7282] text-center">
+                            © 2025 Higher Ground Boston. For authorized staff use
+                            only.
+                        </footer>
+                    </div>
                 </div>
             </div>
+
+            
 
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
@@ -253,8 +252,9 @@ function UserRow({ user }: { user: User }) {
     return (
         <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
             {/* Member */}
-            <div className="flex items-center gap-3 w-1/6">
-                <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold">
+            {/* I added "truncate" to rows and "shrink-0" to logos, now it it does not fit to the page, it just shows the part that fits */}
+            <div className="flex items-center gap-3 w-1/3 truncate"> 
+                <div className="w-10 h-10 rounded-full shrink-0  bg-[#E76C82] flex items-center justify-center text-white font-bold">
                     {user.name[0]}
                 </div>
                 <div className="flex flex-col">
@@ -271,7 +271,7 @@ function UserRow({ user }: { user: User }) {
             </div>
 
             {/* Email */}
-            <div className="text-gray-400 text-center flex-grow w-1/3">
+            <div className="text-gray-400 text-center grow w-1/3">
                 {user.email}
             </div>
 
@@ -361,19 +361,19 @@ function ActionPopUp({ actionVisible, userId, userEmail, popupRef }: { actionVis
     return (
         <div
             ref={popupRef}
-            className="fixed z-50 flex flex-col left-[1200px] bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-[10px] font-manrope border border-gray-200"
+            className="fixed z-50 flex flex-col left-250 bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-2.5 font-manrope border border-gray-200"
         >
-            <button  type="button"  className="flex gap-[8px] mb-[10px] pr-[30px]">
-                <Eye className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
+            <button  type="button"  className="flex gap-2 mb-2.5 pr-[30px]">
+                <Eye className="text-[#717182] mt-0.5 w-5 h-5" />
                 View Activity
             </button>
 
             <button 
                 type="button" 
                 onClick={handleResend} 
-                className="flex gap-[8px] mb-[10px] pr-[30px]"
+                className="flex gap-2 mb-2.5 pr-[30px]"
             >
-                <Send className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
+                <Send className="text-[#717182] mt-0.5] w-5 h-5" />
                 Resend Invite
             </button>
 
@@ -381,9 +381,9 @@ function ActionPopUp({ actionVisible, userId, userEmail, popupRef }: { actionVis
             <button
                 type="button"
                 onClick={handleRemove}
-                className="flex gap-[8px] text-[#D9534F] pr-[30px] w-full text-left"
+                className="flex gap-2 text-[#D9534F] pr-[30px] w-full text-left"
             >
-            <Trash2 className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
+            <Trash2 className="text-[#717182] mt-0.5 w-5 h-5" />
             Remove User
             </button>
         </div>
