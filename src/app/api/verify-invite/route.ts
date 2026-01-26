@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { verification, user } from "@/lib/schema";
+import { verification, user, userInfo } from "@/lib/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { VERIFICATION_TOKEN_COOKIE } from "@/lib/verification";
+import { auth } from "@/lib/auth";
 
 export async function POST(request: Request) {
     try {
@@ -15,19 +16,6 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 { error: "Email and temporary code are required" },
                 { status: 400 }
-            );
-        }
-
-        const [userRecord] = await db
-            .select({ id: user.id })
-            .from(user)
-            .where(eq(user.email, email))
-            .limit(1);
-
-        if (!userRecord) {
-            return NextResponse.json(
-                { error: "Invalid email or code" },
-                { status: 401 }
             );
         }
 
@@ -49,6 +37,40 @@ export async function POST(request: Request) {
                 { status: 401 }
             );
         }
+
+        const existingUser = await db
+            .select()
+            .from(user)
+            .where(eq(user.email, email))
+            .limit(1);
+
+        let finalUser;
+
+        if (existingUser.length > 0) {
+        finalUser = existingUser[0];
+
+        await db.update(userInfo)
+            .set({ authorized: true })
+            .where(eq(userInfo.userId, finalUser.id));
+        } else {
+        const signupResult = await auth.api.signUpEmail({
+            body: {
+                email,
+                password: crypto.randomUUID(),
+                name: email.split("@")[0],
+            },
+        });
+
+        finalUser = signupResult.user;
+
+        await db.insert(userInfo).values({
+            id: crypto.randomUUID(),
+            userId: finalUser.id,
+            authorized: true, 
+            permissions: "none",
+        });
+        }
+        
 
         const response = NextResponse.json({
             success: true,
