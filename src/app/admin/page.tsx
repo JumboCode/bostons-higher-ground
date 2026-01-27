@@ -33,9 +33,9 @@ type ApiUserRow = {
   role?: string;
 };
 
-type GetUsersResponse = {
-  users: ApiUserRow[];
-};
+// type GetUsersResponse = {
+//   users: ApiUserRow[];
+// };
 
 //changes this function to get actual users
 export default function Admin() {
@@ -47,24 +47,6 @@ export default function Admin() {
     
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-
-    // Hardcoded users array
-    // const users: User[] = [
-    //     {
-    //         name: "Alice Johnson",
-    //         email: "alice@example.com",
-    //         status: "Active",
-    //         role: "Admin",
-    //     },
-    //     { name: "Bob Smith", email: "bob@example.com", status: "Pending" },
-    //     {
-    //         name: "Charlie Brown",
-    //         email: "charlie@example.com",
-    //         status: "Active",
-    //     },
-    //     { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
-    // ];
-
 
     useEffect(() => {
         async function load() {
@@ -78,13 +60,15 @@ export default function Admin() {
                     throw new Error(data?.error ?? "Failed to fetch users");
                 }
                 const data = await res.json();
-            
-                const mapped: User[] = data.map((u:ApiUserRow) => ({
-                    id: u.id,
-                    name: u.name ?? "(no name)",
-                    email: u.email ?? "(no email)",
-                    status: u.status === true ? "Active" : "Pending", // adapt if status differs
-                    role: u.role ?? undefined,
+
+                const rows: ApiUserRow[] = Array.isArray(data) ? data : data?.users ?? [];
+
+                const mapped: User[] = rows.map((u: ApiUserRow) => ({
+                id: u.id,
+                name: u.name ?? "(no name)",
+                email: u.email ?? "(no email)",
+                status: u.status === true ? "Active" : "Pending",
+                role: u.role ?? undefined,
                 }));
                 console.log(mapped);
                 setUsers(mapped);
@@ -232,15 +216,14 @@ export default function Admin() {
 function UserRow({ user }: { user: User }) {
     // for actions pop up
     const [actionVisible, setActionVisible] = useState(false);
-
-    const popupRef = useRef<HTMLDivElement | null>(null);
+    const actionsRef = useRef<HTMLDivElement | null>(null);
 
     //added the pup-up to close when clicked outside function
     useEffect(() => {
         if(!actionVisible) return;
 
         function handleClickOutside(e: MouseEvent) {
-            if(popupRef.current && !popupRef.current.contains(e.target as Node)) {
+            if(actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
                 setActionVisible(false);
             }
         }
@@ -248,6 +231,54 @@ function UserRow({ user }: { user: User }) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
 
     }, [actionVisible]);
+
+    // if (!actionVisible) return null;
+
+    async function handleResend(){
+        //CHECKS IF THE ADMIN WANTS TO RESEND INVITE
+        const ok = confirm("Do you want to resend invite?");
+        if(!ok) return;
+        
+        //FETCHING THE RESEND POST FUNCTION FROM THE BACKEND
+        const res = await fetch("/api/users/email", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ email: user.email }),
+        });
+
+        if(!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ?? "Failed to resend invite");
+            return;
+        }
+
+        alert("Invite resent.");
+        window.location.reload();
+    }
+
+     async function handleRemove(){
+        //CHECKS IF WE REALLY WANT TO REMOVE THE USER
+        const ok = confirm("Remove this user?");
+        if(!ok) return;
+
+        //GETS THE BACKEND REQUEST FROM ROUTES FILE
+        const res = await fetch("/api/users", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: user.id }),
+        });
+
+        //IF THERE IS A PROBLEM
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ?? "Failed to remove user");
+            return;
+        }
+
+        // Minimal: reload page or refresh data
+        // Later: remove user from state instead of reloading.
+        window.location.reload();
+    }
 
     return (
         <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
@@ -289,104 +320,65 @@ function UserRow({ user }: { user: User }) {
             </div>
 
             {/* Actions */}
-            <div className="text-right w-1/6 ml-auto">
-                <button onClick={() => setActionVisible((v)=>!v)}> 
-                    {" "}
+            <div ref={actionsRef} className="w-1/6 flex justify-end relative pr-2">
+                <button 
+                    type="button"
+                    onClick={() => setActionVisible((v)=>!v)}
+                    className="shrink-0 p-2 rounded-lg hover:bg-gray-100"
+                    aria-haspopup="menu"
+                    aria-expanded={actionVisible}
+                    > 
                     {/* when action button is clicked, state should become opposite of what it currently is  */}
                     <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
                 </button>
+                 <ActionPopUp 
+                    actionVisible={actionVisible} 
+                    user={user}
+                    onRemove={handleRemove}
+                    onResend={handleResend}
+                /> 
             </div>
-
-            <ActionPopUp 
-                actionVisible={actionVisible} 
-                userId={user.id}
-                userEmail={user.email}
-                popupRef={popupRef}
-            />
+ 
+           
         </div>
     );
 }
 
-function ActionPopUp({ actionVisible, userId, userEmail, popupRef }: { actionVisible: boolean; userId: string; userEmail: string; popupRef: React.RefObject<HTMLDivElement | null>;}) {
-    
+function ActionPopUp({ actionVisible, user, onRemove, onResend, }: { actionVisible: boolean; user: User; onRemove:  () => void; onResend: () => void;}) {
     if (!actionVisible) return null;
 
-    async function handleResend(){
-        //CHECKS IF THE ADMIN WANTS TO RESEND INVITE
-        const ok = confirm("Do you want to resend invite?");
-        if(!ok) return;
-        
-        //FETCHING THE RESEND POST FUNCTION FROM THE BACKEND
-        const res = await fetch("/api/users/email", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ email: userEmail }),
-        });
-
-        if(!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            alert(data?.error ?? "Failed to resend invite");
-            return;
-        }
-
-        alert("Invite resent.");
-        window.location.reload();
-    }
-    
-    
-    async function handleRemove(){
-        //CHECKS IF WE REALLY WANT TO REMOVE THE USER
-        const ok = confirm("Remove this user?");
-        if(!ok) return;
-
-        //GETS THE BACKEND REQUEST FROM ROUTES FILE
-        const res = await fetch("/api/users", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: userId }),
-        });
-
-        //IF THERE IS A PROBLEM
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            alert(data?.error ?? "Failed to remove user");
-            return;
-        }
-
-        // Minimal: reload page or refresh data
-        // Later: remove user from state instead of reloading.
-        window.location.reload();
-    }
-
-    return (
-        <div
-            ref={popupRef}
-            className="fixed z-50 flex flex-col left-250 bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-2.5 font-manrope border border-gray-200"
+     return (
+      
+         <div
+            className="absolute right-0 top-full mt-2 z-50 w-48 bg-white shadow-md rounded-xl p-2 font-manrope border border-gray-200"
         >
+            {/* View Activity Button */}
             <button  type="button"  className="flex gap-2 mb-2.5 pr-[30px]">
                 <Eye className="text-[#717182] mt-0.5 w-5 h-5" />
                 View Activity
             </button>
 
-            <button 
-                type="button" 
-                onClick={handleResend} 
-                className="flex gap-2 mb-2.5 pr-[30px]"
-            >
-                <Send className="text-[#717182] mt-0.5] w-5 h-5" />
-                Resend Invite
-            </button>
+            {/* Resend Invite Button */}
+            {user.status === "Pending" && (
+                <button
+                    type="button"
+                    onClick={onResend}
+                    className="flex gap-2 mb-2.5 pr-[30px]"
+                >
+                    <Send className="text-[#717182] mt-0.5 w-5 h-5" />
+                    Resend Invite
+                </button>
+            )}
 
-
+            {/* Remove User Button */}
             <button
                 type="button"
-                onClick={handleRemove}
+                onClick={onRemove}
                 className="flex gap-2 text-[#D9534F] pr-[30px] w-full text-left"
             >
-            <Trash2 className="text-[#717182] mt-0.5 w-5 h-5" />
-            Remove User
+                <Trash2 className="text-[#717182] mt-0.5 w-5 h-5" />
+                Remove User
             </button>
         </div>
     );
-        
 }
