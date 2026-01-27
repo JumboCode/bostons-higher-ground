@@ -18,6 +18,11 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    user: {
+        deleteUser: {
+            enabled: true 
+        }
+    },
     plugins: [
         nextCookies(),
         emailOTP({
