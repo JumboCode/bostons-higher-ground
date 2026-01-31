@@ -1,5 +1,7 @@
 "use client";
 
+console.log("Rendering current NavBar version");
+
 import { House, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";

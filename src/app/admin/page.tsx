@@ -61,9 +61,9 @@ export default function Admin() {
     ), [searchQuery]);
 
     return (
-        <main className="flex min-h-screen bg-[#F5F5F5] ">
+        <main className="flex min-h-screen bg-[#F5F5F5] overflow-x-hidden">
             <NavBar userName="TODO" />
-            <div className="relative flex-1 overflow-x-hidden min-h-[717px]">
+            <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
                 <div className="w-full h-[64px] border-b border-[#E5E7EB] bg-[#FFFFFF]"></div>
 
@@ -155,18 +155,14 @@ export default function Admin() {
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-0 left-[0px] flex w-full">
-                {/* Spacer for NavBar */}
-                <div className="w-[286px]" />
-
-                {/* Main content footer */}
-                <div className="flex-1 h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px]">
+            <div className="absolute bottom-0 left-[280px] right-0">
+                <div className="h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px] bg-white">
                     <footer className="text-[12px] text-[#6A7282]">
-                        © 2025 Higher Ground Boston. For authorized staff use
-                        only.
+                        © 2025 Higher Ground Boston. For authorized staff use only.
                     </footer>
                 </div>
             </div>
+
 
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
@@ -188,7 +184,7 @@ function UserRow({ user }: { user: User }) {
     const [actionVisible, setActionVisible] = useState(false);
 
     return (
-        <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
+        <div className="flex items-center justify-between py-3 border-b last:border-b-0 border-[#F0F0F0]">
             {/* Member */}
             <div className="flex items-center gap-3 w-1/6">
                 <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold">
