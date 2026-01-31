@@ -66,9 +66,11 @@ export function VerticalBarChart({
             .domain(data.map((d) => d.label))
             .range([0, innerWidth])
             .padding(0.25);
+        
+        const maxY = d3.max(data, (d) => d.value) ?? 0; //frocing the 0 values to be the min, not accepting negative values
         const y = d3
             .scaleLinear()
-            .domain([0, d3.max(data, (d) => d.value) || 0])
+            .domain([0, maxY === 0 ? 1 : maxY])
             .nice()
             .range([innerHeight, 0]);
 
@@ -85,6 +87,7 @@ export function VerticalBarChart({
             .attr("stroke-dasharray", "4 4")
             .attr("stroke-width", 1);
         yGrid.select("line:last-of-type").remove();
+        
 
         const xGrid = chart
             .append("g")
@@ -113,7 +116,10 @@ export function VerticalBarChart({
             .attr("width", x.bandwidth())
             .attr("height", (d) => innerHeight - y(d.value))
             .attr("fill", barColor)
-            .attr("rx", 4);
+            .attr("rx", 4)
+            .attr("stroke", DEFAULT_GRID)
+            .attr("stroke-dasharray", "4 4")
+            .attr("stroke-width", 1);
 
         const xAxis = chart
             .append("g")
