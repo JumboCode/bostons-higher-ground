@@ -4,6 +4,14 @@ import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
 
+import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 import {
     Search,
     CircleCheckBig,
@@ -136,7 +144,7 @@ export default function Admin() {
                         <div className="border-b border-[#E0E0E0] mb-3"></div>
 
                         {/* Rows */}
-                        <div className="flex flex-col gap-2 overflow-auto max-h-[60vh]">
+                        <div className="flex flex-col gap-2 overflow-visible max-h-[60vh]">
                             {filteredUsers.length > 0 ?
                                 filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
                              : <p>No users found.</p>
@@ -218,35 +226,28 @@ function UserRow({ user }: { user: User }) {
             </div>
 
             {/* Actions */}
-            <div className="text-right w-1/6 ml-auto">
-                <button onClick={() => setActionVisible(!actionVisible)}>
-                    {" "}
-                    {/* when action button is clicked, state should become opposite of what it currently is  */}
-                    <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
-                </button>
-            </div>
-
-            <ActionPopUp actionVisible={actionVisible} />
-        </div>
-    );
-}
-
-function ActionPopUp({ actionVisible }: { actionVisible: boolean }) {
-    if (!actionVisible) return null;
-
-    return (
-        <div className="fixed z-50 flex flex-col left-[1200px] bg-[#FFFFFF] shadow-md rounded-xl px-[15px] py-[10px] font-manrope border border-gray-200">
-            <div className="flex gap-[8px] mb-[10px] pr-[30px]">
-                <Eye className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
-                View Activity
-            </div>
-            <div className="flex gap-[8px] mb-[10px] pr-[30px]">
-                <Send className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
-                Resend Invite
-            </div>
-            <div className="flex gap-[8px] text-[#D9534F] pr-[30px]">
-                <Trash2 className="text-[#717182] mt-[2px] w-[20px] h-[20px]" />
-                Remove User
+            <div className="relative text-right w-1/6 ml-auto">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost">
+                            <MoreVertical />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem>
+                            <Eye />
+                            View Activity
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Send />
+                            Resend Invite
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Trash2 />
+                            Remove User
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
     );
