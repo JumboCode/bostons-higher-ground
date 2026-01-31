@@ -79,7 +79,7 @@ export default function ReportBuilderToggle() {
                         {count > 0 && (
                             <div className="relative block mt-1 mx-auto w-fit">
                                 <Circle className="w-5 h-5 fill-[#E76C82] stroke-[#E76C82]" />
-                                <span className="fixed inset-0 flex items-center justify-center text-white text-[10px] font-bold">
+                                <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold">
                                     {count}
                                 </span>
                             </div>
