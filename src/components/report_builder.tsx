@@ -213,8 +213,10 @@ export default function ReportBuilder({
     const count = charts.length;
 
     return (
-        <div className="z-50 bg-black/50 backdrop-blur-xs flex justify-end w-screen h-screen">
+        <div className="fixed top-0 left-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end w-screen h-screen">
+            {/* Overlay for clicking outside */}
             <div className="w-full h-full bg-none" onClick={onClose} />
+            {/* Sidebar */}
             <div className="relative h-full w-1/3 min-w-[400px] px-10 py-10 rounded-l-lg bg-white">
                 <div className="flex">
                     <div className="text-xl font-bold mb-3">Report Builder</div>
@@ -270,6 +272,7 @@ export default function ReportBuilder({
                     </div>
                 </div>
             </div>
+            
         </div>
     );
 }
