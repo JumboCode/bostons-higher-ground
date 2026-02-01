@@ -1,7 +1,7 @@
 "use client";
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
     X,
     GripVertical,
@@ -107,6 +107,22 @@ export default function ReportBuilder({
     onCountChange,
 }: ReportBuilderProps) {
     const [charts, setCharts] = useState<ReportChartEntry[]>([]);
+    const scrollYRef = useRef(0);
+
+    useEffect(() => {
+        scrollYRef.current = window.scrollY;
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${scrollYRef.current}px`;
+        document.body.style.width = "100%";
+
+        return () => {
+            document.body.style.position = "";
+            document.body.style.top = "";
+            document.body.style.width = "";
+            window.scrollTo(0, scrollYRef.current);
+        };
+    }, []);
+
 
     useEffect(() => {
         let active = true;
