@@ -4,6 +4,7 @@ import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateChart, type StoredChart } from "@/lib/generateChart";
 import { headers } from "next/headers";
+import Image from "next/image";
 
 export default async function PreviewPage() {
     const session = await auth.api.getSession({
@@ -21,6 +22,13 @@ export default async function PreviewPage() {
     const report = await db.query.inProgressReports.findFirst({
         where: eq(inProgressReports.userId, session.user.id),
     });
+    if (!report) {
+        return (
+            <div className="p-10 text-gray-700">
+                No in-progress report found.
+            </div>
+        );
+    }
 
     const charts = Array.isArray(report?.charts)
         ? (report!.charts as StoredChart[])
@@ -45,14 +53,24 @@ export default async function PreviewPage() {
     const visible = rendered.filter((c) => c.node !== null);
 
     return (
-        <div className="p-10 space-y-6">
-            <h1 className="text-3xl font-semibold text-gray-800">
-                Report Preview
-            </h1>
-            <div className="flex flex-col gap-6">
+        <div>
+            <div className={`print:[print-color-adjust:exact] bg-bhg-gray-300 flex justify-between items-center p-6`}>
+                <Image
+                    src="/Logo.svg"
+                    alt="Boston Higher Ground logo"
+                    className="w-56 h-auto"
+                    width={60}
+                    height={20}
+                    priority
+                />
+                <h1 className="text-3xl font-semibold text-white">
+                    {report?.title}
+                </h1>
+            </div>
+            <div className="flex flex-wrap gap-x-28 gap-y-20 p-10">
                 {visible.length > 0 ? (
                     visible.map((chart) => (
-                        <div key={chart.key}>{chart.node}</div>
+                        <div key={chart.key} className="flex-1 min-w-[calc(50%-3.5rem)] ">{chart.node}</div>
                     ))
                 ) : (
                     <div className="text-gray-600">
