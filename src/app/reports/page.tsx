@@ -70,7 +70,6 @@ async function DraftReportPopulated() {
                 </div>
             </div>
             <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
-                {/* <ReportChart title="Housing Pipeline" /> */}
                 {charts.length > 0 ? (charts.map((chart, idx) => (
                     <ReportChart key={`${chart.title}-${idx}`} title={chart.title} />
                 ))) : <p className="px-4 text-gray-400">

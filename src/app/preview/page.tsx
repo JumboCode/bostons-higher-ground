@@ -4,7 +4,7 @@ import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateChart, type StoredChart } from "@/lib/generateChart";
 import { headers } from "next/headers";
-import Image from "next/image";
+import ReportDoc from "./report-doc";
 
 export default async function PreviewPage() {
     const session = await auth.api.getSession({
@@ -53,32 +53,6 @@ export default async function PreviewPage() {
     const visible = rendered.filter((c) => c.node !== null);
 
     return (
-        <div>
-            <div className={`print:[print-color-adjust:exact] bg-bhg-gray-300 flex justify-between items-center p-6`}>
-                <Image
-                    src="/Logo.svg"
-                    alt="Boston Higher Ground logo"
-                    className="w-56 h-auto"
-                    width={60}
-                    height={20}
-                    priority
-                />
-                <h1 className="text-3xl font-semibold text-white">
-                    {report?.title}
-                </h1>
-            </div>
-            <div className="flex flex-wrap gap-x-28 gap-y-20 p-10">
-                {visible.length > 0 ? (
-                    visible.map((chart) => (
-                        <div key={chart.key} className="flex-1 min-w-[calc(50%-3.5rem)] ">{chart.node}</div>
-                    ))
-                ) : (
-                    <div className="text-gray-600">
-                        The saved charts could not be rendered. Add a chart to
-                        your report and try again.
-                    </div>
-                )}
-            </div>
-        </div>
+        <ReportDoc reportTitle={report.title ?? "Untitled Report"} charts={visible} />
     );
 }
