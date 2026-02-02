@@ -59,7 +59,7 @@ export default function InviteCard({
                         </span>
                         <input
                             type="text"
-                            placeholder="Fist Last"
+                            placeholder="First Last"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
