@@ -1,3 +1,5 @@
+import { auth } from "@/lib/auth";
+
 export async function sendEmail({
     email,
     otp,
@@ -5,9 +7,14 @@ export async function sendEmail({
 }: {
     email: string;
     otp: string;
-    type: string;
+    type: "sign-in" | "email-verification" | "forget-password";
 }): Promise<void> {
-    // todo: implement actual email sending logic
+    await auth.api.sendVerificationOTP({
+        body: {
+            email: email,
+            type: type,
+        },
+    })
     console.log(`[Email] Sending ${type} OTP to ${email}: ${otp}`);
 
 }

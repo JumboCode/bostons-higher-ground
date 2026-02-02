@@ -1,4 +1,7 @@
 import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
+import ReportCharts from "@/components/Report_Charts"
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -7,7 +10,15 @@ import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
  * drawn on the figma for the case when no charts are selected.
  */
 
-function DraftReportPopulated() {
+ async function DraftReportPopulated() {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+    console.log(session);
+    const res = await fetch("http://localhost:3000/api/reports/in-progress");
+    // const {success, reportId, charts, numCharts} = await res.json();
+    console.log(res);
+
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
             <div className="ReportNameEditBar space-y-2">
@@ -84,7 +95,8 @@ function DraftReportPopulated() {
  * make it reusable.
  */
 
-function ReportEntry({
+
+export function ReportEntry({
     title,
     date,
     schools,
@@ -96,7 +108,9 @@ function ReportEntry({
     schools: string;
     category: string;
     numOfCharts: number;
-}) {
+} 
+
+) { 
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
             <div className="flex grow flex-row h-full space-x-6 items-center">
