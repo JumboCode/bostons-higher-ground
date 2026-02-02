@@ -24,10 +24,10 @@ const TAB_CONFIG = [
 
 export default function Navbar({ userName }: { userName: string }) {
     const pathname = usePathname();
-    const [selected, setSelected] = useState("Overview");
+    //const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
 
-    useEffect(() => {}, [pathname]);
+    //useEffect(() => {}, [pathname]);
 
     return (
         <nav
@@ -46,14 +46,19 @@ export default function Navbar({ userName }: { userName: string }) {
 
             <ul className="flex flex-col gap-4 p-5">
                 {TAB_CONFIG.map(({ name, Icon, href }) => {
-                    const isSelected = selected === name;
+                    //const isSelected = selected === name;
+                    const isSelected =
+                        pathname === href ||
+                        (href !== "/reports" && pathname.startsWith(href + "/"));
+
+
                     return (
                         <Link
                             href={href}
                             key={name}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
-                            onClick={() => setSelected(name)}
+                            //onClick={() => setSelected(name)}
                             className="px-0"
                         >
                             <div
