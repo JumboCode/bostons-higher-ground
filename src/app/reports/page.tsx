@@ -1,7 +1,11 @@
 import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
-import ReportCharts from "@/components/Report_Charts"
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import ReportChart from "@/components/ReportChart";
+import { db } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { inProgressReports } from "@/lib/schema";
+import { type StoredChart } from "@/lib/generateChart";
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -10,14 +14,28 @@ import { headers } from "next/headers";
  * drawn on the figma for the case when no charts are selected.
  */
 
- async function DraftReportPopulated() {
+async function DraftReportPopulated() {
     const session = await auth.api.getSession({
         headers: await headers()
     });
-    console.log(session);
-    const res = await fetch("http://localhost:3000/api/reports/in-progress");
-    // const {success, reportId, charts, numCharts} = await res.json();
-    console.log(res);
+
+    if (!session) {
+        return (
+            <div className="p-10 text-gray-700">
+                Please sign in to view your in-progress report.
+            </div>
+        );
+    }
+
+    const userId = session.user.id;
+
+    const existing = await db.query.inProgressReports.findFirst({
+        where: eq(inProgressReports.userId, userId),
+    });
+
+    const charts = Array.isArray(existing?.charts)
+        ? (existing!.charts as StoredChart[])
+        : [];
 
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
@@ -27,7 +45,7 @@ import { headers } from "next/headers";
                         <h2 className="text-[#555555] text-lg font-semibold">
                             Draft Report
                         </h2>
-                        <p className="text-sm">3 charts added from dashboard</p>
+                        <p className="text-sm">{charts.length} {charts.length === 1 ? "chart" : "charts"} added from dashboard</p>
                     </div>
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
                         <button className="flex flex-row items-center space-x-4">
@@ -52,24 +70,12 @@ import { headers } from "next/headers";
                 </div>
             </div>
             <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
-                <div className="w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB] hover:bg-bgh-gray-100 duration-200 cursor-pointer">
-                    <FileText className="w-[20] h-[20] text-[#E76C82]" />
-                    <div className="font-semibold text-xs">
-                        Housing Pipeline
-                    </div>
-                </div>
-                <div className="w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB] hover:bg-bgh-gray-100 duration-200 cursor-pointer">
-                    <FileText className="w-[20] h-[20] text-[#E76C82]" />
-                    <div className="font-semibold text-xs">
-                        Intakes vs Families Housed
-                    </div>
-                </div>
-                <div className="w-36 space-y-2 rounded-2xl bg-[#F9FAFB] p-4 border border-[#E5E7EB] hover:bg-bgh-gray-100 duration-200 cursor-pointer">
-                    <FileText className="w-[20] h-[20] text-[#E76C82]" />
-                    <div className="font-semibold text-xs">
-                        Families Housed Over Time
-                    </div>
-                </div>
+                {/* <ReportChart title="Housing Pipeline" /> */}
+                {charts.length > 0 ? (charts.map((chart, idx) => (
+                    <ReportChart key={`${chart.title}-${idx}`} title={chart.title} />
+                ))) : <p className="px-4 text-gray-400">
+                    Add charts using the &quot;+&quot; buttons to see them here.
+                </p>}
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
@@ -108,9 +114,9 @@ export function ReportEntry({
     schools: string;
     category: string;
     numOfCharts: number;
-} 
+}
 
-) { 
+) {
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
             <div className="flex grow flex-row h-full space-x-6 items-center">
