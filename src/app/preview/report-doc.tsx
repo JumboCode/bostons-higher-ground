@@ -3,15 +3,8 @@
 import { Page, Text, View, Document, Image, StyleSheet, PDFViewer } from "@react-pdf/renderer";
 import { JSXElementConstructor, ReactElement, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { createTw } from "react-pdf-tailwind";
 import Logo from "../../../public/Logo.png"
 import html2canvas from 'html2canvas-pro';
-
-const tw = createTw({
-    colors: {
-        "bghGray300": "#2D2D2D",
-    },
-});
 
 const styles = StyleSheet.create({
     headerSection: {
@@ -30,11 +23,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         flexWrap: "wrap",
         rowGap: 50,
-        // columnGap: 40,
         padding: 24,
-    },
-    testColor: {
-        backgroundColor: "#F9FAFB",
     }
 });
 
@@ -75,7 +64,7 @@ function ReportDoc({
                         <View style={styles.headerSection}>
                             <Image
                                 src={Logo.src}
-                                style={tw("w-56 h-auto")}
+                                style={{ width: 168 }}
                             />
                             <Text style={styles.header}>
                                 {reportTitle}
@@ -91,7 +80,7 @@ function ReportDoc({
                                     />
                                 ))
                             ) : (
-                                !isLoading && <Text style={tw(`text-gray-600 text-sm`)}>
+                                !isLoading && <Text style={{ fontSize: 12, color: "#364152" }}>
                                     No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
                                 </Text>
                             )}
