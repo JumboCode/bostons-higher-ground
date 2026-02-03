@@ -1,11 +1,11 @@
-// ReportDoc.client.tsx
 "use client";
 
 import { Page, Text, View, Document, Image, StyleSheet, PDFViewer } from "@react-pdf/renderer";
-import { JSXElementConstructor, ReactElement } from "react";
+import { JSXElementConstructor, ReactElement, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { createTw } from "react-pdf-tailwind";
 import Logo from "../../../public/Logo.png"
+import html2canvas from 'html2canvas-pro';
 
 const tw = createTw({
     colors: {
@@ -27,9 +27,10 @@ const styles = StyleSheet.create({
         color: "white",
     },
     chartSection: {
+        flexDirection: "row",
         flexWrap: "wrap",
-        rowGap: 80,
-        columnGap: 56,
+        rowGap: 50,
+        // columnGap: 40,
         padding: 24,
     },
     testColor: {
@@ -44,48 +45,72 @@ function ReportDoc({
     reportTitle: string;
     charts: { key: string; node: ReactElement<unknown, string | JSXElementConstructor<any>> | null }[];
 }) {
+    const [chartImages, setChartImages] = useState<string[]>([]);
+    const chartRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // get charts as images
+    useEffect(() => {
+        async function generateImages() {
+            const images = await Promise.all(
+                chartRefs.current.map(async (el) => {
+                    if (!el) return "";
+                    const canvas = await html2canvas(el, { backgroundColor: null });
+                    return canvas.toDataURL("image/png");
+                })
+            );
+            setChartImages(images.filter(Boolean));
+            setIsLoading(false);
+        }
+
+        generateImages();
+    }, [charts]);
+
     return (
-        <PDFViewer width="100%" className="h-dvh">
-            <Document title={reportTitle}>
-                <Page size="LETTER">
-                    <View style={styles.headerSection}>
-                        <Image
-                            src={Logo.src}
-                            style={tw("w-56 h-auto")}
-                        />
-                        <Text style={styles.header}>
-                            {reportTitle}
-                        </Text>
-                    </View>
-                    <View style={styles.chartSection}>
-                        {charts.length > 0 ? (
-                            charts.map((chart, idx) => (
-                                // <div key={chart.key} className="flex-1 min-w-[calc(50%-3.5rem)] ">{chart.node}</div>
-                                // <Text key={idx} style={styles.testColor}>chart here</Text>
-                                <View key={idx}>{chart.node}</View>
-                            ))
-                        ) : (
-                            <Text style={tw(`text-gray-600 text-sm`)}>
-                                No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
+        <>
+            {/* cover div with charts */}
+            <PDFViewer width="100%" className="h-dvh absolute z-100">
+                <Document title={reportTitle}>
+                    <Page size="LETTER">
+                        <View style={styles.headerSection}>
+                            <Image
+                                src={Logo.src}
+                                style={tw("w-56 h-auto")}
+                            />
+                            <Text style={styles.header}>
+                                {reportTitle}
                             </Text>
-                        )}
-                    </View>
-                    {/*
-                    <div className="flex flex-wrap gap-x-28 gap-y-20 p-10">
-                        {charts.length > 0 ? (
-                            charts.map((chart) => (
-                                <div key={chart.key} className="flex-1 min-w-[calc(50%-3.5rem)] ">{chart.node}</div>
-                            ))
-                        ) : (
-                            <div className="text-gray-600">
-                                The saved charts could not be rendered. Add a chart to
-                                your report and try again.
-                            </div>
-                        )}
-                    </div> */}
-                </Page>
-            </Document>
-        </PDFViewer>
+                        </View>
+                        <View style={styles.chartSection}>
+                            {chartImages.length > 0 ? (
+                                chartImages.map((src, i) => (
+                                    <Image
+                                        key={i}
+                                        src={src}
+                                        style={{ width: "50%" }}
+                                    />
+                                ))
+                            ) : (
+                                !isLoading && <Text style={tw(`text-gray-600 text-sm`)}>
+                                    No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
+                                </Text>
+                            )}
+                        </View>
+                    </Page>
+                </Document>
+            </PDFViewer>
+            {/* hidden dom for getting charts as images */}
+            <div className="h-dvh overflow-y-scroll">
+                {charts.map((chart, i) => (
+                    <div
+                        key={chart.key}
+                        ref={(ele) => { chartRefs.current[i] = ele; }}
+                    >
+                        {chart.node}
+                    </div>
+                ))}
+            </div>
+        </>
     );
 }
 
