@@ -34,15 +34,6 @@ export default async function PreviewPage() {
         ? (report!.charts as StoredChart[])
         : [];
 
-    if (!charts.length) {
-        return (
-            <div className="p-10 text-gray-700">
-                No in-progress report found. Add charts using the &quot;+&quot; buttons to
-                see them here.
-            </div>
-        );
-    }
-
     const rendered = await Promise.all(
         charts.map(async (chart, idx) => ({
             key: `${chart.title}-${idx}`,
