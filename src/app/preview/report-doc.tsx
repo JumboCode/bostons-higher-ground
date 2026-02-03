@@ -1,7 +1,7 @@
 "use client";
 
 import { Page, Text, View, Document, Image, StyleSheet, PDFViewer } from "@react-pdf/renderer";
-import { JSXElementConstructor, ReactElement, useEffect, useRef, useState } from "react";
+import { ReactElement, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Logo from "../../../public/Logo.png"
 import html2canvas from 'html2canvas-pro';
@@ -32,7 +32,7 @@ function ReportDoc({
     charts,
 }: {
     reportTitle: string;
-    charts: { key: string; node: ReactElement<unknown, string | JSXElementConstructor<any>> | null }[];
+    charts: { key: string; node: ReactElement | null }[];
 }) {
     const [chartImages, setChartImages] = useState<string[]>([]);
     const chartRefs = useRef<(HTMLDivElement | null)[]>([]);
