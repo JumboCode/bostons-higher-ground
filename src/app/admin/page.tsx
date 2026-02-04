@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
@@ -25,72 +25,110 @@ import {
 } from "lucide-react";
 
 type User = {
+    id: string;
     name: string;
     email: string;
     status: "Active" | "Pending";
     role?: string;
 };
 
+type ApiUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  status: boolean;
+  role?: string;
+};
+
+// type GetUsersResponse = {
+//   users: ApiUserRow[];
+// };
+
+//changes this function to get actual users
 export default function Admin() {
     // for invite staff pop up
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);  
+    
+    
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Hardcoded users array
-    const users: User[] = [
-        {
-            name: "Alice Johnson",
-            email: "alice@example.com",
-            status: "Active",
-            role: "Admin",
-        },
-        { name: "Bob Smith", email: "bob@example.com", status: "Pending" },
-        {
-            name: "Charlie Brown",
-            email: "charlie@example.com",
-            status: "Active",
-        },
-        { name: "Dana Lee", email: "dana@example.com", status: "Pending" },
-    ];
+    useEffect(() => {
+        async function load() {
+            try{
+                setLoading(true);
+                setError(null);
+
+                const res = await fetch('/api/users'); 
+                if(!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data?.error ?? "Failed to fetch users");
+                }
+                const data = await res.json();
+
+                const rows: ApiUserRow[] = Array.isArray(data) ? data : data?.users ?? [];
+
+                const mapped: User[] = rows.map((u: ApiUserRow) => ({
+                id: u.id,
+                name: u.name ?? "(no name)",
+                email: u.email ?? "(no email)",
+                status: u.status === true ? "Active" : "Pending",
+                role: u.role ?? undefined,
+                }));
+                console.log(mapped);
+                setUsers(mapped);
+            } catch (e: unknown){
+                const message = e instanceof Error ? e.message : "Error loading users";
+                setError(message);
+            }finally {
+                setLoading(false);
+            }
+            
+        }
+        load();
+    }, []);
+
     const numMembers = users.length;
 
     const filteredUsers = useMemo(() => (
         users.filter((user) =>
             user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-    ), [searchQuery]);
+    ), [users, searchQuery]);
 
     return (
         <main className="flex min-h-screen bg-[#F5F5F5] overflow-x-hidden">
             <NavBar userName="admin" />
             <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
-                <div className="w-full h-[64px] border-b border-[#E5E7EB] bg-[#FFFFFF]"></div>
+                <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div>
 
                 {/*Title*/}
-                <div className="mt-[20px] mx-[45px] flex items-center justify-between">
+                <div className="mt-5 mx-[45px] flex items-center justify-between">
                     <h1 className="text-[#555555] text-[28px] leading-[42px] font-poppins font-bold ">
                         Admin Settings
                     </h1>
-                    <button className="px-[10px] py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2">
+                    <button className="px-2.5 py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2">
                         <RefreshCcw className="w-[17px] h-[17px] text-[#E76C82]" />
                         Update Data
                     </button>
                 </div>
 
                 {/*Alert Box */}
-                <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-[16px] px-4 flex items-center">
-                    <CircleCheckBig className="w-[16px] h-[16px] text-[#555555]" />
-                    <p className="font-manrope text-[14px] text-[#555555] leading-[20px] pl-[10px]">
+                <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-2xl px-4 flex items-center">
+                    <CircleCheckBig className="w-4 h-4 text-[#555555]" />
+                    <p className="font-manrope text-[14px] text-[#555555] leading-5 pl-2.5">
                         Last sync from Salesforce: Today at 12:44AM
                     </p>
                 </div>
 
                 {/*Table*/}
-                <div className="mt-[25px] mx-[45px] h-[538px] border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col">
+                <div className="mt-[25px] mx-[45px] h-f border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-6 flex flex-col">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-[12px]">
-                            <div className="w-[45px] h-[45px] rounded-[16px] bg-[#F0E7ED] flex items-center justify-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-[45px] h-[45px] rounded-2xl bg-[#F0E7ED] flex items-center justify-center">
                                 <UsersRound className="w-[25px] h-[25px] text-[#E76C82]" />
                             </div>
 
@@ -108,8 +146,8 @@ export default function Admin() {
                         {/*Invite Staff*/}
                         <button
                             onClick={() => setIsInviteOpen(true)}
-                            className="pl-[15px] pr-[18px] py-[8px] h-[40px] rounded-[14px] bg-[#E76C82] hover:bg-[#d75c6f] flex items-center justify-center
-                            text-[#FFFFFF] font-manrope text-[15px] leading-[20px] gap-[12px]"
+                            className="pl-[15px] pr-[18px] py-2 h-10 rounded-[14px] bg-[#E76C82] hover:bg-[#d75c6f] flex items-center justify-center
+                            text-[#FFFFFF] font-manrope text-[15px] leading-5 gap-3"
                         >
                             <Send className="w-[18px] h-[18px]" />
                             Invite Staff
@@ -117,23 +155,23 @@ export default function Admin() {
                     </div>
 
                     {/*Search bar*/}
-                    <div className="relative pt-[10px]">
-                        <Search className="mt-[25px] absolute left-[12px] top-[13.5px] w-[20px] h-[20px] text-[#ABABAB]" />
+                    <div className="relative pt-2.5">
+                        <Search className="mt-[25px] absolute left-3 top-[13.5px] w-5 h-5 text-[#ABABAB]" />
                         <input
                             type="text"
                             placeholder="Search by name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full mt-[12px] top-[66px] h-[55px] rounded-[14px] border border-[#D9D9D9] px-[44px] py-[12px] pr-[16px] outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                            className="w-full mt-3 top-[66px] h-[55px] rounded-[14px] border border-[#D9D9D9] px-11 py-3 pr-4 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
                         ></input>
                     </div>
 
                     {/* ALL USERS!! */}
-                    <div className="mt-[35px] mx-[8px] flex flex-col">
+                    <div className="mt-[35px] mx-2 flex flex-col">
                         {/* Header */}
                         <div className="flex w-full text-[#555555] font-manrope font-semibold mb-3">
                             <span className="text-left w-1/6">Member</span>
-                            <span className="text-center flex-grow w-1/3">
+                            <span className="text-center grow w-1/3">
                                 Email
                             </span>
                             <span className="text-center w-1/6">Status</span>
@@ -163,7 +201,6 @@ export default function Admin() {
                 </div>
             </div>
 
-
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
                     <InviteCard
@@ -182,12 +219,76 @@ export default function Admin() {
 function UserRow({ user }: { user: User }) {
     // for actions pop up
     const [actionVisible, setActionVisible] = useState(false);
+    const actionsRef = useRef<HTMLDivElement | null>(null);
+
+    //added the pup-up to close when clicked outside function
+    useEffect(() => {
+        if(!actionVisible) return;
+
+        function handleClickOutside(e: MouseEvent) {
+            if(actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
+                setActionVisible(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    }, [actionVisible]);
+
+    // if (!actionVisible) return null;
+
+    async function handleResend(){
+        //CHECKS IF THE ADMIN WANTS TO RESEND INVITE
+        const ok = confirm("Do you want to resend invite?");
+        if(!ok) return;
+        
+        //FETCHING THE RESEND POST FUNCTION FROM THE BACKEND
+        const res = await fetch("/api/users/email", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ email: user.email }),
+        });
+
+        if(!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ?? "Failed to resend invite");
+            return;
+        }
+
+        alert("Invite resent.");
+        window.location.reload();
+    }
+
+     async function handleRemove(){
+        //CHECKS IF WE REALLY WANT TO REMOVE THE USER
+        const ok = confirm("Remove this user?");
+        if(!ok) return;
+
+        //GETS THE BACKEND REQUEST FROM ROUTES FILE
+        const res = await fetch("/api/users", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: user.id }),
+        });
+
+        //IF THERE IS A PROBLEM
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ?? "Failed to remove user");
+            return;
+        }
+
+        // Minimal: reload page or refresh data
+        // Later: remove user from state instead of reloading.
+        window.location.reload();
+    }
 
     return (
         <div className="flex items-center justify-between py-3 border-b last:border-b-0 border-[#F0F0F0]">
             {/* Member */}
-            <div className="flex items-center gap-3 w-1/6">
-                <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold">
+            {/* I added "truncate" to rows and "shrink-0" to logos, now it it does not fit to the page, it just shows the part that fits */}
+            <div className="flex items-center gap-3 w-1/3 truncate"> 
+                <div className="w-10 h-10 rounded-full shrink-0  bg-[#E76C82] flex items-center justify-center text-white font-bold">
                     {user.name[0]}
                 </div>
                 <div className="flex flex-col">
@@ -204,7 +305,7 @@ function UserRow({ user }: { user: User }) {
             </div>
 
             {/* Email */}
-            <div className="text-gray-400 text-center flex-grow w-1/3">
+            <div className="text-gray-400 text-center grow w-1/3">
                 {user.email}
             </div>
 
