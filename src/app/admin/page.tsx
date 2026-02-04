@@ -61,15 +61,15 @@ export default function Admin(){
 
                 {/*Alert Box */}
                 <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-[16px] px-4 flex items-center">
-                    <CircleCheckBig className="w-[16px] h-[16px] text-[#555555]"/>
-                    <p className="font-manrope text-[14px] text-[#555555] leading-[20px] pl-[10px]">
+                    <CircleCheckBig className="w-[16px] h-[16px] text-[#555555] shrink-0"/>
+                    <p className="font-manrope text-[14px] text-[#555555] leading-[20px] pl-[10px] line-clamp-2">
                         Last sync from Salesforce: Today at 12:44AM
                     </p>
                 </div>
             
 
                 {/*Table*/}
-                <div className="mt-[25px] mx-[45px] h-[538px] border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col">
+                <div className="mt-[25px] mx-[45px] h-[538px] border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col min-w-[800px]">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-[12px]">
                             <div className="w-[45px] h-[45px] rounded-[16px] bg-[#F0E7ED] flex items-center justify-center">
@@ -108,9 +108,9 @@ export default function Admin(){
                     </div>
                     
                     {/* ALL USERS!! */}
-                    <div className="mt-[35px] mx-[8px] flex flex-col">
+                    <div className="mt-[35px] mx-[8px] flex flex-col ">
                         {/* Header */}
-                        <div className="flex w-full text-[#555555] font-manrope font-semibold mb-3">
+                        <div className="flex w-full text-[#555555] font-manrope font-semibold mb-3 ">
                             <span className="text-left w-1/6">Member</span>
                             <span className="text-center flex-grow w-1/3">Email</span>
                             <span className="text-center w-1/6">Status</span>
@@ -118,10 +118,10 @@ export default function Admin(){
                         </div>
 
                         {/* Dividing line for the table */}
-                        <div className="border-b border-[#E0E0E0] mb-3"></div>
+                        <div className="border-b border-[#E0E0E0] mb-3 "></div>
 
                         {/* Rows */}
-                        <div className="flex flex-col gap-2 overflow-auto max-h-[60vh]">
+                        <div className=" gap-2 overflow-auto max-h-[60vh]">
                             {users.map((user, idx) => (
                                 <UserRow key={idx} user={user} />
                             ))}
@@ -154,47 +154,50 @@ function UserRow({ user }:{ user:User }) {
     // for actions pop up
     const [actionVisible, setActionVisible] = useState(false);
 
-    return(
-        <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
-            {/* Member */}
-            <div className="flex items-center gap-3 w-1/6">
-                <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold">
-                    {user.name[0]}
-                </div>
-                <div className="flex flex-col">
-                    <span className="font-poppins font-semibold text-[#111827]">{user.name}</span>
-                    {user.role && (
-                        <span className="flex text-[12px] text-[#E76C82] gap-[3px]">
-                            <Shield className="w-[15px] h-[15px]"/>
-                            {user.role}
+        return(
+
+            <div className="overflow-x-auto min-w-[900px]">    
+                <div className="flex items-center justify-between py-4 border-b last:border-b-0  border-[#F0F0F0]">
+                    {/* Member */}
+                    <div className="flex items-center gap-3 w-[200px] min-w-[200px] ">
+                        <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold">
+                            {user.name[0]}
+                        </div>
+                        <div className="flex flex-col ">
+                            <span className="font-poppins font-semibold text-[#111827]">{user.name}</span>
+                            {user.role && (
+                                <span className="flex text-[12px] text-[#E76C82] gap-[3px]">
+                                    <Shield className="w-[15px] h-[15px]"/>
+                                    {user.role}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Email */}
+                    <div className="text-gray-400 text-center flex-grow w-1/3   ">{user.email}</div>
+
+                    {/* Status */}
+                    <div className="text-center w-1/6 ml-auto ">
+                        <span
+                            className={`px-2 py-1 rounded-full text-[12px] ${
+                                user.status === "Active" ? "bg-green-100 text-green-600 " : "bg-yellow-100 text-yellow-600 "
+                                }`}
+                            >
+                            {user.status}
                         </span>
-                    )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="text-right w-1/6 ml-auto">
+                        <button onClick={() => setActionVisible(!actionVisible)}> {/* when action button is clicked, state should become opposite of what it currently is  */}
+                            <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
+                        </button>
+                    </div>
+
+                    <ActionPopUp actionVisible={actionVisible} />
                 </div>
             </div>
-
-            {/* Email */}
-            <div className="text-gray-400 text-center flex-grow w-1/3">{user.email}</div>
-
-            {/* Status */}
-            <div className="text-center w-1/6 ml-auto">
-                <span
-                    className={`px-2 py-1 rounded-full text-[12px] ${
-                        user.status === "Active" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"
-                        }`}
-                    >
-                    {user.status}
-                </span>
-            </div>
-
-            {/* Actions */}
-            <div className="text-right w-1/6 ml-auto">
-                <button onClick={() => setActionVisible(!actionVisible)}> {/* when action button is clicked, state should become opposite of what it currently is  */}
-                    <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
-                </button>
-            </div>
-
-            <ActionPopUp actionVisible={actionVisible} />
-        </div>
     );
 }
 
