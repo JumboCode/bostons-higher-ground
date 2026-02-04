@@ -4,6 +4,13 @@ import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
 
+import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
     Search,
@@ -92,9 +99,9 @@ export default function Admin() {
     ), [users, searchQuery]);
 
     return (
-        <main className="flex min-h-screen bg-[#F5F5F5] ">
-            <NavBar userName="TODO" />
-            <div className="flex-1 overflow-x-hidden min-h-screen flex flex-col">
+        <main className="flex min-h-screen bg-[#F5F5F5] overflow-x-hidden">
+            <NavBar userName="admin" />
+            <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
                 <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div>
 
@@ -175,7 +182,7 @@ export default function Admin() {
                         <div className="border-b border-[#E0E0E0] mb-3"></div>
 
                         {/* Rows */}
-                        <div className="flex flex-col gap-2 overflow-y-auto overflow-x-visible max-h-[60vh]">
+                        <div className="flex flex-col gap-2 overflow-visible max-h-[60vh]">
                             {filteredUsers.length > 0 ?
                                 filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
                              : <p>No users found.</p>
@@ -183,20 +190,16 @@ export default function Admin() {
                         </div>
                     </div>
                 </div>
-                {/* Footer */}
-                {/* Moved footer inside this div as it was over the users, made changes to className so that its responsive to the page  */}
-                <div className="mt-auto w-full border-t border-[#E5E7EB] bg-[#F5F5F5]">
-                    {/* Main content footer */}
-                    <div className="h-[66px] flex items-center justify-center px-8">
-                        <footer className="text-[12px] text-[#6A7282] text-center">
-                            © 2025 Higher Ground Boston. For authorized staff use
-                            only.
-                        </footer>
-                    </div>
-                </div>
             </div>
 
-            
+            {/* Footer */}
+            <div className="absolute bottom-0 left-[250px] right-0">
+                <div className="h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px] bg-white">
+                    <footer className="text-[12px] text-[#6A7282]">
+                        © 2025 Higher Ground Boston. For authorized staff use only.
+                    </footer>
+                </div>
+            </div>
 
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
@@ -281,7 +284,7 @@ function UserRow({ user }: { user: User }) {
     }
 
     return (
-        <div className="flex items-center justify-between py-3 border-b last:border-b-0  border-[#F0F0F0]">
+        <div className="flex items-center justify-between py-3 border-b last:border-b-0 border-[#F0F0F0]">
             {/* Member */}
             {/* I added "truncate" to rows and "shrink-0" to logos, now it it does not fit to the page, it just shows the part that fits */}
             <div className="flex items-center gap-3 w-1/3 truncate"> 
@@ -320,65 +323,29 @@ function UserRow({ user }: { user: User }) {
             </div>
 
             {/* Actions */}
-            <div ref={actionsRef} className="w-1/6 flex justify-end relative pr-2">
-                <button 
-                    type="button"
-                    onClick={() => setActionVisible((v)=>!v)}
-                    className="shrink-0 p-2 rounded-lg hover:bg-gray-100"
-                    aria-haspopup="menu"
-                    aria-expanded={actionVisible}
-                    > 
-                    {/* when action button is clicked, state should become opposite of what it currently is  */}
-                    <MoreVertical className="w-5 h-5 text-gray-500 cursor-pointer ml-auto" />
-                </button>
-                 <ActionPopUp 
-                    actionVisible={actionVisible} 
-                    user={user}
-                    onRemove={handleRemove}
-                    onResend={handleResend}
-                /> 
+            <div className="relative text-right w-1/6 ml-auto">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost">
+                            <MoreVertical />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem>
+                            <Eye />
+                            View Activity
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Send />
+                            Resend Invite
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Trash2 />
+                            Remove User
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
- 
-           
-        </div>
-    );
-}
-
-function ActionPopUp({ actionVisible, user, onRemove, onResend, }: { actionVisible: boolean; user: User; onRemove:  () => void; onResend: () => void;}) {
-    if (!actionVisible) return null;
-
-     return (
-      
-         <div
-            className="absolute right-0 top-full mt-2 z-50 w-48 bg-white shadow-md rounded-xl p-2 font-manrope border border-gray-200"
-        >
-            {/* View Activity Button */}
-            <button  type="button"  className="flex gap-2 mb-2.5 pr-[30px]">
-                <Eye className="text-[#717182] mt-0.5 w-5 h-5" />
-                View Activity
-            </button>
-
-            {/* Resend Invite Button */}
-            {user.status === "Pending" && (
-                <button
-                    type="button"
-                    onClick={onResend}
-                    className="flex gap-2 mb-2.5 pr-[30px]"
-                >
-                    <Send className="text-[#717182] mt-0.5 w-5 h-5" />
-                    Resend Invite
-                </button>
-            )}
-
-            {/* Remove User Button */}
-            <button
-                type="button"
-                onClick={onRemove}
-                className="flex gap-2 text-[#D9534F] pr-[30px] w-full text-left"
-            >
-                <Trash2 className="text-[#717182] mt-0.5 w-5 h-5" />
-                Remove User
-            </button>
         </div>
     );
 }
