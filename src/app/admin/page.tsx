@@ -117,15 +117,15 @@ export default function Admin() {
                 </div>
 
                 {/*Alert Box */}
-                <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-2xl px-4 flex items-center">
-                    <CircleCheckBig className="w-4 h-4 text-[#555555]" />
-                    <p className="font-manrope text-[14px] text-[#555555] leading-5 pl-2.5">
+                <div className="mt-[13px] mx-[45px] h-[46px] bg-[#4CAF501A] border border-[#4CAF5033] rounded-[16px] px-4 flex items-center">
+                    <CircleCheckBig className="w-[16px] h-[16px] text-[#555555] shrink-0"/>
+                    <p className="font-manrope text-[14px] text-[#555555] leading-[20px] pl-[10px] line-clamp-2">
                         Last sync from Salesforce: Today at 12:44AM
                     </p>
                 </div>
 
                 {/*Table*/}
-                <div className="mt-[25px] mx-[45px] h-f border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-6 flex flex-col">
+                <div className="mt-[25px] mx-[45px] h-[538px] border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col min-w-[800px]">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-[45px] h-[45px] rounded-2xl bg-[#F0E7ED] flex items-center justify-center">
@@ -167,30 +167,32 @@ export default function Admin() {
                     </div>
 
                     {/* ALL USERS!! */}
-                    <div className="mt-[35px] mx-2 flex flex-col">
-                        {/* Header */}
-                        <div className="flex w-full text-[#555555] font-manrope font-semibold mb-3">
-                            <span className="text-left w-1/6">Member</span>
-                            <span className="text-center grow w-1/3">
-                                Email
-                            </span>
-                            <span className="text-center w-1/6">Status</span>
-                            <span className="text-right w-1/6">Actions</span>
+                    <div className="mt-[35px] mx-[8px]  overflow-x-auto">
+                        <div className="min-w-[900px]">
+                            {/* Header */}
+                            <div className="flex w-full text-[#555555] font-manrope font-semibold mb-3 ">
+                                <span className="text-left w-1/6">Member</span>
+                                <span className="text-center grow w-1/3">
+                                    Email
+                                </span>
+                                <span className="text-center w-1/6">Status</span>
+                                <span className="text-right w-1/6">Actions</span>
+                            </div>
+
+                            {/* Dividing line for the table */}
+                            <div className="border-b border-[#E0E0E0] mb-3 "></div>
+
+                            {/* Rows */}
+                            <div className="flex flex-col gap-0.5 overflow-y-auto ">
+                                {filteredUsers.length > 0 ?
+                                    filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
+                                : <p>No users found.</p>
+                                }
+                            </div>
                         </div>
-
-                        {/* Dividing line for the table */}
-                        <div className="border-b border-[#E0E0E0] mb-3"></div>
-
-                        {/* Rows */}
-                        <div className="flex flex-col gap-2 overflow-visible max-h-[60vh]">
-                            {filteredUsers.length > 0 ?
-                                filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
-                             : <p>No users found.</p>
-                            }
                         </div>
                     </div>
                 </div>
-            </div>
 
             {/* Footer */}
             <div className="absolute bottom-0 left-[250px] right-0">
@@ -217,135 +219,127 @@ export default function Admin() {
 }
 
 function UserRow({ user }: { user: User }) {
-    // for actions pop up
-    const [actionVisible, setActionVisible] = useState(false);
-    const actionsRef = useRef<HTMLDivElement | null>(null);
+  const [actionVisible, setActionVisible] = useState(false);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
 
-    //added the pup-up to close when clicked outside function
-    useEffect(() => {
-        if(!actionVisible) return;
+  useEffect(() => {
+    if (!actionVisible) return;
 
-        function handleClickOutside(e: MouseEvent) {
-            if(actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
-                setActionVisible(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-
-    }, [actionVisible]);
-
-    // if (!actionVisible) return null;
-
-    async function handleResend(){
-        //CHECKS IF THE ADMIN WANTS TO RESEND INVITE
-        const ok = confirm("Do you want to resend invite?");
-        if(!ok) return;
-        
-        //FETCHING THE RESEND POST FUNCTION FROM THE BACKEND
-        const res = await fetch("/api/users/email", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ email: user.email }),
-        });
-
-        if(!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            alert(data?.error ?? "Failed to resend invite");
-            return;
-        }
-
-        alert("Invite resent.");
-        window.location.reload();
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        actionsRef.current &&
+        !actionsRef.current.contains(e.target as Node)
+      ) {
+        setActionVisible(false);
+      }
     }
 
-     async function handleRemove(){
-        //CHECKS IF WE REALLY WANT TO REMOVE THE USER
-        const ok = confirm("Remove this user?");
-        if(!ok) return;
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, [actionVisible]);
 
-        //GETS THE BACKEND REQUEST FROM ROUTES FILE
-        const res = await fetch("/api/users", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: user.id }),
-        });
+  async function handleResend() {
+    const ok = confirm("Do you want to resend invite?");
+    if (!ok) return;
 
-        //IF THERE IS A PROBLEM
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            alert(data?.error ?? "Failed to remove user");
-            return;
-        }
+    const res = await fetch("/api/users/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email }),
+    });
 
-        // Minimal: reload page or refresh data
-        // Later: remove user from state instead of reloading.
-        window.location.reload();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data?.error ?? "Failed to resend invite");
+      return;
     }
 
-    return (
-        <div className="flex items-center justify-between py-3 border-b last:border-b-0 border-[#F0F0F0]">
-            {/* Member */}
-            {/* I added "truncate" to rows and "shrink-0" to logos, now it it does not fit to the page, it just shows the part that fits */}
-            <div className="flex items-center gap-3 w-1/3 truncate"> 
-                <div className="w-10 h-10 rounded-full shrink-0  bg-[#E76C82] flex items-center justify-center text-white font-bold">
-                    {user.name[0]}
-                </div>
-                <div className="flex flex-col">
-                    <span className="font-poppins font-semibold text-[#111827]">
-                        {user.name}
-                    </span>
-                    {user.role && (
-                        <span className="flex text-[12px] text-[#E76C82] gap-[3px]">
-                            <Shield className="w-[15px] h-[15px]" />
-                            {user.role}
-                        </span>
-                    )}
-                </div>
-            </div>
+    alert("Invite resent.");
+    window.location.reload();
+  }
 
-            {/* Email */}
-            <div className="text-gray-400 text-center grow w-1/3">
-                {user.email}
-            </div>
+  async function handleRemove() {
+    const ok = confirm("Remove this user?");
+    if (!ok) return;
 
-            {/* Status */}
-            <div className="text-center w-1/6 ml-auto">
-                <span
-                    className={`px-2 py-1 rounded-full text-[12px] ${
-                        user.status === "Active"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-yellow-100 text-yellow-600"
-                    }`}
-                >
-                    {user.status}
-                </span>
-            </div>
+    const res = await fetch("/api/users", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: user.id }),
+    });
 
-            {/* Actions */}
-            <div className="relative text-right w-1/6 ml-auto">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost">
-                            <MoreVertical />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem>
-                            <Eye />
-                            View Activity
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <Send />
-                            Resend Invite
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <Trash2 />
-                            Remove User
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data?.error ?? "Failed to remove user");
+      return;
+    }
+
+    window.location.reload();
+  }
+
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0]">
+      {/* Member */}
+      <div className="flex items-center gap-3 w-[200px] min-w-[200px]">
+        <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold shrink-0">
+          {user.name[0]}
         </div>
-    );
+
+        <div className="flex flex-col truncate">
+          <span className="font-poppins font-semibold text-[#111827]">
+            {user.name}
+          </span>
+
+          {user.role && (
+            <span className="flex text-[12px] text-[#E76C82] gap-1">
+              <Shield className="w-[15px] h-[15px]" />
+              {user.role}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Email */}
+      <div className="text-gray-400 text-center w-[300px] truncate">
+        {user.email}
+      </div>
+
+      {/* Status */}
+      <div className="w-[120px] text-center">
+        <span
+          className={`px-2 py-1 rounded-full text-[12px] ${
+            user.status === "Active"
+              ? "bg-green-100 text-green-600"
+              : "bg-yellow-100 text-yellow-600"
+          }`}
+        >
+          {user.status}
+        </span>
+      </div>
+
+      {/* Actions */}
+      <div className="relative w-[60px] text-right" ref={actionsRef}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleResend}>
+              <Send className="mr-2 h-4 w-4" />
+              Resend Invite
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={handleRemove} className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Remove User
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
 }
