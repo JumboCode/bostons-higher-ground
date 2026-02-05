@@ -33,7 +33,7 @@ export default function Page() {
         }
     };
 
-    const blurHandlerEmail = (event: React.FocusEvent<HTMLInputElement>) => {
+    const blurHandlerEmail = () => {
         setIsEmailBlur(true);
 
         if (email == "") {
@@ -44,7 +44,7 @@ export default function Page() {
             setIsEmailValid(true);
         }
     };
-    const blurHandlerTempCode = (event: React.FocusEvent<HTMLInputElement>) => {
+    const blurHandlerTempCode = () => {
         setIsTempCodeBlur(true);
 
         if (tempCode == "") {

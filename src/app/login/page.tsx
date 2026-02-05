@@ -1,34 +1,20 @@
-/*
- * TODO: This component is the popup that should appear when the user clicks on
- * the "forgot password" button on the login page.
- * change the color to the gey color of welcome back
- * for the forgot password, the button should be slightly different color
- * hover over the button change color for submit
- * Change the sizing
- */
 "use client";
 import Image from "next/image";
-
 import { authClient } from "@/lib/auth-client";
-
-//importing the logo image
 import logo from "./logo.jpg";
-//importing the background image
 import bg from "./bg.png";
-//import the font
 import { Manrope } from "next/font/google";
 const manrope = Manrope({ subsets: ["latin"] });
-
-// import popins
-
 import { Poppins } from "next/font/google";
+
 const poppins = Poppins({
     subsets: ["latin"],
-    weight: ["700"], // bold weight
+    weight: ["700"],
 });
 
 import { X } from "lucide-react";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Props = {
     isOpen: boolean;
@@ -58,13 +44,13 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                         to reset your pass.
                     </p>
 
-                    <p className="font-manrope font-medium text-[14px] leading-5 w-[92px] h-5 mt-4 text-[#555555]">
+                    <p className="font-manrope font-medium text-[14px] leading-5 w-full h-5 mt-4 text-[#555555]">
                         Email Address
                     </p>
 
                     <input
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder="you@highergroundboston.org"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
@@ -98,18 +84,15 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
     );
 }
 
-/*
- * TODO: This function is the top level component of the login page. All of the
- * JSX returned by this function will be rendered on the /login route. Complete
- * the component to match the designs provided in the ticket.
- */
 export default function LogIn() {
     const [isOpen, setIsOpen] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>();
 
-    async function handleClick(e: React.MouseEvent) {
+    const router = useRouter();
+
+    async function handleFormSubmit(e: React.FormEvent) {
         e.preventDefault();
         try {
             const result = await authClient.signIn.email({
@@ -119,9 +102,11 @@ export default function LogIn() {
 
             if (result.error) {
                 setError(result.error.message ?? "An unknown error occurred");
+                console.error(error);
             } else {
                 setError(null);
                 console.log("Successfully logged in!");
+                router.push("/reports");
             }
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -150,7 +135,7 @@ export default function LogIn() {
             <section className="min-h-screen flex items-center justify-center">
                 <div
                     style={{
-                        width: "384px",
+                        width: "450px",
                         height: "695px",
                         borderRadius: "24px",
                         backgroundColor: "#FFFFFF",
@@ -206,7 +191,10 @@ export default function LogIn() {
                     </p>
 
                     {/* Currently a D,v but turn to FORM (visual only) */}
-                    <div className="mt-8 space-y-5">
+                    <form
+                        className="mt-8 space-y-5"
+                        onSubmit={handleFormSubmit}
+                    >
                         {/* EMAIL FIELD */}
                         <div>
                             <label
@@ -219,7 +207,7 @@ export default function LogIn() {
                                 id="email"
                                 name="email"
                                 type="email"
-                                placeholder="you@example.com"
+                                placeholder="you@highergroundboston.org"
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
                             />
@@ -246,11 +234,10 @@ export default function LogIn() {
                         {/* PRIMARY BUTTON */}
                         <button
                             type="submit"
-                            onClick={handleClick}
+                            // onClick={handleClick}
                             className={`${manrope.className} mt-1 w-full text-center text-white transition`}
                             style={{
                                 backgroundColor: "#E59AA8",
-                                width: "318px",
                                 height: "48px",
                                 borderRadius: "14px",
                                 transform: "rotate(0deg)",
@@ -289,7 +276,7 @@ export default function LogIn() {
 
                         {/* HAIRLINE DIVIDER */}
                         <div className="mt-4 h-px w-full bg-neutral-200" />
-                    </div>
+                    </form>
 
                     {/* FOOTNOTE / LEGAL LINE */}
                     <p className="mt-4 text-center text-xs text-neutral-400">
@@ -297,8 +284,6 @@ export default function LogIn() {
                     </p>
                 </div>
             </section>
-
-            {/* Modal shell included but hidden */}
 
             <ForgotPasswordModal
                 isOpen={isOpen}

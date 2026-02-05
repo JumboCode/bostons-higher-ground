@@ -1,63 +1,59 @@
-/*
- * This component represents the navbar that will consistently visible as users
- * navigate the application. As you are building out this component, keep in
- * mind that we want it to be reusable across different pages in the
- * application. Do you need any props?
- */
-
 "use client";
 
-// Import your image components
-import { House, FileText, Settings } from "lucide-react";
-import { useState } from "react";
-import Image from "next/image";
+console.log("Rendering current NavBar version");
 
-// Color palette constants
+import { House, FileText, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { redirect, usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+
 const SOFT_PINK = "bg-[#DE8F9C]";
 const LIGHT_GRAY = "bg-[#414141]";
-const DARK_GRAY = "bg-[#555555]";
 
 // used placeholders for icons not found. (to be impelemented using Lucide React)
 const TAB_CONFIG = [
-    { name: "Overview", Icon: House },
-    { name: "Housing", Icon: House },
-    { name: "Education", Icon: House },
-    { name: "Schools", Icon: House },
-    { name: "Reports", Icon: FileText },
-    { name: "Admin", Icon: Settings },
+    { name: "Overview", Icon: House, href: "/reports/overview" },
+    { name: "Housing", Icon: House, href: "/reports/housing" },
+    { name: "Education", Icon: House, href: "/reports/education" },
+    { name: "Schools", Icon: House, href: "/reports/schools" },
+    { name: "Reports", Icon: FileText, href: "/reports" },
+    { name: "Admin", Icon: Settings, href: "/admin" },
 ];
 
-export default function Navbar() {
-    const [selected, setSelected] = useState("Overview");
+export default function Navbar({ userName }: { userName: string }) {
+    const pathname = usePathname();
     const [hovered, setHovered] = useState("");
 
     return (
         <nav
-            className={`w-[280px] min-h-screen ${DARK_GRAY} text-white flex flex-col`}
+            className={`w-[250px] flex-shrink-0 h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
         >
             {/* Logo Area */}
-            <div className="flex flex-col items-start px-6 py-6 border-b border-[#F5F5F5]">
+            <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">
                 <Image
-                    src="/Logo.png"
+                    src="/Logo.svg"
                     alt="Boston Higher Ground logo"
                     className="w-52 h-10 mb-2"
-                    width={208}
-                    height={40}
+                    width={52}
+                    height={10}
                 />
             </div>
 
-            {/* Spacer */}
-            <div className="h-4" />
+            <ul className="flex flex-col gap-4 p-5">
+                {TAB_CONFIG.map(({ name, Icon, href }) => {
+                    const isSelected =
+                        pathname === href ||
+                        (href !== "/reports" && pathname.startsWith(href + "/"));
 
-            <ul className="flex flex-col gap-4 px-5">
-                {TAB_CONFIG.map(({ name, Icon }) => {
-                    const isSelected = selected === name;
+
                     return (
-                        <li
+                        <Link
+                            href={href}
                             key={name}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
-                            onClick={() => setSelected(name)}
                             className="px-0"
                         >
                             <div
@@ -73,10 +69,16 @@ export default function Navbar() {
                                 <Icon className="w-6 h-6 mr-4" />
                                 <span className="text-base">{name}</span>
                             </div>
-                        </li>
+                        </Link>
                     );
                 })}
             </ul>
+            
+            <button onClick={async () => {
+                await authClient.signOut();
+                redirect("/");
+            }}
+            className="cursor-pointer underline">{userName}</button>
         </nav>
     );
 }
