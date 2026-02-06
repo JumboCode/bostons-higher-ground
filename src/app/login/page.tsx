@@ -13,6 +13,7 @@ const poppins = Poppins({
 });
 
 import { X } from "lucide-react";
+import * as Icon from "feather-icons-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -88,7 +89,13 @@ export default function LogIn() {
     const [isOpen, setIsOpen] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>();
+    const [error, setError] = useState(false);
+    const [emailError, setEmailError] = useState("");
+    const [isEmailBlur, setIsEmailBlur] = useState(false);
+    const [isEmailValid, setIsEmailValid] = useState(true);
+    const [passwordError, setPasswordError] = useState("");
+    const [isPasswordBlur, setIsPasswordBlur] = useState(false);
+    const [isPasswordValid, setIsPasswordValid] = useState(true);
 
     const router = useRouter();
 
@@ -100,20 +107,73 @@ export default function LogIn() {
                 password: password,
             });
 
+// Ask for actual error messages
+
             if (result.error) {
-                setError(result.error.message ?? "An unknown error occurred");
+                setError(true);
+                switch(result.error.status) {
+                    case 400:
+                    setEmailError("The email or password is incorrect");
+                    setIsEmailValid(false);
+                    break;
+
+                    case 401:
+                    setPasswordError("Password was not correct. Please try again.");
+                    setIsPasswordValid(false);
+                    break;
+
+                    // case 134:
+                    // setEmailError("The email could not be found.");
+                    // setIsEmailValid(false);
+                    // break;
+                }
+                console.log(error);
+
+                // setEmailError(result.error.message ?? "An unknown error occurred");
                 console.error(error);
             } else {
-                setError(null);
+                setError(false);
+                setEmailError("");
+                setPasswordError("");
                 console.log("Successfully logged in!");
                 router.push("/reports");
             }
         } catch (err: unknown) {
             if (err instanceof Error) {
-                setError(err.message || "Something went wrong");
+                setError(true);
+                setEmailError(err.message || "Something went wrong");
+                setPasswordError(err.message || "Something went wrong");
             }
         }
-    }
+    };
+
+    const blurEmail = () => {
+        setIsEmailBlur(true);
+
+        if (email == "") {
+            setEmailError("Email is required");
+            setIsEmailValid(false);
+            setIsEmailBlur(true);
+        } else {
+            setEmailError("");
+            setIsEmailValid(true);
+            setIsEmailBlur(false);
+        }
+    };
+
+    const blurPassword = () => {
+        setIsPasswordBlur(true);
+
+        if (password == "") {
+            setPasswordError("Password is required")
+            setIsPasswordBlur(true);
+            setIsPasswordValid(false);
+        } else {
+            setPasswordError("");
+            setIsPasswordBlur(false);
+            setIsPasswordValid(true);
+        }
+    };
 
     return (
         <main className="relative min-h-dvh w-full overflow-x-hidden">
@@ -207,10 +267,21 @@ export default function LogIn() {
                                 id="email"
                                 name="email"
                                 type="email"
+                                required
                                 placeholder="you@highergroundboston.org"
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                                onBlur={blurEmail}
+                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 invalid:border-red-500"
                             />
+
+                            {(error || isEmailBlur) && !isEmailValid && (
+                                <span className="flex items-center text-[#D9534F]">
+                                    {" "}
+                                    <Icon.AlertCircle className="w-4 h-4 mr-1 stroke-2" />{" "}
+                                    {emailError}
+                                </span>
+                            )}
+
                         </div>
 
                         {/* PASSWORD FIELD */}
@@ -225,10 +296,21 @@ export default function LogIn() {
                                 id="password"
                                 name="password"
                                 type="password"
+                                required
                                 placeholder="••••••••"
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                                onBlur={blurPassword}
+                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 invalid:border-red-500"
                             />
+
+                            {(error || isPasswordBlur) && !isPasswordValid && (
+                                <span className="flex items-center text-[#D9534F]">
+                                    {" "}
+                                    <Icon.AlertCircle className="w-4 h-4 mr-1 stroke-2" />{" "}
+                                    {passwordError}
+                                </span>
+                            )}
+
                         </div>
 
                         {/* PRIMARY BUTTON */}
