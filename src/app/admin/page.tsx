@@ -349,3 +349,11 @@ function UserRow({ user }: { user: User }) {
         </div>
     );
 }
+function setLoading(arg0: boolean) {
+    throw new Error("Function not implemented.");
+}
+
+function setError(arg0: null) {
+    throw new Error("Function not implemented.");
+}
+
