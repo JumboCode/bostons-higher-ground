@@ -2,10 +2,12 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { userInfo } from "@/lib/schema";
+import { userInfo, user, verification, account } from "@/lib/schema";
+import {session} from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
 import { APIError } from "better-auth";
+
 
 /* Adds a user*/
 export async function POST(request: Request) {
@@ -58,15 +60,57 @@ export async function POST(request: Request) {
 
 /* Deletes a user */
 export async function DELETE(request: Request) {
-    const session = await auth.api.getSession({ headers: request.headers });
+    const user_session = await auth.api.getSession({ headers: request.headers });
 
     /* Grabs the userid associated with the current session */
 
-    if (!session) {
+    if (!user_session) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
     /* Grabs the userid associated with the current session */
+    const Id = user_session.user.id;
+
+    /* If the client is not an admin, return an unauthorized error */
+    const isAdmin = await getUserPermission(Id);
+    if (!isAdmin) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    /* Grabs info from client*/
+    let body: { id?: string };
+    try {
+        body = await request.json();
+        
+    } catch {
+        return Response.json({ error: "invalid_json" }, { status: 400 });
+    }
+
+    if (!body.id) {
+        return Response.json({ error: "missing_id" }, { status: 400 });
+    }
+    
+    /* Deletes profile from all tables */
+    await db.delete(userInfo).where(eq(userInfo.userId, body.id));
+    await db.delete(user).where(eq(user.id, body.id));
+    await db.delete(session).where(eq(session.id, body.id));
+    await db.delete(account).where(eq(account.id, body.id));
+    await db.delete(verification).where(eq(verification.id, body.id));
+
+    return Response.json({ success: true });
+}
+
+// Gets a user 
+
+export async function GET(request: Request) {
+    /* Checks if a user is logged in */
+    const session = await auth.api.getSession({headers: request.headers});
+
+    if (!session) {
+        return Response.json({error: "unauthorized"}, {status: 401});
+    }
+
+     /* Grabs the userid associated with the current session */
     const Id = session.user.id;
 
     /* If the client is not an admin, return an unauthorized error */
@@ -74,9 +118,18 @@ export async function DELETE(request: Request) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    /* Grabs info from client*/
-    const body = await request.json();
+    /* Grabs data table */
+    const allUsers = await db
+        .select({
+            id: userInfo.userId,                    // string 
+            name: user.name,                        // string
+            email: user.email,                      // string
+            status: userInfo.authorized,            // boolean 
+            role: userInfo.permissions,             // string 
+        })
+        .from(userInfo)
+        .leftJoin(user, eq(user.id, userInfo.userId));
 
-    /* Deletes profile from userinfo */
-    await db.delete(userInfo).where(eq(userInfo.id, body.id));
+    return Response.json(allUsers);
+    
 }
