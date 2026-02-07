@@ -111,26 +111,20 @@ export default function LogIn() {
 
             if (result.error) {
                 setError(true);
-                switch(result.error.status) {
-                    case 400:
-                    setEmailError("The email or password is incorrect");
-                    setIsEmailValid(false);
-                    break;
 
-                    case 401:
-                    setPasswordError("Password was not correct. Please try again.");
-                    setIsPasswordValid(false);
-                    break;
-
-                    // case 134:
-                    // setEmailError("The email could not be found.");
-                    // setIsEmailValid(false);
-                    // break;
+                if (email == "" || password == ""){
+                    if (email == "") {
+                        setIsEmailValid(false);
+                        setEmailError("Email is required.");
+                    } else if (password == "") {
+                        setIsPasswordValid(false);
+                        setPasswordError("Password is required");
+                    }
+                } else {
+                    setEmailError("Invalid email or password. Please try again.")
                 }
+            
                 console.log(error);
-
-                // setEmailError(result.error.message ?? "An unknown error occurred");
-                console.error(error);
             } else {
                 setError(false);
                 setEmailError("");
@@ -196,7 +190,7 @@ export default function LogIn() {
                 <div
                     style={{
                         width: "450px",
-                        height: "695px",
+                        height: error && isEmailValid && isPasswordValid ? "740px" : !isPasswordValid && !isEmailValid ? "710px" : !isPasswordValid || !isEmailValid ? "690px" : "672px",
                         borderRadius: "24px",
                         backgroundColor: "#FFFFFF",
                         border: "1px solid #F3F4F6",
@@ -252,9 +246,21 @@ export default function LogIn() {
 
                     {/* Currently a D,v but turn to FORM (visual only) */}
                     <form
-                        className="mt-8 space-y-5"
+                        className="mt-7 space-y-5"
                         onSubmit={handleFormSubmit}
                     >
+                        {error && isEmailValid && isPasswordValid && (
+                            <div
+                                className="w-full rounded-xl border border-rose-300 bg-[#d84e4e]/10 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400"
+                                >
+                                <span className="flex items-center text-[#D9534F]">
+                                    {" "}
+                                    <Icon.AlertCircle className="w-4 h-4 mr-1 stroke-2" />{" "}
+                                    {emailError}
+                                </span>
+                            </div>
+                        )}
+
                         {/* EMAIL FIELD */}
                         <div>
                             <label
@@ -267,11 +273,10 @@ export default function LogIn() {
                                 id="email"
                                 name="email"
                                 type="email"
-                                required
                                 placeholder="you@highergroundboston.org"
                                 onChange={(e) => setEmail(e.target.value)}
                                 onBlur={blurEmail}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 invalid:border-red-500"
+                                className={`w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 ${error || isEmailBlur ? "border-red-500" : "border-neutral-200 focus:border-rose-300" } `}
                             />
 
                             {(error || isEmailBlur) && !isEmailValid && (
@@ -296,11 +301,10 @@ export default function LogIn() {
                                 id="password"
                                 name="password"
                                 type="password"
-                                required
                                 placeholder="••••••••"
                                 onChange={(e) => setPassword(e.target.value)}
                                 onBlur={blurPassword}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 invalid:border-red-500"
+                                className={`w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 ${error || isPasswordBlur ? "border-red-500" : "border-neutral-200 focus:border-rose-300"}`}
                             />
 
                             {(error || isPasswordBlur) && !isPasswordValid && (
