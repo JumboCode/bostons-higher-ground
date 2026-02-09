@@ -44,6 +44,7 @@ export default function Page() {
             setIsEmailValid(true);
         }
     };
+    
     const blurHandlerTempCode = () => {
         setIsTempCodeBlur(true);
 

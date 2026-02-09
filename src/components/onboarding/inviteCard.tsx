@@ -52,18 +52,18 @@ export default function InviteCard({
                 >
                     <label className="block">
                         <span
-                            className="mb-1 block text-[14px] font-medium text-[#555]"
-                            style={{ fontFamily: "Manrope" }}
+                            className="mb-1 block text-[14px] font-medium text-[#555] Manrope"
+                            // style={{ fontFamily: "Manrope" }}
                         >
                             Full Name <span className="text-[#E76C82]">*</span>
                         </span>
                         <input
                             type="text"
-                            placeholder="Fist Last"
+                            placeholder="First Last"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                            style={{ fontFamily: "Manrope" }}
+                            className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 Manrope"
+                            // style={{ fontFamily: "Manrope" }}
                         />
                     </label>
 
