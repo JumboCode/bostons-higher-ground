@@ -1,5 +1,7 @@
 "use client";
 
+console.log("Rendering current NavBar version");
+
 import { House, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -22,14 +24,11 @@ const TAB_CONFIG = [
 
 export default function Navbar({ userName }: { userName: string }) {
     const pathname = usePathname();
-    const [selected, setSelected] = useState("Overview");
     const [hovered, setHovered] = useState("");
-
-    useEffect(() => {}, [pathname]);
 
     return (
         <nav
-            className={`w-[280px] h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
+            className={`w-[250px] flex-shrink-0 h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
         >
             {/* Logo Area */}
             <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">
@@ -44,14 +43,17 @@ export default function Navbar({ userName }: { userName: string }) {
 
             <ul className="flex flex-col gap-4 p-5">
                 {TAB_CONFIG.map(({ name, Icon, href }) => {
-                    const isSelected = selected === name;
+                    const isSelected =
+                        pathname === href ||
+                        (href !== "/reports" && pathname.startsWith(href + "/"));
+
+
                     return (
                         <Link
                             href={href}
                             key={name}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
-                            onClick={() => setSelected(name)}
                             className="px-0"
                         >
                             <div
