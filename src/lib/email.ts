@@ -11,4 +11,3 @@ export async function sendEmail({
     console.log(`[Email] Sending ${type} OTP to ${email}: ${otp}`);
 
 }
-
