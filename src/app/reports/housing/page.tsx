@@ -1,19 +1,18 @@
-import { getAllData } from "@/lib/getAllData";
 import HousingClient from "./housing-client";
+import { getHousingRecordsFromSalesforce } from "@/lib/salesforceHousing";
 
-// Grabbing all data from the database
-const data = await getAllData();
+// Fetch directly from Salesforce for now (option A).
+const sfData = await getHousingRecordsFromSalesforce();
 
-// Temporary filter for input data
-// TODO: write function to connect front end filtering to this function
-const filtered_Data = data.filter(function (d) {
-    return d.intakeDate?.substring(0, 4) == "2025";
-});
+// Temporary filter for input data (keep existing behavior)
+const filtered_Data = sfData.filter(
+    (d) => d.intakeDate?.substring(0, 4) === "2025"
+);
 
-const final_Data = filtered_Data.map((d) => ({
+// Coerce to the numeric id expected by charts while preserving the Salesforce id in familyId
+const final_Data = filtered_Data.map((d, idx) => ({
     ...d,
-    intakeMonth: d.intakeDate ? new Date(d.intakeDate).getMonth() : null,
-    housedMonth: d.dateHoused ? new Date(d.dateHoused).getMonth() : null,
+    id: idx + 1,
 }));
 
 export default function Housing() {
