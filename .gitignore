@@ -42,3 +42,4 @@ next-env.d.ts
 src/app/onboarding-test/page.tsx
 package.json
 pnpm-lock.yaml
+.env*.local
