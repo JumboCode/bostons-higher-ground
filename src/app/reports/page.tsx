@@ -183,7 +183,7 @@ export function ReportEntry({
  */
 export default function Archive() {
     return (
-        <main className="bg-[#F5F5F5] p-10 flex flex-col overflow-scroll gap-y-8">
+        <main className="bg-[#F5F5F5] p-10 flex flex-col gap-y-10 pt-12.5">
             <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
                 Reports
             </h1>

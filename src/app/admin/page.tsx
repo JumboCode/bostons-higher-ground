@@ -14,6 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import {
+  InvitationSentCard,
+  ResendInviteCard,
+} from "@/components/onboarding/notifCard";
+
+import {
     Search,
     CircleCheckBig,
     UsersRound,
@@ -23,6 +28,7 @@ import {
     Shield,
     Eye,
     Trash2,
+    X,
 } from "lucide-react";
 
 type User = {
@@ -51,9 +57,12 @@ export default function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);  
+    const [resendError, setResendError] = useState(false);
     
     
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [isInviteSentOpen, setIsInviteSentOpen] = useState(false);
+    const [isResendOpen, setIsResendOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
@@ -185,7 +194,7 @@ export default function Admin() {
                             {/* Rows */}
                             <div className="flex flex-col gap-0.5 overflow-y-auto ">
                                 {filteredUsers.length > 0 ?
-                                    filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
+                                    filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} setIsResendOpen={setIsResendOpen} setResendError={setResendError} setIsInviteSentOpen={setIsInviteSentOpen}/>))
                                 : <p>No users found.</p>
                                 }
                             </div>
@@ -210,15 +219,57 @@ export default function Admin() {
                         onSend={({ name, email }) => {
                             console.log("Send invite", { name, email });
                             setIsInviteOpen(false);
+                            setIsInviteSentOpen(true);
                         }}
                     />
                 </ModalOverlay>
             )}
+
+            {isInviteSentOpen && !resendError &&(
+              <ModalOverlay onClose={() => setIsInviteSentOpen(false)}>
+
+                <InvitationSentCard 
+                  showOverlay={false}
+                  onClose={() => setIsInviteSentOpen(false)}
+                />
+              </ModalOverlay>
+            )}
+
+            {isResendOpen && (
+              <ModalOverlay onClose={() => setIsResendOpen(false)}>
+                <ResendInviteCard
+                  showOverlay={false}
+                  onCancel={() => {setIsResendOpen(false);}}
+                  onResend={() => {setIsResendOpen(false); setIsInviteSentOpen(true) }}
+                />
+
+              </ModalOverlay>
+            )}
+
+            {resendError && (
+              <div
+                className="fixed top-10 right-4 w-80 bg-white border border-gray-300 px-4 py-3 shadow-lg shadow-gray-400 z-50 cursor-pointer rounded-md text-sm flex items-center gap-5"
+                
+                >
+                  
+                  
+                  <button 
+                   className=" left-4 hover:text-gray-700"
+                    onClick={() => setResendError(false)}
+                  >
+                    <X className="w-4 h-4"/>
+                  </button>
+                  <span className="text-left">Failed to resend invite </span>
+              </div>
+            )}
+
+            
+
         </main>
     );
 }
 
-function UserRow({ user }: { user: User }) {
+function UserRow({ user, setIsResendOpen, setResendError, setIsInviteSentOpen}: { user: User; setIsResendOpen: (value: boolean) => void; setResendError: (value: boolean) => void; setIsInviteSentOpen: (value: boolean) => void}) {
   const [actionVisible, setActionVisible] = useState(false);
   const actionsRef = useRef<HTMLDivElement | null>(null);
   const [isRemoveOpen, setIsRemoveOpen] = useState(false);
@@ -241,23 +292,26 @@ function UserRow({ user }: { user: User }) {
   }, [actionVisible]);
 
   async function handleResend() {
-    const ok = confirm("Do you want to resend invite?");
-    if (!ok) return;
+    
+    try{
+      const res = await fetch("/api/users/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      });
 
-    const res = await fetch("/api/users/email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error ?? "Failed to resend invite");
-      return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setResendError(true);
+        return;
+      }
+      setIsInviteSentOpen(true);
+    } catch (e) {
+      console.error(e);
+      setResendError(true);
     }
 
-    alert("Invite resent.");
-    window.location.reload();
+    
   }
 
   async function handleRemove() {
