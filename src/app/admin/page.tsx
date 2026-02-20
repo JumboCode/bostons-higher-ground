@@ -78,7 +78,6 @@ export default function Admin() {
                 status: u.status === true ? "Active" : "Pending",
                 role: u.role ?? undefined,
                 }));
-                console.log(mapped);
                 setUsers(mapped);
             } catch (e: unknown){
                 const message = e instanceof Error ? e.message : "Error loading users";
