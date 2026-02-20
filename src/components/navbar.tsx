@@ -2,7 +2,7 @@
 
 console.log("Rendering current NavBar version");
 
-import { House, FileText, Settings } from "lucide-react";
+import { House, FileText, Settings, GraduationCap, School, LayoutDashboard} from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,10 +14,10 @@ const LIGHT_GRAY = "bg-[#414141]";
 
 // used placeholders for icons not found. (to be impelemented using Lucide React)
 const TAB_CONFIG = [
-    { name: "Overview", Icon: House, href: "/reports/overview" },
+    { name: "Overview", Icon: LayoutDashboard, href: "/reports/overview" },
     { name: "Housing", Icon: House, href: "/reports/housing" },
-    { name: "Education", Icon: House, href: "/reports/education" },
-    { name: "Schools", Icon: House, href: "/reports/schools" },
+    { name: "Education", Icon: GraduationCap, href: "/reports/education" },
+    { name: "Schools", Icon: School, href: "/reports/schools" },
     { name: "Reports", Icon: FileText, href: "/reports" },
     { name: "Admin", Icon: Settings, href: "/admin" },
 ];
