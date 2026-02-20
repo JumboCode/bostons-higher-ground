@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
+import { RemoveUserCard } from "../../components/onboarding/notifCard";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -221,6 +222,7 @@ export default function Admin() {
 function UserRow({ user }: { user: User }) {
   const [actionVisible, setActionVisible] = useState(false);
   const actionsRef = useRef<HTMLDivElement | null>(null);
+  const [isRemoveOpen, setIsRemoveOpen] = useState(false);
 
   useEffect(() => {
     if (!actionVisible) return;
@@ -260,23 +262,24 @@ function UserRow({ user }: { user: User }) {
   }
 
   async function handleRemove() {
-    const ok = confirm("Remove this user?");
-    if (!ok) return;
-
-    const res = await fetch("/api/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: user.id }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error ?? "Failed to remove user");
-      return;
-    }
-
-    window.location.reload();
+    setIsRemoveOpen(true);
   }
+
+  async function removeUser() {
+      const res = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data?.error ?? "Failed to remove user");
+        return;
+      }
+      setIsRemoveOpen(false);
+      window.location.reload();
+  };
 
   return (
     <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0]">
@@ -318,6 +321,17 @@ function UserRow({ user }: { user: User }) {
         </span>
       </div>
 
+      {isRemoveOpen && (
+        <ModalOverlay onClose={() => setIsRemoveOpen(false)}>
+            <RemoveUserCard
+              onCancel={() => setIsRemoveOpen(false)}
+              onRemove={() => {
+                removeUser();
+              }}
+            />
+        </ModalOverlay>
+    )}
+
       {/* Actions */}
       <div className="relative w-[60px] text-right" ref={actionsRef}>
         <DropdownMenu>
@@ -327,11 +341,13 @@ function UserRow({ user }: { user: User }) {
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleResend}>
-              <Send className="mr-2 h-4 w-4" />
-              Resend Invite
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" >
+            {user.status === "Pending" && 
+              (<DropdownMenuItem onClick={handleResend}>
+                <Send className="mr-2 h-4 w-4" />
+                  Resend Invite
+                </DropdownMenuItem> 
+              )}
 
             <DropdownMenuItem onClick={handleRemove} className="text-red-600">
               <Trash2 className="mr-2 h-4 w-4" />
