@@ -39,7 +39,7 @@ const DashboardTop: React.FC<DashboardTopProps> = ({
 }) => {
     return (
         <>
-            <div className="w-full flex flex-col p-10">
+            <div className="w-full px-10 pb-10">
                 <div className="w-full flex justify-between items-center mb-10">
                     <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
                         {pageTitle}

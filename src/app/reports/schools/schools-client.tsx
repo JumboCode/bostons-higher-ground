@@ -90,7 +90,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     <SchoolFilterBar />
                 </DashboardTop>
             </div>
-            <div className="p-20">
+            <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Chart
                     title="Partner Schools & Homeless Student Counts"
                     appliedFilters={formattedFilters(filterState)}
