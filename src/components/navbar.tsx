@@ -12,7 +12,7 @@ import { authClient } from "@/lib/auth-client";
 const SOFT_PINK = "bg-[#DE8F9C]";
 const LIGHT_GRAY = "bg-[#414141]";
 
-// used placeholders for icons not found. (to be impelemented using Lucide React)
+// Icons 
 const TAB_CONFIG = [
     { name: "Overview", Icon: LayoutDashboard, href: "/reports/overview" },
     { name: "Housing", Icon: House, href: "/reports/housing" },
@@ -40,6 +40,7 @@ export default function Navbar({ userName }: { userName: string }) {
                     height={10}
                 />
             </div>
+            
 
             <ul className="flex flex-col gap-4 p-5">
                 {TAB_CONFIG.map(({ name, Icon, href }) => {
@@ -79,6 +80,18 @@ export default function Navbar({ userName }: { userName: string }) {
                 redirect("/");
             }}
             className="cursor-pointer underline">{userName}</button>
+
+            {/* This is the bottom left button */}
+<div className="mt-auto pb-6 px-4">
+  <button 
+    className="w-12 h-12 rounded-full bg-[#E5737D] flex items-center justify-center text-white font-medium hover:brightness-90 transition-all cursor-pointer shadow-md"
+    aria-label="User profile"
+    // Wording below for the bottom left
+  >
+    Su
+  </button>
+</div>
         </nav>
     );
+
 }

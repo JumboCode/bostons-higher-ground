@@ -71,7 +71,7 @@ export default function Chart({
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleDownload}
-                        className="p-2.5 rounded-2xl hover:bg-gray-100 transition-colors"
+                        className="p-2.5 rounded-2xl hover:bg-gray-100 cursor-pointer transition-colors"
                         aria-label="Download chart"
                     >
                         <Download className="w-5 h-5 text-gray-600" />
@@ -79,7 +79,7 @@ export default function Chart({
                     <button
                         onClick={handleAdd}
                         
-                        className="p-2.5 rounded-2xl hover:bg-red-100 hover:text-white transition-colors"
+                        className="p-2.5 rounded-2xl hover:bg-red-100 cursor-pointer hover:text-white transition-colors"
                         aria-label="Add"
                     >
                         <Plus className="w-5 h-5 text-gray-600" />
