@@ -283,7 +283,7 @@ function UserRow({ user }: { user: User }) {
       {/* Member */}
       <div className="flex items-center gap-3 w-[200px] min-w-[200px]">
         <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold shrink-0">
-          {user.name[0]}
+          {user.name?.charAt(0).toUpperCase()}
         </div>
 
         <div className="flex flex-col truncate">
