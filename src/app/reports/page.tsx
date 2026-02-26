@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
+import Link from 'next/link';
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -37,6 +38,7 @@ async function DraftReportPopulated() {
         ? (existing!.charts as StoredChart[])
         : [];
 
+    // const [isPreviewOpen_PDF, setIsPreviewOpen_PDF] = useState(false);
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
             <div className="ReportNameEditBar space-y-2">
@@ -77,20 +79,28 @@ async function DraftReportPopulated() {
                 </p>}
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-45 h-10 hover:bg-[#d75c6f] hover:text-[#FFFFFF]">
+                <Link href="/preview">Export as PDF</Link>
+
                     <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PDF</div>
+                    
                 </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
+                <button 
+                    className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-45 h-10 hover:bg-[#d75c6f] hover:text-[#FFFFFF]">
+                    <Link href="/preview">Export as CSV</Link>
                     <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as CSV</div>
+                    
                 </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
+                <button 
+                    className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-45 h-10 hover:bg-[#d75c6f] hover:text-[#FFFFFF]"
+                >
                     <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PNG</div>
+                    <Link href="/preview">Export as PNG</Link>
+                    
                 </button>
             </div>
         </div>
+
     );
 }
 
