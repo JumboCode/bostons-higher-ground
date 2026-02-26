@@ -43,8 +43,8 @@ const styles = StyleSheet.create({
         color: "#6A7282",
     },
     line: {
-      borderBottom: "1px solid #E76C82",
-      marginVertical: 12,
+        borderBottom: "1px solid #E76C82",
+        marginVertical: 12,
     },
     content: {
         paddingHorizontal: 40,
@@ -53,6 +53,16 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         flexWrap: "wrap",
         rowGap: 50,
+    },
+    chart: {
+        width: "100%",
+        // backgroundColor: "aliceblue",
+    },
+    chartTitle: {
+        fontSize: 10,
+        fontFamily: "Poppins",
+        fontWeight: 700,
+        color: "#555555",
     },
 });
 
@@ -94,8 +104,6 @@ function ReportDoc({
         generateImages();
     }, [charts]);
 
-    console.log(isLoading);
-
     return (
         <>
             {!isLoading && (
@@ -117,11 +125,20 @@ function ReportDoc({
                                 <View style={styles.chartSection}>
                                     {chartImages.length > 0 ? (
                                         chartImages.map((src, i) => (
-                                            <Image
-                                                key={i}
-                                                src={src}
-                                                style={{ width: "50%" }}
-                                            />
+                                            <View style={styles.chart}>
+                                                <Text style={styles.chartTitle}>
+                                                    {
+                                                        charts[i].key.split(
+                                                            "-"
+                                                        )[0]
+                                                    }
+                                                </Text>
+                                                <Image
+                                                    key={i}
+                                                    src={src}
+                                                    style={{ width: "50%" }}
+                                                />
+                                            </View>
                                         ))
                                     ) : (
                                         <Text

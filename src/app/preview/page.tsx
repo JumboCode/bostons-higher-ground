@@ -8,7 +8,7 @@ import ReportDoc from "./report-doc";
 
 export default async function PreviewPage() {
     const session = await auth.api.getSession({
-        headers: await headers()
+        headers: await headers(),
     });
 
     if (!session) {
@@ -30,6 +30,8 @@ export default async function PreviewPage() {
         );
     }
 
+    console.log(report);
+
     const charts = Array.isArray(report?.charts)
         ? (report!.charts as StoredChart[])
         : [];
@@ -40,10 +42,16 @@ export default async function PreviewPage() {
             node: await generateChart(chart),
         }))
     );
+    console.log(rendered);
 
     const visible = rendered.filter((c) => c.node !== null);
 
+    console.log("visible; ", visible);
+
     return (
-        <ReportDoc reportTitle={report.title ?? "Untitled Report"} charts={visible} />
+        <ReportDoc
+            reportTitle={report.title ?? "Untitled Report"}
+            charts={visible}
+        />
     );
 }
