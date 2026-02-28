@@ -30,6 +30,7 @@ import {
     Trash2,
     X,
 } from "lucide-react";
+import { sendEmail } from "@/lib/email";
 
 type User = {
     id: string;
@@ -218,6 +219,13 @@ export default function Admin() {
                         onCancel={() => setIsInviteOpen(false)}
                         onSend={({ name, email }) => {
                             console.log("Send invite", { name, email });
+                            fetch("/api/users/email/", {
+                                method: "POST",
+                                body: JSON.stringify({ email }),
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            })
                             setIsInviteOpen(false);
                             setIsInviteSentOpen(true);
                         }}
