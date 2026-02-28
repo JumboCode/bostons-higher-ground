@@ -193,8 +193,6 @@ const chartBuilders: Record<ChartKey, ChartBuilder> = {
         const data = familiesHousedSeries(records);
         return React.createElement(LineChart, {
             data,
-            width: 800,
-            height: 400,
             xLabel: "Month",
             yLabel: "Families Housed",
         });

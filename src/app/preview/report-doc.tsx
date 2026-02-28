@@ -27,9 +27,9 @@ Font.register({
 
 const styles = StyleSheet.create({
     pageContent: {
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between"
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
     },
     logo: {
         flexDirection: "column",
@@ -52,16 +52,15 @@ const styles = StyleSheet.create({
         borderBottom: "1px solid #E76C82",
         marginTop: 12,
     },
-    content: {
-        paddingHorizontal: 40,
-    },
     chartSection: {
+        display: "flex",
         flexDirection: "row",
         flexWrap: "wrap",
+        justifyContent: "space-between",
         rowGap: 12,
     },
     chart: {
-        width: "100%",
+        width: "48%",
         marginTop: 12,
     },
     chartTitle: {
@@ -70,10 +69,6 @@ const styles = StyleSheet.create({
         fontWeight: 700,
         color: "#555555",
         marginBottom: 4,
-    },
-    chartImage: {
-      backgroundColor: "aliceblue",
-      // width: ""
     },
     footer: {
       display: "flex",
@@ -147,32 +142,34 @@ function ReportDoc({
                 <PDFViewer width="100%" className="h-dvh absolute z-100">
                     <Document title={reportTitle}>
                         <Page size="LETTER" style={styles.pageContent}>
-                            <View style={styles.logo}>
-                                <Image
-                                    src={"/Logo_black_text.png"}
-                                    style={{ width: 250, height: "auto" }}
-                                />
-                            </View>
-                            <View style={styles.content}>
-                                <Text style={styles.header}>{reportTitle}</Text>
-                                <Text style={styles.subtitle}>
-                                    Generated on {date}
-                                </Text>
-                                <View style={styles.line}></View>
-                                <View style={styles.chartSection}>
-                                    {chartImages.length > 0 ? (
-                                        chartImages.map((src, i) => (
-                                            <View key={i} style={styles.chart} wrap={false}>
-                                                <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
-                                                <Image src={src} style={styles.chartImage} />
-                                            </View>
-                                        ))
-                                    ) : (
-                                        <Text style={{ fontSize: 12, color: "#364152", }}>
-                                            No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
-                                        </Text>
-                                    )}
-                                </View>
+                            <View>
+                              <View style={styles.logo}>
+                                  <Image
+                                      src={"/Logo_black_text.png"}
+                                      style={{ width: 250, height: "auto" }}
+                                  />
+                              </View>
+                              <View style={{ paddingHorizontal: 40 }}>
+                                  <Text style={styles.header}>{reportTitle}</Text>
+                                  <Text style={styles.subtitle}>
+                                      Generated on {date}
+                                  </Text>
+                                  <View style={styles.line}></View>
+                                  <View style={styles.chartSection}>
+                                      {chartImages.length > 0 ? (
+                                          chartImages.map((src, i) => (
+                                              <View key={i} style={styles.chart} wrap={false}>
+                                                  <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
+                                                  <Image src={src}/>
+                                              </View>
+                                          ))
+                                      ) : (
+                                          <Text style={{ fontSize: 12, color: "#364152", }}>
+                                              No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
+                                          </Text>
+                                      )}
+                                  </View>
+                              </View>
                             </View>
                             <Footer />
                         </Page>
@@ -194,6 +191,7 @@ function ReportDoc({
                         ref={(ele) => {
                             chartRefs.current[i] = ele;
                         }}
+                        className="w-105"
                     >
                         {chart.node}
                     </div>
