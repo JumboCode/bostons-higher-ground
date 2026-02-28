@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     }
 
     //CHECKS IF THE LOGGED IN USER IS AN ADMIN
-    const isAdmin = await getUserPermission(session.user.id);
+    const permissions = await getUserPermission(session.user.id);
+    const isAdmin = permissions === "admin";
     if (!isAdmin) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
@@ -41,7 +42,9 @@ export async function POST(request: Request) {
         otp,
         type: "invite",
     });
-    // console.log(`[Email] Sending "invite" OTP to ${body.email}: ${otp}`);
+
+    // TODO: add pending user to userInfo table?
+    console.log(`[Email] Sending "invite" OTP to ${body.email}: ${otp}`);
     //SAYS ALL WORKED
     return Response.json({ success: true });
 
