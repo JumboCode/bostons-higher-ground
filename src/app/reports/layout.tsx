@@ -27,7 +27,6 @@ export default async function Layout({
             <div className="flex">
                 <NavBar userName={userName}/>
                 <div className="bg-[#F5F5F5] w-full flex-col">
-                    
                     {children}
                 </div>
             </div>
