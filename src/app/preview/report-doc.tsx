@@ -13,6 +13,7 @@ import {
 import { ReactElement, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import html2canvas from "html2canvas-pro";
+import { LoaderCircle } from "lucide-react";
 
 Font.register({
     family: "Poppins",
@@ -52,17 +53,19 @@ const styles = StyleSheet.create({
     chartSection: {
         flexDirection: "row",
         flexWrap: "wrap",
-        rowGap: 50,
+        rowGap: 12,
     },
     chart: {
         width: "100%",
-        // backgroundColor: "aliceblue",
     },
     chartTitle: {
         fontSize: 10,
         fontFamily: "Poppins",
         fontWeight: 700,
         color: "#555555",
+    },
+    bgColor: {
+        backgroundColor: "aliceblue",
     },
 });
 
@@ -125,7 +128,7 @@ function ReportDoc({
                                 <View style={styles.chartSection}>
                                     {chartImages.length > 0 ? (
                                         chartImages.map((src, i) => (
-                                            <View style={styles.chart}>
+                                            <View key={i} style={styles.chart}>
                                                 <Text style={styles.chartTitle}>
                                                     {
                                                         charts[i].key.split(
@@ -134,9 +137,11 @@ function ReportDoc({
                                                     }
                                                 </Text>
                                                 <Image
-                                                    key={i}
                                                     src={src}
-                                                    style={{ width: "50%" }}
+                                                    style={[
+                                                        styles.bgColor,
+                                                        { width: "50%" },
+                                                    ]}
                                                 />
                                             </View>
                                         ))
@@ -159,7 +164,12 @@ function ReportDoc({
                 </PDFViewer>
             )}
             {/* cover div with charts */}
-            <div className="w-full h-dvh absolute z-50 bg-white"></div>
+            <div className="w-full h-dvh absolute z-50 bg-white flex items-center justify-center-safe">
+                <div className="flex gap-3.5 items-center">
+                  <LoaderCircle size={40} className="animate-spin" color="#E76C82"/>
+                  <p className="font-manrope">Loading...</p>
+                </div>
+            </div>
             {/* hidden dom for getting charts as images */}
             <div className="h-dvh overflow-y-scroll">
                 {charts.map((chart, i) => (
