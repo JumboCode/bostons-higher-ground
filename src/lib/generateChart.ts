@@ -36,7 +36,6 @@ export type HousingRecord = FilterableRecord & {
     school: string | null;
     schoolId: string | null;
     studentCount: number | null;
-    housedMonth: number | null;
 };
 
 type ChartBuilder = (records: HousingRecord[]) => React.ReactElement | null;
@@ -114,10 +113,11 @@ function familyIntakeSeries(records: HousingRecord[]): VerticalBarDatum[] {
 function familiesHousedSeries(records: HousingRecord[]): LineDatum[] {
     const counts = new Array(12).fill(0);
     records.forEach((record) => {
-        if (record.housedMonth === null || record.housedMonth === undefined)
+        if (record.dateHoused === null || record.dateHoused === undefined)
             return;
-        if (record.housedMonth >= 0 && record.housedMonth < 12) {
-            counts[record.housedMonth] += 1;
+        const housedMonth = parseInt(record.dateHoused.split("-")[1]);
+        if (housedMonth >= 1 && housedMonth <= 12) {
+            counts[housedMonth - 1] += 1;
         }
     });
     return MONTH_NAMES.map((label, i) => ({ label, value: counts[i] || 0 }));
