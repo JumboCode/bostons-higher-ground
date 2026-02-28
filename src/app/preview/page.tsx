@@ -30,8 +30,6 @@ export default async function PreviewPage() {
         );
     }
 
-    console.log(report);
-
     const charts = Array.isArray(report?.charts)
         ? (report!.charts as StoredChart[])
         : [];
@@ -42,11 +40,8 @@ export default async function PreviewPage() {
             node: await generateChart(chart),
         }))
     );
-    console.log(rendered);
 
     const visible = rendered.filter((c) => c.node !== null);
-
-    console.log("visible; ", visible);
 
     return (
         <ReportDoc

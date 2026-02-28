@@ -36,7 +36,6 @@ export type HousingRecord = FilterableRecord & {
     school: string | null;
     schoolId: string | null;
     studentCount: number | null;
-    intakeMonth: number | null;
     housedMonth: number | null;
 };
 
@@ -99,10 +98,11 @@ const MONTH_NAMES = [
 function familyIntakeSeries(records: HousingRecord[]): VerticalBarDatum[] {
     const counts = new Array(12).fill(0);
     records.forEach((record) => {
-        if (record.intakeMonth === null || record.intakeMonth === undefined)
+        if (record.intakeDate === null || record.intakeDate === undefined)
             return;
-        if (record.intakeMonth >= 0 && record.intakeMonth < 12) {
-            counts[record.intakeMonth] += 1;
+        const intakeMonth = parseInt(record.intakeDate.split("-")[1]);
+        if (intakeMonth >= 1 && intakeMonth <= 12) {
+            counts[intakeMonth - 1] += 1;
         }
     });
     return MONTH_NAMES.map((label, index) => ({
