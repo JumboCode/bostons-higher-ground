@@ -1,10 +1,12 @@
+"use client";
+import { useState, useEffect } from "react";
 import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+// import { auth } from "@/lib/auth";
+// import { headers } from "next/headers";
 import ReportChart from "@/components/ReportChart";
-import { db } from "@/lib/db";
-import { eq } from "drizzle-orm";
-import { inProgressReports } from "@/lib/schema";
+// import { db } from "@/lib/db";
+// import { eq } from "drizzle-orm";
+// import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
 
 /*
@@ -14,28 +16,41 @@ import { type StoredChart } from "@/lib/generateChart";
  * drawn on the figma for the case when no charts are selected.
  */
 
-async function DraftReportPopulated() {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+function DraftReportPopulated() {
+    const [charts, setCharts] = useState<StoredChart[]>([]);
 
-    if (!session) {
-        return (
-            <div className="p-10 text-gray-700">
-                Please sign in to view your in-progress report.
-            </div>
-        );
+    // Fetch charts once when component mounts
+    useEffect(() => {
+        const fetchCharts = async () => {
+            try {
+                const res = await fetch("/api/reports/in-progress");
+                if (!res.ok) return;
+                const data = await res.json();
+                setCharts(data.charts || []);
+            } catch (err) {
+                console.error("Failed to fetch in-progress charts", err);
+            }
+        };
+
+        fetchCharts();
+    }, []);
+
+    const handleDelete = async (index: number) => {
+    // Update UI immediately
+    const nextCharts = charts.filter((_, i) => i !== index);
+    setCharts(nextCharts);
+
+    // Delete from backend
+    try {
+        await fetch("/api/reports/in-progress", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index }),
+        });
+    } catch (err) {
+        console.error("Failed to delete chart", err);
     }
-
-    const userId = session.user.id;
-
-    const existing = await db.query.inProgressReports.findFirst({
-        where: eq(inProgressReports.userId, userId),
-    });
-
-    const charts = Array.isArray(existing?.charts)
-        ? (existing!.charts as StoredChart[])
-        : [];
+};
 
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
@@ -71,7 +86,10 @@ async function DraftReportPopulated() {
             </div>
             <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
                 {charts.length > 0 ? (charts.map((chart, idx) => (
-                    <ReportChart key={`${chart.title}-${idx}`} title={chart.title} />
+                    <ReportChart 
+                        key={`${chart.title}-${idx}`} 
+                        title={chart.title} 
+                        onDelete={() => handleDelete(idx)} />
                 ))) : <p className="px-4 text-gray-400">
                     Add charts using the &quot;+&quot; buttons to see them here.
                 </p>}

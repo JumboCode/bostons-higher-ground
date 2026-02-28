@@ -48,7 +48,7 @@ function ChartEntry({
                     flex items-center justify-center
                     rounded-full
                     bg-gray-100
-                    text-gray-400
+                    text-gray-500
                     shadow-md
 
                     hover:bg-rose-100
