@@ -57,7 +57,8 @@ function ChartEntry({
                 <X className="w-4 h-4" />
             </button>
 
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 text-gray-900 
+            transition-colors duration-200 group-hover:text-rose-500">
                 
                 {/* Number circle */}
                 <div className="flex items-center justify-center w-6 h-6 
@@ -67,14 +68,14 @@ function ChartEntry({
 
                 {/* Text content */}
                 <div className="flex-1">
-                    <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold ">
                         {title}
                     </div>
                 </div>
                 
                 {/* Eye icon */}
                 <div
-                    className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                    className="cursor-pointer transition-colors"
                     onClick={onPreview}
                 >
                     <Eye className="w-5 h-5" />
