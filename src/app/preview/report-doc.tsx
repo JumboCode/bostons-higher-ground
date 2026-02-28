@@ -26,6 +26,11 @@ Font.register({
 });
 
 const styles = StyleSheet.create({
+    pageContent: {
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between"
+    },
     logo: {
         flexDirection: "column",
         alignItems: "center",
@@ -45,7 +50,7 @@ const styles = StyleSheet.create({
     },
     line: {
         borderBottom: "1px solid #E76C82",
-        marginVertical: 12,
+        marginTop: 12,
     },
     content: {
         paddingHorizontal: 40,
@@ -57,17 +62,46 @@ const styles = StyleSheet.create({
     },
     chart: {
         width: "100%",
+        marginTop: 12,
     },
     chartTitle: {
         fontSize: 10,
         fontFamily: "Poppins",
         fontWeight: 700,
         color: "#555555",
+        marginBottom: 4,
     },
-    bgColor: {
-        backgroundColor: "aliceblue",
+    chartImage: {
+      backgroundColor: "aliceblue",
+      // width: ""
     },
+    footer: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      padding: 5,
+      borderTop: '1px solid #e6e7eb',
+      margin: 12,
+    },
+    footerText: {
+      fontSize: 10,
+      color: "#555555",
+      fontFamily: "Manrope"
+    }
 });
+
+function Footer() {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  return (
+    <View style={styles.footer} fixed>
+      <Text style={styles.footerText}>&copy; {currentYear} Higher Ground Boston</Text>
+      <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (
+        `Page ${pageNumber} of ${totalPages}`
+      )} />
+    </View>
+  )
+}
 
 function ReportDoc({
     reportTitle,
@@ -112,7 +146,7 @@ function ReportDoc({
             {!isLoading && (
                 <PDFViewer width="100%" className="h-dvh absolute z-100">
                     <Document title={reportTitle}>
-                        <Page size="LETTER">
+                        <Page size="LETTER" style={styles.pageContent}>
                             <View style={styles.logo}>
                                 <Image
                                     src={"/Logo_black_text.png"}
@@ -128,37 +162,19 @@ function ReportDoc({
                                 <View style={styles.chartSection}>
                                     {chartImages.length > 0 ? (
                                         chartImages.map((src, i) => (
-                                            <View key={i} style={styles.chart}>
-                                                <Text style={styles.chartTitle}>
-                                                    {
-                                                        charts[i].key.split(
-                                                            "-"
-                                                        )[0]
-                                                    }
-                                                </Text>
-                                                <Image
-                                                    src={src}
-                                                    style={[
-                                                        styles.bgColor,
-                                                        { width: "50%" },
-                                                    ]}
-                                                />
+                                            <View key={i} style={styles.chart} wrap={false}>
+                                                <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
+                                                <Image src={src} style={styles.chartImage} />
                                             </View>
                                         ))
                                     ) : (
-                                        <Text
-                                            style={{
-                                                fontSize: 12,
-                                                color: "#364152",
-                                            }}
-                                        >
-                                            No in-progress report found. Add
-                                            charts using the &quot;+&quot;
-                                            buttons to see them here.
+                                        <Text style={{ fontSize: 12, color: "#364152", }}>
+                                            No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
                                         </Text>
                                     )}
                                 </View>
                             </View>
+                            <Footer />
                         </Page>
                     </Document>
                 </PDFViewer>
