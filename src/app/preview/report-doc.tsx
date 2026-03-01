@@ -10,9 +10,8 @@ import {
     PDFViewer,
     Font,
 } from "@react-pdf/renderer";
-import { ReactElement, useEffect, useRef, useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import html2canvas from "html2canvas-pro";
 import { LoaderCircle } from "lucide-react";
 
 Font.register({
@@ -105,35 +104,18 @@ function ReportDoc({
     reportTitle: string;
     charts: { key: string; node: ReactElement | null }[];
 }) {
-    const [chartImages, setChartImages] = useState<string[]>([]);
-    const chartRefs = useRef<(HTMLDivElement | null)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [date, setDate] = useState<string>("");
 
-    // get charts as images
     useEffect(() => {
-        async function generateImages() {
-            const images = await Promise.all(
-                chartRefs.current.map(async (el) => {
-                    if (!el) return "";
-                    const canvas = await html2canvas(el, {
-                        backgroundColor: null,
-                    });
-                    return canvas.toDataURL("image/png");
-                })
-            );
-            const date = new Date();
-            const formattedDate = new Intl.DateTimeFormat("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-            }).format(date);
-            setDate(formattedDate);
-            setChartImages(images.filter(Boolean));
-            setIsLoading(false);
-        }
-
-        generateImages();
+        const date = new Date();
+        const formattedDate = new Intl.DateTimeFormat("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        }).format(date);
+        setDate(formattedDate);
+        setIsLoading(false);
     }, [charts]);
 
     return (
@@ -156,14 +138,12 @@ function ReportDoc({
                                   </Text>
                                   <View style={styles.line}></View>
                                   <View style={styles.chartSection}>
-                                      {chartImages.length > 0 ? (
-                                          chartImages.map((src, i) => (
-                                              <View key={i} style={styles.chart} wrap={false}>
-                                                  <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
-                                                  <Image src={src}/>
-                                              </View>
-                                          ))
-                                      ) : (
+                                      {charts.length > 0 ? (charts.map((chart, i) => (
+                                          <View key={i} style={styles.chart} wrap={false}>
+                                              <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
+                                              <View style={{ aspectRatio: "1/1" }}>{chart.node}</View>
+                                          </View>
+                                      ))) : (
                                           <Text style={{ fontSize: 12, color: "#364152", }}>
                                               No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
                                           </Text>
@@ -176,26 +156,12 @@ function ReportDoc({
                     </Document>
                 </PDFViewer>
             )}
-            {/* cover div with charts */}
+            {/* loader div */}
             <div className="w-full h-dvh absolute z-50 bg-white flex items-center justify-center-safe">
-                <div className="flex gap-3.5 items-center">
-                  <LoaderCircle size={40} className="animate-spin" color="#E76C82"/>
+                {<div className="flex gap-3.5 items-center">
+                  <LoaderCircle size={40} className={isLoading ? "animate-spin" : ""} color="#E76C82"/>
                   <p className="font-manrope">Loading...</p>
-                </div>
-            </div>
-            {/* hidden dom for getting charts as images */}
-            <div className="h-dvh overflow-y-scroll">
-                {charts.map((chart, i) => (
-                    <div
-                        key={chart.key}
-                        ref={(ele) => {
-                            chartRefs.current[i] = ele;
-                        }}
-                        className="w-105"
-                    >
-                        {chart.node}
-                    </div>
-                ))}
+                </div>}
             </div>
         </>
     );

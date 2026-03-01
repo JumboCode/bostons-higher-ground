@@ -2,8 +2,11 @@ import { filterRecords, type FilterableRecord } from "@/lib/applyFilters";
 import { getAllData } from "@/lib/getAllData";
 import {
     LineChart,
+    LineChartPdf,
     VerticalBarChart,
+    VerticalBarChartPdf,
     HorizontalBarChart,
+    HorizontalBarChartPdf,
     type LineDatum,
     type VerticalBarDatum,
     type HorizontalBarDatum,
@@ -215,6 +218,41 @@ const chartBuilders: Record<ChartKey, ChartBuilder> = {
     },
 };
 
+const chartBuildersPdf: Record<ChartKey, ChartBuilder> = {
+    "family-intake-bar": (records) => {
+        const data = familyIntakeSeries(records);
+        return React.createElement(VerticalBarChartPdf, {
+            data,
+            xLabel: "Month",
+            yLabel: "Families",
+        });
+    },
+    "families-housed-line": (records) => {
+        const data = familiesHousedSeries(records);
+        return React.createElement(LineChartPdf, {
+            data,
+            xLabel: "Month",
+            yLabel: "Families Housed",
+        });
+    },
+    "days-to-house-bar": (records) => {
+        const data = daysToHouseSeries(records);
+        return React.createElement(VerticalBarChartPdf, {
+            data,
+            xLabel: "School",
+            yLabel: "Avg. days to house",
+        });
+    },
+    "location-bar": (records) => {
+        const data = locationSeries(records);
+        return React.createElement(HorizontalBarChartPdf, {
+            data,
+            xLabel: "# of Families",
+            yLabel: "Location",
+        });
+    },
+};
+
 function resolveChartKey(title: string): ChartKey | null {
     const mapped = (chartRegistry as Record<string, ChartKey | undefined>)[
         title
@@ -224,7 +262,7 @@ function resolveChartKey(title: string): ChartKey | null {
 
 import React from "react";
 
-export async function generateChart(stored: StoredChart) {
+export async function generateChart(stored: StoredChart, isForPdf = false) {
     const data = (await getAllData()) as HousingRecord[];
 
     const filters = parseFilters(stored.filters);
@@ -239,6 +277,6 @@ export async function generateChart(stored: StoredChart) {
     const chartKey = resolveChartKey(stored.title);
     if (!chartKey) return null;
 
-    const build = chartBuilders[chartKey];
+    const build = isForPdf ? chartBuildersPdf[chartKey] : chartBuilders[chartKey];
     return build(filtered as HousingRecord[]);
 }

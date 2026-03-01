@@ -37,7 +37,7 @@ export default async function PreviewPage() {
     const rendered = await Promise.all(
         charts.map(async (chart, idx) => ({
             key: `${chart.title}-${idx}`,
-            node: await generateChart(chart),
+            node: await generateChart(chart, true),
         }))
     );
 
