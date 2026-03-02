@@ -55,7 +55,7 @@ function ReportDoc({
         generateImages();
     }, [charts]);
 
-    // Generate PDF blob and upload via API (uploadFile runs server-side)
+    // generate pdf blob and uplaod via API
     const hasUploadedRef = useRef(false);
     useEffect(() => {
         if (isLoading || hasUploadedRef.current) return;
