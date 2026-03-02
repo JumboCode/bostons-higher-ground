@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
+import { ClearDraftReport } from "@/components/onboarding/notifCard";
+
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -47,7 +49,10 @@ async function DraftReportPopulated() {
                         </h2>
                         <p className="text-sm">{charts.length} {charts.length === 1 ? "chart" : "charts"} added from dashboard</p>
                     </div>
-                    <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
+                   
+                   {/* Clear Reports Button */}
+                   
+                    <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] hover:text-[#F3F3F5]">
                         <button className="flex flex-row items-center space-x-4">
                             <Trash2 className="w-[16] h-[16]" />
                             <p className="font-medium text-sm">Clear</p>

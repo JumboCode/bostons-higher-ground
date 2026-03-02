@@ -3,6 +3,8 @@
 import React from "react";
 import { CheckCircle, Trash2, Send } from "lucide-react";
 import clsx from "clsx";
+import { useState } from "react";
+import { inProgressReports } from "@/lib/schema";
 
 /** ---------------------------
  *  Overlay (exported)
@@ -311,3 +313,71 @@ export function ResendInviteCard({
         card
     );
 }
+
+// Clear Draft Report (no pill)
+export function ClearDraftReportPopUp({
+    onCancel,
+    onClear,
+    showOverlay = true,
+}: {
+    onCancel?: () => void;
+    onClear?: () => void;
+    showOverlay?: boolean;
+}) {
+    const card = (
+        <NotifCard
+            title="Clear Draft Report"
+            secondaryAction={{ label: "Cancel", onClick: onCancel }}
+            primaryAction={{
+                label: "Clear",
+                onClick: onClear,
+            }}
+        >
+            { "Are you sure you want to clear the draft report?\nThis action cannot be undone."}
+        </NotifCard>
+    );
+
+    return showOverlay ? (
+        <ModalOverlay onClose={onCancel}>{card}</ModalOverlay>
+    ) : (
+        card
+    );
+
+}
+
+// Client-side function to call Clear Draft Report Popup
+export function ClearDraftReport({
+    defaultOpen = false,
+    clear,
+}:{
+    defaultOpen?: boolean;
+    clear: () => void;
+    
+}) {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    return (
+        <>
+            <button className="flex flex-row items-center space-x-4"
+                    onClick={() => setIsOpen(true)}>
+                <Trash2 className="w-[16] h-[16]" />
+                <p className="font-medium text-sm">Clear</p>
+            </button>
+
+            {isOpen && (
+                <ModalOverlay onClose={() => setIsOpen(false)}>
+                    <ClearDraftReportPopUp
+                        onCancel={() => setIsOpen(false)}
+                        onClear={() => {
+                            fetch("api/reports/in-progress", {
+                                method: "DELETE",
+                                headers: { "Content-Type": "application/json" },
+                            })  
+                            setIsOpen(false);
+                        }}
+                    />
+                </ModalOverlay>
+            )};
+        </>
+    )
+};
