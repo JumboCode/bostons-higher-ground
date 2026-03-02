@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import React from "react";
 import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
 // import { auth } from "@/lib/auth";
 // import { headers } from "next/headers";
@@ -8,6 +9,7 @@ import ReportChart from "@/components/ReportChart";
 // import { eq } from "drizzle-orm";
 // import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
+import ChartPreview from "@/components/chartPreview";
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -52,6 +54,19 @@ function DraftReportPopulated() {
     }
 };
 
+    const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
+    const handlePreview = (title: string) => {
+        // sanitize the title to match the chart element ID
+        const element = document.getElementById("chartElement");
+        if (!element) return;
+
+        import("html2canvas-pro").then((html2canvas) => {
+            html2canvas.default(element, { useCORS: true }).then((canvas) => {
+                setPreviewSrc(canvas.toDataURL("image/png"));
+            });
+        });
+    };
+
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
             <div className="ReportNameEditBar space-y-2">
@@ -85,14 +100,20 @@ function DraftReportPopulated() {
                 </div>
             </div>
             <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
-                {charts.length > 0 ? (charts.map((chart, idx) => (
-                    <ReportChart 
-                        key={`${chart.title}-${idx}`} 
-                        title={chart.title} 
-                        onDelete={() => handleDelete(idx)} />
-                ))) : <p className="px-4 text-gray-400">
-                    Add charts using the &quot;+&quot; buttons to see them here.
-                </p>}
+                {charts.length > 0 ? (
+                    charts.map((chart, idx) => (
+                        <ReportChart
+                            key={`${chart.title}-${idx}`}
+                            title={chart.title}
+                            onDelete={() => handleDelete(idx)}
+                            onPreview={() => handlePreview(chart.title)} // <-- pass title
+                        />
+                    ))
+                ) : (
+                    <p className="px-4 text-gray-400">
+                        Add charts using the &quot;+&quot; buttons to see them here.
+                    </p>
+                )}
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                 <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
@@ -108,6 +129,10 @@ function DraftReportPopulated() {
                     <div className="font-medium text-sm">Export as PNG</div>
                 </button>
             </div>
+            <ChartPreview
+                src={previewSrc}
+                onClose={() => setPreviewSrc(null)}
+            />
         </div>
     );
 }

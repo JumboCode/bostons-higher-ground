@@ -4,14 +4,16 @@ import { FileText, X } from "lucide-react";
 type ChartProps = {
     title: string;
     onDelete: () => void;
+    onPreview?: () => void;
 };
 
-export default function ReportChart({ title, onDelete }: ChartProps) {
+export default function ReportChart({ title, onDelete, onPreview }: ChartProps) {
     return (
         <div
             className="group relative w-36 space-y-2 rounded-2xl bg-[#F9FAFB] 
             p-4 border border-[#E5E7EB] transition-all duration-200 
             hover:shadow-md cursor-pointer"
+            onClick={onPreview} // <-- call onPreview when clicked
         >
             {/* X Button */}
             <button
