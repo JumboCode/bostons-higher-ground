@@ -346,15 +346,19 @@ export function ClearDraftReportPopUp({
 }
 
 // Client-side function to call Clear Draft Report Popup
-export function ClearDraftReport({
-    defaultOpen = false,
-    clear,
-}:{
-    defaultOpen?: boolean;
-    clear: () => void;
-    
-}) {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
+export function ClearDraftReport() {
+    const [isOpen, setIsOpen] = useState(false);
+    async function deleteReports() {
+        const res = await fetch("api/reports/drafts", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+        });
+
+        const data = await res.json()
+        // console.log(data);
+        setIsOpen(false);
+        window.location.reload();
+    }
 
     return (
         <>
@@ -369,15 +373,11 @@ export function ClearDraftReport({
                     <ClearDraftReportPopUp
                         onCancel={() => setIsOpen(false)}
                         onClear={() => {
-                            fetch("api/reports/in-progress", {
-                                method: "DELETE",
-                                headers: { "Content-Type": "application/json" },
-                            })  
-                            setIsOpen(false);
+                            deleteReports();
                         }}
                     />
                 </ModalOverlay>
-            )};
+            )}
         </>
     )
 };
