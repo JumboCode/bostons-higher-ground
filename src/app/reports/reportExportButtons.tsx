@@ -1,33 +1,42 @@
 "use client";
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
+import { usePdfMetadataStore } from "@/lib/pdfMetadataStore";
+import { redirect } from "next/navigation";
 
-function buildPreviewHref(format: "pdf" | "csv" | "png", reportName: string) {
-  const safe = reportName.trim() || "untitled";
-  const path = encodeURIComponent(safe);
-  const params = new URLSearchParams();
-  params.set("format", format);
-  params.set("reportName", safe); 
-  return `/preview?${params}`;
-}
+export default function ReportExportButton() {
+    const filename = usePdfMetadataStore((s) => s.filename);
 
-export default function ExportButtonsClient() {
-  const searchParams = useSearchParams();
-  const reportName = searchParams.get("reportName") ?? "";
+    async function setPdfTitle() {
+        try {
+            const res = await fetch("/api/reports/drafts", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: filename,
+                }),
+            });
 
-  const baseBtn =
-    "flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-45 h-10 hover:bg-[#d75c6f] hover:text-[#FFFFFF]";
+            if (!res.ok) {
+                throw new Error("Failed to update report name");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+        redirect("/preview");
+    }
 
-  return (
-    <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-      <Link href={buildPreviewHref("pdf", reportName)} className={baseBtn}>
-        <span>Export as PDF</span>
-        <Download className="w-4 h-4" />
-      </Link>
+    const baseBtn =
+        "flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl py-3 px-4 h-10 text-[#555555] hover:bg-[#d75c6f] hover:text-[#FFFFFF]";
 
-      <Link href={buildPreviewHref("csv", reportName)} className={baseBtn}>
+    return (
+        <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+            <button onClick={setPdfTitle} className={baseBtn}>
+                <Download className="w-4 h-4" />
+                <p>Export as PDF</p>
+            </button>
+
+            {/* <Link href={buildPreviewHref("csv", reportName)} className={baseBtn}>
         <span>Export as CSV</span>
         <Download className="w-4 h-4" />
       </Link>
@@ -35,7 +44,7 @@ export default function ExportButtonsClient() {
       <Link href={buildPreviewHref("png", reportName)} className={baseBtn}>
         <span>Export as PNG</span>
         <Download className="w-4 h-4" />
-      </Link>
-    </div>
-  );
+      </Link> */}
+        </div>
+    );
 }
