@@ -8,12 +8,16 @@ type ChartProps = {
 };
 
 export default function ReportChart({ title, onDelete, onPreview }: ChartProps) {
+    // assign id to each chart by title 
+    const safeId = title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
+    
     return (
         <div
+            id={`chartElement-${safeId}`}
             className="group relative w-36 space-y-2 rounded-2xl bg-[#F9FAFB] 
             p-4 border border-[#E5E7EB] transition-all duration-200 
             hover:shadow-md cursor-pointer"
-            onClick={onPreview} // <-- call onPreview when clicked
+            onClick={onPreview}
         >
             {/* X Button */}
             <button

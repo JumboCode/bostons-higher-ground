@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import React from "react";
+import html2canvas from "html2canvas-pro";
 import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
 // import { auth } from "@/lib/auth";
 // import { headers } from "next/headers";
@@ -54,16 +55,18 @@ function DraftReportPopulated() {
     }
 };
 
+    // Preview popup 
     const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
-    const handlePreview = (title: string) => {
-        // sanitize the title to match the chart element ID
-        const element = document.getElementById("chartElement");
-        if (!element) return;
 
-        import("html2canvas-pro").then((html2canvas) => {
-            html2canvas.default(element, { useCORS: true }).then((canvas) => {
-                setPreviewSrc(canvas.toDataURL("image/png"));
-            });
+    const handlePreview = (title: string) => {
+        const safeId = title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
+        const element = document.getElementById(`chartElement-${safeId}`);
+        if (!element) {
+            console.log("element not found", `chartElement-${safeId}`);
+            return;
+        }
+        html2canvas(element, { useCORS: true }).then((canvas) => {
+            setPreviewSrc(canvas.toDataURL("image/png"));
         });
     };
 
@@ -106,7 +109,7 @@ function DraftReportPopulated() {
                             key={`${chart.title}-${idx}`}
                             title={chart.title}
                             onDelete={() => handleDelete(idx)}
-                            onPreview={() => handlePreview(chart.title)} // <-- pass title
+                            onPreview={() => handlePreview(chart.title)} 
                         />
                     ))
                 ) : (

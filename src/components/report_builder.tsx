@@ -221,6 +221,7 @@ export default function ReportBuilder({
     const count = charts.length;
     const router = useRouter();
 
+    // Preview popup 
     const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
 
     const handlePreview = () => {
