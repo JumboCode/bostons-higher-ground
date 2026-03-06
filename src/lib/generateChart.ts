@@ -41,7 +41,31 @@ export type HousingRecord = FilterableRecord & {
     studentCount: number | null;
 };
 
-type ChartBuilder = (records: HousingRecord[]) => React.ReactElement | null;
+export type GeneratedChartModel =
+    | {
+          chartKey: "family-intake-bar";
+          data: VerticalBarDatum[];
+          xLabel: "Month";
+          yLabel: "Families";
+      }
+    | {
+          chartKey: "families-housed-line";
+          data: LineDatum[];
+          xLabel: "Month";
+          yLabel: "Families Housed";
+      }
+    | {
+          chartKey: "days-to-house-bar";
+          data: VerticalBarDatum[];
+          xLabel: "School";
+          yLabel: "Avg. days to house";
+      }
+    | {
+          chartKey: "location-bar";
+          data: HorizontalBarDatum[];
+          xLabel: "# of Families";
+          yLabel: "Location";
+      };
 
 // Parse a filters string back into a filter state subset
 function parseFilters(filters: string | null): Partial<FilterState> {
@@ -183,75 +207,55 @@ function locationSeries(records: HousingRecord[]): HorizontalBarDatum[] {
         );
 }
 
-const chartBuilders: Record<ChartKey, ChartBuilder> = {
-    "family-intake-bar": (records) => {
-        const data = familyIntakeSeries(records);
-        return React.createElement(VerticalBarChart, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families",
-        });
-    },
-    "families-housed-line": (records) => {
-        const data = familiesHousedSeries(records);
-        return React.createElement(LineChart, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families Housed",
-        });
-    },
-    "days-to-house-bar": (records) => {
-        const data = daysToHouseSeries(records);
-        return React.createElement(VerticalBarChart, {
-            data,
-            xLabel: "School",
-            yLabel: "Avg. days to house",
-        });
-    },
-    "location-bar": (records) => {
-        const data = locationSeries(records);
-        return React.createElement(HorizontalBarChart, {
-            data,
-            xLabel: "# of Families",
-            yLabel: "Location",
-        });
-    },
-};
+function getFilteredRecords(
+    data: HousingRecord[],
+    stored: StoredChart
+): HousingRecord[] {
+    const filters = parseFilters(stored.filters);
+    return filterRecords(data, {
+        selectedLocations: filters.selectedLocations ?? [],
+        selectedSchools: filters.selectedSchools ?? [],
+        timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
+        fiscalYear: filters.fiscalYear,
+        customRange: filters.customRange,
+    }) as HousingRecord[];
+}
 
-const chartBuildersPdf: Record<ChartKey, ChartBuilder> = {
-    "family-intake-bar": (records) => {
-        const data = familyIntakeSeries(records);
-        return React.createElement(VerticalBarChartPdf, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families",
-        });
-    },
-    "families-housed-line": (records) => {
-        const data = familiesHousedSeries(records);
-        return React.createElement(LineChartPdf, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families Housed",
-        });
-    },
-    "days-to-house-bar": (records) => {
-        const data = daysToHouseSeries(records);
-        return React.createElement(VerticalBarChartPdf, {
-            data,
-            xLabel: "School",
-            yLabel: "Avg. days to house",
-        });
-    },
-    "location-bar": (records) => {
-        const data = locationSeries(records);
-        return React.createElement(HorizontalBarChartPdf, {
-            data,
-            xLabel: "# of Families",
-            yLabel: "Location",
-        });
-    },
-};
+function buildChartModel(
+    chartKey: ChartKey,
+    records: HousingRecord[]
+): GeneratedChartModel {
+    switch (chartKey) {
+        case "family-intake-bar":
+            return {
+                chartKey,
+                data: familyIntakeSeries(records),
+                xLabel: "Month",
+                yLabel: "Families",
+            };
+        case "families-housed-line":
+            return {
+                chartKey,
+                data: familiesHousedSeries(records),
+                xLabel: "Month",
+                yLabel: "Families Housed",
+            };
+        case "days-to-house-bar":
+            return {
+                chartKey,
+                data: daysToHouseSeries(records),
+                xLabel: "School",
+                yLabel: "Avg. days to house",
+            };
+        case "location-bar":
+            return {
+                chartKey,
+                data: locationSeries(records),
+                xLabel: "# of Families",
+                yLabel: "Location",
+            };
+    }
+}
 
 function resolveChartKey(title: string): ChartKey | null {
     const mapped = (chartRegistry as Record<string, ChartKey | undefined>)[
@@ -262,21 +266,74 @@ function resolveChartKey(title: string): ChartKey | null {
 
 import React from "react";
 
-export async function generateChart(stored: StoredChart, isForPdf = false) {
-    const data = (await getAllData()) as HousingRecord[];
-
-    const filters = parseFilters(stored.filters);
-    const filtered = filterRecords(data, {
-        selectedLocations: filters.selectedLocations ?? [],
-        selectedSchools: filters.selectedSchools ?? [],
-        timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
-        fiscalYear: filters.fiscalYear,
-        customRange: filters.customRange,
-    });
-
+export async function generateChartModel(
+    stored: StoredChart
+): Promise<GeneratedChartModel | null> {
     const chartKey = resolveChartKey(stored.title);
     if (!chartKey) return null;
 
-    const build = isForPdf ? chartBuildersPdf[chartKey] : chartBuilders[chartKey];
-    return build(filtered as HousingRecord[]);
+    const data = (await getAllData()) as HousingRecord[];
+    const filteredRecords = getFilteredRecords(data, stored);
+    return buildChartModel(chartKey, filteredRecords);
+}
+
+export async function generateChart(stored: StoredChart, isForPdf = false) {
+    const model = await generateChartModel(stored);
+    if (!model) return null;
+
+    if (isForPdf) {
+        if (model.chartKey === "family-intake-bar") {
+            return React.createElement(VerticalBarChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        if (model.chartKey === "families-housed-line") {
+            return React.createElement(LineChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        if (model.chartKey === "days-to-house-bar") {
+            return React.createElement(VerticalBarChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        return React.createElement(HorizontalBarChartPdf, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+
+    if (model.chartKey === "family-intake-bar") {
+        return React.createElement(VerticalBarChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    if (model.chartKey === "families-housed-line") {
+        return React.createElement(LineChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    if (model.chartKey === "days-to-house-bar") {
+        return React.createElement(VerticalBarChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    return React.createElement(HorizontalBarChart, {
+        data: model.data,
+        xLabel: model.xLabel,
+        yLabel: model.yLabel,
+    });
 }

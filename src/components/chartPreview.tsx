@@ -2,14 +2,67 @@
 
 import React from "react";
 import { X } from "lucide-react";
+import {
+    HorizontalBarChart,
+    LineChart,
+    VerticalBarChart,
+} from "@/components/charts";
+import { type GeneratedChartModel } from "@/lib/generateChart";
 
 interface ChartPreviewModalProps {
-    src: string | null;
+    src?: string | null;
+    chart?: GeneratedChartModel | null;
     onClose: () => void;
 }
 
-export default function ChartPreviewModal({ src, onClose }: ChartPreviewModalProps) {
-    if (!src) return null;
+function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
+    if (chart.chartKey === "families-housed-line") {
+        return (
+            <LineChart
+                data={chart.data}
+                xLabel={chart.xLabel}
+                yLabel={chart.yLabel}
+                width={640}
+                height={320}
+                className="w-full h-[320px]"
+            />
+        );
+    }
+
+    if (
+        chart.chartKey === "family-intake-bar" ||
+        chart.chartKey === "days-to-house-bar"
+    ) {
+        return (
+            <VerticalBarChart
+                data={chart.data}
+                xLabel={chart.xLabel}
+                yLabel={chart.yLabel}
+                width={640}
+                height={320}
+                className="w-full h-[320px]"
+            />
+        );
+    }
+
+    return (
+        <HorizontalBarChart
+            data={chart.data}
+            xLabel={chart.xLabel}
+            yLabel={chart.yLabel}
+            width={640}
+            height={320}
+            className="w-full"
+        />
+    );
+}
+
+export default function ChartPreviewModal({
+    src,
+    chart,
+    onClose,
+}: ChartPreviewModalProps) {
+    if (!src && !chart) return null;
 
     return (
         <div
@@ -17,11 +70,13 @@ export default function ChartPreviewModal({ src, onClose }: ChartPreviewModalPro
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-2xl p-4 max-w-xl w-full shadow-xl"
+                className="bg-white rounded-2xl p-4 max-w-3xl w-full shadow-xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-3">
-                    <span className="ml-5 text-lg font-semibold text-gray-800">Preview</span>
+                    <span className="ml-5 text-lg font-semibold text-gray-800">
+                        Preview
+                    </span>
                     <button
                         onClick={onClose}
                         className="ml-auto text-gray-600 hover:text-gray-800 hover:bg-[#EEEEEE] rounded-md w-8 h-8 flex items-center justify-center transition-colors"
@@ -29,7 +84,19 @@ export default function ChartPreviewModal({ src, onClose }: ChartPreviewModalPro
                         <X className="w-4 h-4" />
                     </button>
                 </div>
-                <img src={src} alt="Chart Preview" className="w-full rounded-lg aspect-[3/2] object-contain" />
+                {chart ? (
+                    <div className="w-full rounded-lg border border-gray-200 bg-white p-4">
+                        <PreviewChart chart={chart} />
+                    </div>
+                ) : (
+                    src && (
+                        <img
+                            src={src}
+                            alt="Chart Preview"
+                            className="w-full rounded-lg aspect-[3/2] object-contain"
+                        />
+                    )
+                )}
             </div>
         </div>
     );

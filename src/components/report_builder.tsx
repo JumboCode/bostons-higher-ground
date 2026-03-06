@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import ChartPreview from "@/components/chartPreview";
-import html2canvas from "html2canvas-pro";
+import { type GeneratedChartModel } from "@/lib/generateChart";
 import {
     X,
     GripVertical,
@@ -15,7 +15,6 @@ import {
     Eye,
     EyeClosed,
 } from "lucide-react";
-
 
 function ChartEntry({
     title,
@@ -31,10 +30,11 @@ function ChartEntry({
     index: number;
 }) {
     return (
-        <div className="group relative bg-white border border-gray-200 
+        <div
+            className="group relative bg-white border border-gray-200 
         rounded-2xl px-5 py-4 mb-4 transition-all duration-200 hover:shadow-md 
-        hover:border-gray-300">
-
+        hover:border-gray-300"
+        >
             {/* Remove button (only on hover) */}
             <button
                 onClick={onDelete}
@@ -53,26 +53,27 @@ function ChartEntry({
 
                     hover:bg-rose-100
                     hover:text-rose-500"
-                >
+            >
                 <X className="w-4 h-4" />
             </button>
 
-            <div className="flex items-start gap-4 text-gray-900 
-            transition-colors duration-200 group-hover:text-rose-500">
-                
+            <div
+                className="flex items-start gap-4 text-gray-900 
+            transition-colors duration-200 group-hover:text-rose-500"
+            >
                 {/* Number circle */}
-                <div className="flex items-center justify-center w-6 h-6 
-                rounded-full bg-rose-100 text-rose-500 text-xs font-semibold">
+                <div
+                    className="flex items-center justify-center w-6 h-6 
+                rounded-full bg-rose-100 text-rose-500 text-xs font-semibold"
+                >
                     {index}
                 </div>
 
                 {/* Text content */}
                 <div className="flex-1">
-                    <div className="text-base font-semibold ">
-                        {title}
-                    </div>
+                    <div className="text-base font-semibold ">{title}</div>
                 </div>
-                
+
                 {/* Eye icon */}
                 <div
                     className="cursor-pointer transition-colors"
@@ -80,7 +81,6 @@ function ChartEntry({
                 >
                     <Eye className="w-5 h-5" />
                 </div>
-
             </div>
         </div>
     );
@@ -116,7 +116,6 @@ export default function ReportBuilder({
             window.scrollTo(0, scrollYRef.current);
         };
     }, []);
-
 
     useEffect(() => {
         let active = true;
@@ -221,99 +220,110 @@ export default function ReportBuilder({
     const count = charts.length;
     const router = useRouter();
 
-    // Preview popup 
-    const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
+    // Preview popup
+    const [previewChart, setPreviewChart] =
+        React.useState<GeneratedChartModel | null>(null);
 
-    const handlePreview = () => {
-        const element = document.getElementById("chartElement");
-        if (!element) {
-            console.log("element not found");
-            return;
+    const handlePreview = async (chart: ReportChartEntry) => {
+        try {
+            const res = await fetch("/api/reports/chart-preview", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(chart),
+            });
+            if (!res.ok) return;
+
+            const payload = (await res.json()) as {
+                model?: GeneratedChartModel;
+            };
+            setPreviewChart(payload.model ?? null);
+        } catch {
+            // ignore network errors for now
         }
-        html2canvas(element, { useCORS: true }).then((canvas) => {
-            setPreviewSrc(canvas.toDataURL("image/png"));
-        });
     };
 
     return (
-    <div className="fixed inset-0 z-50">
-        
-        {/* Dark overlay */}
-        <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-xs"
-        onClick={onClose}
-        />
+        <div className="fixed inset-0 z-50">
+            {/* Dark overlay */}
+            <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+                onClick={onClose}
+            />
 
-        {/* Sidebar */}
-        <div
-            className="
+            {/* Sidebar */}
+            <div
+                className="
                 absolute right-0 top-0
                 h-full w-1/3 min-w-[400px]
                 rounded-l-lg
                 bg-white
                 flex flex-col
             "
-        >
-            <div className="px-10 pt-10 pb-6">
-                <div className="flex items-center">
-                    <div className="text-xl font-bold">Report Builder</div>
-                    <button
-                    onClick={onClose}
-                    className="w-8 h-8 flex items-center justify-center ml-auto text-gray-600 hover:text-gray-800 hover:bg-[#EEEEEE] rounded-md p-1 transition-colors"
-                    >
-                    <X className="w-4 h-4" />
-                    </button>
+            >
+                <div className="px-10 pt-10 pb-6">
+                    <div className="flex items-center">
+                        <div className="text-xl font-bold">Report Builder</div>
+                        <button
+                            onClick={onClose}
+                            className="w-8 h-8 flex items-center justify-center ml-auto text-gray-600 hover:text-gray-800 hover:bg-[#EEEEEE] rounded-md p-1 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <div className="text-sm text-gray-500 mt-3">
+                        {count} {count === 1 ? "chart" : "charts"} added
+                    </div>
+
+                    <hr className="border-gray-200 mt-4" />
                 </div>
 
-                <div className="text-sm text-gray-500 mt-3">
-                    {count} {count === 1 ? "chart" : "charts"} added
+                <div className="flex-1 overflow-y-auto px-10 pt-6 pb-8">
+                    {count > 0 ? (
+                        charts.map((chart, idx) => (
+                            <ChartEntry
+                                key={`${chart.title}-${idx}`}
+                                title={chart.title}
+                                filters={chart.filters}
+                                onDelete={() => handleDelete(idx)}
+                                onPreview={() => handlePreview(chart)}
+                                index={idx + 1}
+                            />
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-gray-400 mt-10">
+                            <FileTextIcon
+                                stroke="#D1D5DC"
+                                width="60"
+                                height="60"
+                            />
+                            <p className="mt-8 text-center text-md mb-2">
+                                No charts added yet. Click the &quot;+&quot;
+                                icon on any chart to add it to your Report
+                            </p>
+                        </div>
+                    )}
                 </div>
-
-                <hr className="border-gray-200 mt-4" />
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-10 pt-6 pb-8">
-                {count > 0 ? (
-                charts.map((chart, idx) => (
-                    <ChartEntry
-                        key={`${chart.title}-${idx}`}
-                        title={chart.title}
-                        filters={chart.filters}
-                        onDelete={() => handleDelete(idx)}
-                        onPreview={() => handlePreview()}
-                        index={idx + 1}
-                    />
-                ))
-                ) : (
-                <div className="flex flex-col items-center justify-center text-gray-400 mt-10">
-                    <FileTextIcon
-                        stroke="#D1D5DC"
-                        width="60"
-                        height="60"
-                    />
-                    <p className="mt-8 text-center text-md mb-2">
-                        No charts added yet. Click the &quot;+&quot; icon on any chart to add it to your Report
-                    </p>
-                </div>
-                )}
-            </div>
-            <div className="px-10 pb-6 pt-4 border-t">
-                <div className="mt-3 flex w-full py-2">
-                    <button
-                        disabled={charts.length === 0}
-                        onClick={() => router.push("/reports")}
-                        className={`w-full px-3 py-3 rounded-full text-white font-medium transition-colors ${
-                        charts.length > 0
-                            ? "bg-[#E76C82] hover:bg-[#d9566e] cursor-pointer"
-                            : "bg-[#E59AA8] cursor-not-allowed"
-                        }`}
-                    >
-                        Go to Reports Tab
-                    </button>
+                <div className="px-10 pb-6 pt-4 border-t">
+                    <div className="mt-3 flex w-full py-2">
+                        <button
+                            disabled={charts.length === 0}
+                            onClick={() => router.push("/reports")}
+                            className={`w-full px-3 py-3 rounded-full text-white font-medium transition-colors ${
+                                charts.length > 0
+                                    ? "bg-[#E76C82] hover:bg-[#d9566e] cursor-pointer"
+                                    : "bg-[#E59AA8] cursor-not-allowed"
+                            }`}
+                        >
+                            Go to Reports Tab
+                        </button>
+                    </div>
                 </div>
             </div>
+            <ChartPreview
+                chart={previewChart}
+                onClose={() => setPreviewChart(null)}
+            />
         </div>
-        <ChartPreview src={previewSrc} onClose={() => setPreviewSrc(null)} />
-    </div>
     );
 }
