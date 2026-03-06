@@ -1,112 +1,119 @@
-import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+"use client";
+import { useState, useEffect } from "react";
+import React from "react";
+import html2canvas from "html2canvas-pro";
+import { Download, Calendar, Trash2, FileText, ArchiveIcon } from "lucide-react";
 import ReportChart from "@/components/ReportChart";
-import { db } from "@/lib/db";
-import { eq } from "drizzle-orm";
-import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
 import { ClearDraftReport } from "@/components/onboarding/notifCard";
+import ChartPreview from "@/components/chartPreview";
 
+import ReportNameInput from "./reportNameInput";
+import ReportExportButton from "./reportExportButtons";
 
-/*
- * TODO: This component represents the draft report interface that goes at the
- * top of the page. Ultimately, it will list the charts the user has selected to
- * go into their next report, but for now you only need to make the interface
- * drawn on the figma for the case when no charts are selected.
- */
+function DraftReportPopulated() {
+    const [charts, setCharts] = useState<StoredChart[]>([]);
 
-async function DraftReportPopulated() {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    // Fetch charts once when component mounts
+    useEffect(() => {
+        const fetchCharts = async () => {
+            try {
+                const res = await fetch("/api/reports/in-progress");
+                if (!res.ok) return;
+                const data = await res.json();
+                setCharts(data.charts || []);
+            } catch (err) {
+                console.error("Failed to fetch in-progress charts", err);
+            }
+        };
 
-    if (!session) {
-        return (
-            <div className="p-10 text-gray-700">
-                Please sign in to view your in-progress report.
-            </div>
-        );
+        fetchCharts();
+    }, []);
+
+    const handleDelete = async (index: number) => {
+    // Update UI immediately
+    const nextCharts = charts.filter((_, i) => i !== index);
+    setCharts(nextCharts);
+
+    // Delete from backend
+    try {
+        await fetch("/api/reports/in-progress", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index }),
+        });
+    } catch (err) {
+        console.error("Failed to delete chart", err);
     }
+};
 
-    const userId = session.user.id;
+    // Preview popup 
+    const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
 
-    const existing = await db.query.inProgressReports.findFirst({
-        where: eq(inProgressReports.userId, userId),
-    });
-
-    const charts = Array.isArray(existing?.charts)
-        ? (existing!.charts as StoredChart[])
-        : [];
+    const handlePreview = (title: string) => {
+        const safeId = title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
+        const element = document.getElementById(`chartElement-${safeId}`);
+        if (!element) {
+            console.log("element not found", `chartElement-${safeId}`);
+            return;
+        }
+        html2canvas(element, { useCORS: true }).then((canvas) => {
+            setPreviewSrc(canvas.toDataURL("image/png"));
+        });
+    };
 
     return (
-        <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
-            <div className="ReportNameEditBar space-y-2">
+        <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-5">
+            <div className="ReportNameEditBar space-y-5">
                 <div className="DraftHeading+NoOfChartsAdded+ClearButton flex flex-row items-center">
                     <div className="Name+ChartNoDisplay">
                         <h2 className="text-[#555555] text-lg font-semibold">
                             Draft Report
                         </h2>
-                        <p className="text-sm">{charts.length} {charts.length === 1 ? "chart" : "charts"} added from dashboard</p>
+                        <p className="text-sm text-black/50">
+                            {charts.length}{" "}
+                            {charts.length === 1 ? "chart" : "charts"} added from dashboards
+                        </p>
                     </div>
-                   
                    {/* Clear Reports Button */}
-                   
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] hover:text-[#F3F3F5]">
                         <ClearDraftReport/>
-                        
-                        {/* <button className="flex flex-row items-center space-x-4">
-                            <Trash2 className="w-[16] h-[16]" />
-                            <p className="font-medium text-sm">Clear</p>
-                        </button> */}
                     </div>
                 </div>
-                <div className="flex flex-col ReportNameEdit space-y-1">
-                    <div className="text-sm font-medium">Report Name</div>
-                    <div className="ReportNameTextField">
-                        <div className="relative w-full">
-                            <SquarePen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input
-                                type="text"
-                                name="reportName"
-                                placeholder="Enter report name (e.g., October 2025 Housing Report)"
-                                className="w-full text-sm pl-9 pr-3 p-2 bg-[#F3F3F5] rounded-2xl font-normal focus:outline-none"
-                            />
-                        </div>
-                    </div>
-                </div>
+                <ReportNameInput />
             </div>
-            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
-                {charts.length > 0 ? (charts.map((chart, idx) => (
-                    <ReportChart key={`${chart.title}-${idx}`} title={chart.title} />
-                ))) : <p className="px-4 text-gray-400">
-                    Add charts using the &quot;+&quot; buttons to see them here.
-                </p>}
+            <div className="w-full overflow-x-hidden">
+            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
+                {charts.length > 0 ? (
+                    charts.map((chart, idx) => (
+                        <ReportChart
+                            key={`${chart.title}-${idx}`}
+                            title={chart.title}
+                            onDelete={() => handleDelete(idx)}
+                            onPreview={() => handlePreview(chart.title)} 
+                        />
+                    ))
+                ) : (
+                    <p className="px-4 text-gray-400">
+                        Add charts using the &quot;+&quot; buttons to see them here.
+                    </p>
+                )}
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PDF</div>
-                </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as CSV</div>
-                </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PNG</div>
+                <ReportExportButton />
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
+                    <ArchiveIcon className="w-4 h-4" />
+                    <div className="font-medium">Save to Archive</div>
                 </button>
             </div>
+            <ChartPreview
+                src={previewSrc}
+                onClose={() => setPreviewSrc(null)}
+            />
+        </div>
         </div>
     );
 }
-
-/*
- * TODO: This component represents a single report in the list of archived
- * reports. As you are designing it, think about what props you need in order to
- * make it reusable.
- */
-
 
 export function ReportEntry({
     title,
@@ -120,9 +127,7 @@ export function ReportEntry({
     schools: string;
     category: string;
     numOfCharts: number;
-}
-
-) {
+}) {
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
             <div className="flex grow flex-row h-full space-x-6 items-center">
@@ -183,23 +188,24 @@ export function ReportEntry({
     );
 }
 
-/*
- * TODO: This function is the top level component of the archive page. All of
- * the JSX returned by this function will be rendered on the /reports route.
- * Complete the component to match the designs provided in the ticket.
- */
 export default function Archive() {
     return (
         <main className="bg-[#F5F5F5] p-10 flex flex-col gap-y-10 pt-12.5">
             <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
                 Reports
             </h1>
-            {/* <DraftReport /> */}
             <DraftReportPopulated />
             <div className="flex flex-col gap-y-4">
                 <h2 className="text-xl font-extrabold text-[#555555] gap-8">
                     Archived Reports
                 </h2>
+                <ReportEntry
+                    title="Q4 Report 2025"
+                    date={new Date(2025, 0, 4)}
+                    schools="All Schools"
+                    category="Housing"
+                    numOfCharts={4}
+                />
                 <ReportEntry
                     title="Q4 Report 2025"
                     date={new Date(2025, 0, 4)}
