@@ -1,15 +1,6 @@
 "use client";
 
-import {
-    Page,
-    Text,
-    View,
-    Document,
-    Image,
-    StyleSheet,
-    PDFViewer,
-    Font,
-} from "@react-pdf/renderer";
+import { Page, Text, View, Document, Image, StyleSheet, PDFViewer, Font, pdf } from "@react-pdf/renderer";
 import { ReactElement, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { LoaderCircle } from "lucide-react";
@@ -117,6 +108,45 @@ function ReportDoc({
         setDate(formattedDate);
         setIsLoading(false);
     }, [charts]);
+
+    // generate pdf blob and uplaod via API
+    const hasUploadedRef = useRef(false);
+    useEffect(() => {
+        if (isLoading || hasUploadedRef.current) return;
+
+        let cancelled = false;
+        (async () => {
+            const doc = (
+                <Document title={reportTitle}>
+                    <Page size="LETTER">
+                        <View style={styles.headerSection}>
+                            <Image src={Logo.src} style={{ width: 168 }} />
+                            <Text style={styles.header}>{reportTitle}</Text>
+                        </View>
+                        <View style={styles.chartSection}>
+                            {chartImages.length > 0
+                                ? chartImages.map((src, i) => (
+                                      <Image key={i} src={src} style={{ width: "50%" }} />
+                                  ))
+                                : null}
+                        </View>
+                    </Page>
+                </Document>
+            );
+            const blob = await pdf(doc).toBlob();
+            if (cancelled) return;
+            hasUploadedRef.current = true;
+            await fetch("/api/reports/upload-pdf", {
+                method: "POST",
+                body: blob,
+                headers: { "Content-Type": "application/pdf" },
+            });
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [reportTitle, chartImages, isLoading]);
 
     return (
         <>

@@ -1,4 +1,4 @@
-import { Download, SquarePen, Calendar, Trash2, FileText, ArchiveIcon, X} from "lucide-react";
+import { Download, SquarePen, Calendar, Trash2, FileText, Info, ArchiveIcon, X} from "lucide-react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import ReportChart from "@/components/ReportChart";
@@ -166,9 +166,25 @@ export default function Archive() {
             {/* <DraftReport /> */}
             <DraftReportPopulated />
             <div className="flex flex-col gap-y-4">
-                <h2 className="text-xl font-extrabold text-[#555555] gap-8">
-                    Archived Reports
-                </h2>
+                <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-extrabold text-[#555555]">
+                        Archived Reports
+                    </h2>
+                    <span className="relative inline-flex group">
+                        <Info
+                            className="w-4 h-4 text-[#555555] group-hover:text-[#E76C82] transition-colors"
+                            aria-label="Archived reports info"
+                        />
+                        <span
+                            role="tooltip"
+                            className="pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 w-[320px] rounded-xl bg-[rgba(239,246,255,1)] px-2 py-2 text-left text-sm text-[rgba(28,57,142,1)] shadow-lg ring-1 ring-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            The system can save a maximum of 20 archived reports.
+                            When the limit is reached, you&apos;ll need to remove old
+                            reports before saving new ones.
+                        </span>
+                    </span>
+                </div>
                 <ReportEntry
                     title="Q4 Report 2025"
                     date={new Date(2025, 0, 4)}

@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
     X,
     GripVertical,
@@ -71,19 +72,27 @@ function ChartEntry({
 function DownloadButton({
     doctype,
     count,
+    onClick,
 }: {
     doctype: string;
     count: number;
+    onClick?: () => void;
 }) {
     return (
         <div className="flex">
             {count === 0 ? (
-                <button className="flex text-gray-200 border-gray-200 border-2 py-2 px-8 rounded-full">
+                <button
+                    className="flex text-gray-200 border-gray-200 border-2 py-2 px-8 rounded-full"
+                    disabled
+                >
                     <FileDown className="mr-2 mt-0.5 w-5 h-5" />
                     {doctype}
                 </button>
             ) : (
-                <button className="flex text-gray-700 border-gray-200 border-2 py-2 px-8 rounded-full">
+                <button
+                    className="flex text-gray-700 border-gray-200 border-2 py-2 px-8 rounded-full"
+                    onClick={onClick}
+                >
                     <FileDown className="mr-2 mt-0.5 w-5 h-5" />
                     {doctype}
                 </button>
@@ -106,6 +115,7 @@ export default function ReportBuilder({
     onClose,
     onCountChange,
 }: ReportBuilderProps) {
+    const router = useRouter();
     const [charts, setCharts] = useState<ReportChartEntry[]>([]);
     const scrollYRef = useRef(0);
 
@@ -282,7 +292,19 @@ export default function ReportBuilder({
                     <hr className="border-gray-200" />
 
                     <div className="mt-5 flex justify-evenly w-full py-2">
-                        <DownloadButton doctype="PDF" count={count} />
+                        <DownloadButton
+                            doctype="PDF"
+                            count={count}
+                            onClick={() => {
+                                fetch("/api/reports/upload", {
+                                    method: "POST",
+                                }).catch(() => {
+                                    // ignore upload errors for now
+                                });
+                                router.push("/preview");
+                                onClose();
+                            }}
+                        />
                         <DownloadButton doctype="CSV" count={count} />
                         <DownloadButton doctype="PNG" count={count} />
                     </div>
