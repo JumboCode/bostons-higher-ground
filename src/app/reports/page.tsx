@@ -7,16 +7,12 @@ import { eq } from "drizzle-orm";
 import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
 
-/*
- * TODO: This component represents the draft report interface that goes at the
- * top of the page. Ultimately, it will list the charts the user has selected to
- * go into their next report, but for now you only need to make the interface
- * drawn on the figma for the case when no charts are selected.
- */
+import ReportNameInput from "./reportNameInput";
+import ReportExportButton from "./reportExportButtons";
 
 async function DraftReportPopulated() {
     const session = await auth.api.getSession({
-        headers: await headers()
+        headers: await headers(),
     });
 
     if (!session) {
@@ -45,7 +41,11 @@ async function DraftReportPopulated() {
                         <h2 className="text-[#555555] text-lg font-semibold">
                             Draft Report
                         </h2>
-                        <p className="text-sm">{charts.length} {charts.length === 1 ? "chart" : "charts"} added from dashboard</p>
+                        <p className="text-sm">
+                            {charts.length}{" "}
+                            {charts.length === 1 ? "chart" : "charts"} added
+                            from dashboard
+                        </p>
                     </div>
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
                         <button className="flex flex-row items-center space-x-4 ">
@@ -54,56 +54,35 @@ async function DraftReportPopulated() {
                         </button>
                     </div>
                 </div>
-                <div className="flex flex-col ReportNameEdit space-y-1">
-                    <div className="text-sm font-medium">Report Name</div>
-                    <div className="ReportNameTextField">
-                        <div className="relative w-full">
-                            <SquarePen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input
-                                type="text"
-                                name="reportName"
-                                placeholder="Enter report name (e.g., October 2025 Housing Report)"
-                                className="w-full text-sm pl-9 pr-3 p-2 bg-[#F3F3F5] rounded-2xl font-normal focus:outline-none "
-                            />
-                        </div>
-                    </div>
-                </div>
+                <ReportNameInput />
             </div>
             <div className="w-full overflow-x-hidden">
-            <div className="Reports flex flex-row space-x-3 overflow-x-auto pb-2 max-w-full ">
-                {charts.slice(0, 7).map((chart, idx) => (
-                    <div key={`${chart.title}-${idx}`} className="flex-shrink-0 ">
-                        <ReportChart title={chart.title} 
-                            
+            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
+                {charts.length > 0 ? (
+                    charts.map((chart, idx) => (
+                        <ReportChart
+                            key={`${chart.title}-${idx}`}
+                            title={chart.title}
                         />
-                        
-                        
-                    </div>
-                ))}
-
+                    ))
+                ) : (
+                    <p className="px-4 text-gray-400">
+                        Add charts using the &quot;+&quot; buttons to see them
+                        here.
+                    </p>
+                )}
             </div>
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PDF</div>
-                </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
+                <ReportExportButton />
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
                     <ArchiveIcon className="w-4 h-4" />
-                    <div className="font-medium text-sm">Save to Archive</div>
+                    <div className="font-medium">Save to Archive</div>
                 </button>
-                
             </div>
         </div>
     );
 }
-
-/*
- * TODO: This component represents a single report in the list of archived
- * reports. As you are designing it, think about what props you need in order to
- * make it reusable.
- */
-
 
 export function ReportEntry({
     title,
@@ -117,9 +96,7 @@ export function ReportEntry({
     schools: string;
     category: string;
     numOfCharts: number;
-}
-
-) {
+}) {
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
             <div className="flex grow flex-row h-full space-x-6 items-center">
@@ -180,11 +157,6 @@ export function ReportEntry({
     );
 }
 
-/*
- * TODO: This function is the top level component of the archive page. All of
- * the JSX returned by this function will be rendered on the /reports route.
- * Complete the component to match the designs provided in the ticket.
- */
 export default function Archive() {
     return (
         <main className="bg-[#F5F5F5] p-10 flex flex-col gap-y-10 pt-12.5">

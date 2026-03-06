@@ -8,7 +8,7 @@ import ReportDoc from "./report-doc";
 
 export default async function PreviewPage() {
     const session = await auth.api.getSession({
-        headers: await headers()
+        headers: await headers(),
     });
 
     if (!session) {
@@ -37,13 +37,16 @@ export default async function PreviewPage() {
     const rendered = await Promise.all(
         charts.map(async (chart, idx) => ({
             key: `${chart.title}-${idx}`,
-            node: await generateChart(chart),
+            node: await generateChart(chart, true),
         }))
     );
 
     const visible = rendered.filter((c) => c.node !== null);
 
     return (
-        <ReportDoc reportTitle={report.title ?? "Untitled Report"} charts={visible} />
+        <ReportDoc
+            reportTitle={report.title ?? "Untitled Report"}
+            charts={visible}
+        />
     );
 }
