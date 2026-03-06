@@ -1,4 +1,4 @@
-import { Download, Calendar, Trash2, FileText } from "lucide-react";
+import { Download, SquarePen, Calendar, Trash2, FileText, ArchiveIcon, X} from "lucide-react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import ReportChart from "@/components/ReportChart";
@@ -9,13 +9,6 @@ import { type StoredChart } from "@/lib/generateChart";
 
 import ReportNameInput from "./reportNameInput";
 import ReportExportButton from "./reportExportButtons";
-
-/*
- * TODO: This component represents the draft report interface that goes at the
- * top of the page. Ultimately, it will list the charts the user has selected to
- * go into their next report, but for now you only need to make the interface
- * drawn on the figma for the case when no charts are selected.
- */
 
 async function DraftReportPopulated() {
     const session = await auth.api.getSession({
@@ -54,15 +47,16 @@ async function DraftReportPopulated() {
                             from dashboard
                         </p>
                     </div>
-                    <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
-                        <button className="flex flex-row items-center space-x-4">
-                            <Trash2 className="w-[16] h-[16]" />
+                    <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
+                        <button className="flex flex-row items-center space-x-4 ">
+                            <Trash2 className="w-[16] h-[16] " />
                             <p className="font-medium text-sm">Clear</p>
                         </button>
                     </div>
                 </div>
                 <ReportNameInput />
             </div>
+            <div className="w-full overflow-x-hidden">
             <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
                 {charts.length > 0 ? (
                     charts.map((chart, idx) => (
@@ -78,16 +72,17 @@ async function DraftReportPopulated() {
                     </p>
                 )}
             </div>
-            <ReportExportButton />
+            </div>
+            <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+                <ReportExportButton />
+                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
+                    <ArchiveIcon className="w-4 h-4" />
+                    <div className="font-medium">Save to Archive</div>
+                </button>
+            </div>
         </div>
     );
 }
-
-/*
- * TODO: This component represents a single report in the list of archived
- * reports. As you are designing it, think about what props you need in order to
- * make it reusable.
- */
 
 export function ReportEntry({
     title,
@@ -162,11 +157,6 @@ export function ReportEntry({
     );
 }
 
-/*
- * TODO: This function is the top level component of the archive page. All of
- * the JSX returned by this function will be rendered on the /reports route.
- * Complete the component to match the designs provided in the ticket.
- */
 export default function Archive() {
     return (
         <main className="bg-[#F5F5F5] p-10 flex flex-col gap-y-10 pt-12.5">
@@ -179,6 +169,13 @@ export default function Archive() {
                 <h2 className="text-xl font-extrabold text-[#555555] gap-8">
                     Archived Reports
                 </h2>
+                <ReportEntry
+                    title="Q4 Report 2025"
+                    date={new Date(2025, 0, 4)}
+                    schools="All Schools"
+                    category="Housing"
+                    numOfCharts={4}
+                />
                 <ReportEntry
                     title="Q4 Report 2025"
                     date={new Date(2025, 0, 4)}
