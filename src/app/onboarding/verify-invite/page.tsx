@@ -106,15 +106,15 @@ export default function Page() {
                     Create your account to get started
                 </p>
             </div>
-            <div className="flex flex-col border-0 p-8 rounded-3xl bg-white space-y-8 shadow-[0px_24px_50px_0px_rgba(167,_74,_91,_0.2)] max-w-[400px]">
-                <p className="text-2xl font-semibold px-5 text-[#555555]">
-                    Verify your information
+<div className="flex flex-col bg-white p-14 rounded-2xl space-y-10 w-[500px] min-h-[440px] shadow-[0_30px_60px_rgba(167,74,91,0.18)]">                
+    <p className="text-3xl font-bold text-[#555555] text-center" >
+                    Verify Your Invitation
                 </p>
-                <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                     <div className="flex flex-col space-y-1">
                         <div className="space-x-1">
                             <label>Email Address</label>
-                            <span className="text-[#D9534F]">*</span>
+                            <span className="text-[#D9534F]">  *</span>
                         </div>
                         <input
                             name="email"
@@ -137,7 +137,7 @@ export default function Page() {
                         <div className="flex justify-between">
                             <div className="space-x-1">
                                 <label>Temporary Code</label>
-                                <span className="text-[#D9534F]">*</span>
+                                <span className="text-[#D9534F]">  *</span>
                             </div>
                             <div>
                                 <button
@@ -152,8 +152,8 @@ export default function Page() {
                                     className="fixed bg-black/30 min-h-screen z-10 w-screen flex justify-center items-center top-0 left-0"
                                     onClick={togglePopup}
                                 >
-                                    <div className="bg-white max-w-sm p-4 border border-[#DBEAFE] rounded-3xl">
-                                        <p className="text-center">
+                                    <div className="bg-[#DBEAFE] max-w-sm p-4 border border-[#DBEAFE] rounded-3xl">
+                                        <p className="text-center text-[#006eff]">
                                             The temporary code was sent to your
                                             email along with the invitation link
                                         </p>
