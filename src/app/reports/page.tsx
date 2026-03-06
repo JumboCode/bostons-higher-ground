@@ -1,4 +1,4 @@
-import { Download, SquarePen, Calendar, Trash2, FileText } from "lucide-react";
+import { Download, Calendar, Trash2, FileText } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import ReportChart from "@/components/ReportChart";
@@ -6,6 +6,9 @@ import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
+
+import ReportNameInput from "./reportNameInput";
+import ReportExportButton from "./reportExportButtons";
 
 /*
  * TODO: This component represents the draft report interface that goes at the
@@ -16,7 +19,7 @@ import { type StoredChart } from "@/lib/generateChart";
 
 async function DraftReportPopulated() {
     const session = await auth.api.getSession({
-        headers: await headers()
+        headers: await headers(),
     });
 
     if (!session) {
@@ -45,7 +48,11 @@ async function DraftReportPopulated() {
                         <h2 className="text-[#555555] text-lg font-semibold">
                             Draft Report
                         </h2>
-                        <p className="text-sm">{charts.length} {charts.length === 1 ? "chart" : "charts"} added from dashboard</p>
+                        <p className="text-sm">
+                            {charts.length}{" "}
+                            {charts.length === 1 ? "chart" : "charts"} added
+                            from dashboard
+                        </p>
                     </div>
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3">
                         <button className="flex flex-row items-center space-x-4">
@@ -54,42 +61,24 @@ async function DraftReportPopulated() {
                         </button>
                     </div>
                 </div>
-                <div className="flex flex-col ReportNameEdit space-y-1">
-                    <div className="text-sm font-medium">Report Name</div>
-                    <div className="ReportNameTextField">
-                        <div className="relative w-full">
-                            <SquarePen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input
-                                type="text"
-                                name="reportName"
-                                placeholder="Enter report name (e.g., October 2025 Housing Report)"
-                                className="w-full text-sm pl-9 pr-3 p-2 bg-[#F3F3F5] rounded-2xl font-normal focus:outline-none"
-                            />
-                        </div>
-                    </div>
-                </div>
+                <ReportNameInput />
             </div>
             <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
-                {charts.length > 0 ? (charts.map((chart, idx) => (
-                    <ReportChart key={`${chart.title}-${idx}`} title={chart.title} />
-                ))) : <p className="px-4 text-gray-400">
-                    Add charts using the &quot;+&quot; buttons to see them here.
-                </p>}
+                {charts.length > 0 ? (
+                    charts.map((chart, idx) => (
+                        <ReportChart
+                            key={`${chart.title}-${idx}`}
+                            title={chart.title}
+                        />
+                    ))
+                ) : (
+                    <p className="px-4 text-gray-400">
+                        Add charts using the &quot;+&quot; buttons to see them
+                        here.
+                    </p>
+                )}
             </div>
-            <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PDF</div>
-                </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as CSV</div>
-                </button>
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 w-40 h-10">
-                    <Download className="w-4 h-4" />
-                    <div className="font-medium text-sm">Export as PNG</div>
-                </button>
-            </div>
+            <ReportExportButton />
         </div>
     );
 }
@@ -99,7 +88,6 @@ async function DraftReportPopulated() {
  * reports. As you are designing it, think about what props you need in order to
  * make it reusable.
  */
-
 
 export function ReportEntry({
     title,
@@ -113,9 +101,7 @@ export function ReportEntry({
     schools: string;
     category: string;
     numOfCharts: number;
-}
-
-) {
+}) {
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
             <div className="flex grow flex-row h-full space-x-6 items-center">
