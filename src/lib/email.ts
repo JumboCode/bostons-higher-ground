@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendEmail({
     email,
     otp,
@@ -12,12 +10,13 @@ export async function sendEmail({
     type: string;
 }): Promise<void> {
     const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
         if (type === "invite") {
             // Send invitation email
-            await resend.emails.send({
-                from: "no-reply@bostonsground.com",
+            const {data, error} = await resend.emails.send({
+                from: "no-reply@bhg.jumbocode.org",
                 to: email,
                 subject: "You've been invited to join Boston's Higher Ground!",
                 html: `
@@ -33,6 +32,11 @@ export async function sendEmail({
                     </p>
                 `,
             });
+
+            if (error) {
+                return console.error({ error });
+            }
+            console.log({ data });
         } else {
             // Send OTP verification email for other auth flows
             await resend.emails.send({

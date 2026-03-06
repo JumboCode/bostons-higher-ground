@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
+import { RemoveUserCard } from "../../components/onboarding/notifCard";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -29,6 +30,7 @@ import {
     Trash2,
     X,
 } from "lucide-react";
+import { sendEmail } from "@/lib/email";
 
 type User = {
     id: string;
@@ -86,7 +88,6 @@ export default function Admin() {
                 status: u.status === true ? "Active" : "Pending",
                 role: u.role ?? undefined,
                 }));
-                console.log(mapped);
                 setUsers(mapped);
             } catch (e: unknown){
                 const message = e instanceof Error ? e.message : "Error loading users";
@@ -218,6 +219,13 @@ export default function Admin() {
                         onCancel={() => setIsInviteOpen(false)}
                         onSend={({ name, email }) => {
                             console.log("Send invite", { name, email });
+                            fetch("/api/users/email/", {
+                                method: "POST",
+                                body: JSON.stringify({ email }),
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            })
                             setIsInviteOpen(false);
                             setIsInviteSentOpen(true);
                         }}
@@ -272,6 +280,7 @@ export default function Admin() {
 function UserRow({ user, setIsResendOpen, setResendError, setIsInviteSentOpen}: { user: User; setIsResendOpen: (value: boolean) => void; setResendError: (value: boolean) => void; setIsInviteSentOpen: (value: boolean) => void}) {
   const [actionVisible, setActionVisible] = useState(false);
   const actionsRef = useRef<HTMLDivElement | null>(null);
+  const [isRemoveOpen, setIsRemoveOpen] = useState(false);
 
   useEffect(() => {
     if (!actionVisible) return;
@@ -314,30 +323,31 @@ function UserRow({ user, setIsResendOpen, setResendError, setIsInviteSentOpen}: 
   }
 
   async function handleRemove() {
-    const ok = confirm("Remove this user?");
-    if (!ok) return;
-
-    const res = await fetch("/api/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: user.id }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error ?? "Failed to remove user");
-      return;
-    }
-
-    window.location.reload();
+    setIsRemoveOpen(true);
   }
+
+  async function removeUser() {
+      const res = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data?.error ?? "Failed to remove user");
+        return;
+      }
+      setIsRemoveOpen(false);
+      window.location.reload();
+  };
 
   return (
     <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0]">
       {/* Member */}
       <div className="flex items-center gap-3 w-[200px] min-w-[200px]">
         <div className="w-10 h-10 rounded-full bg-[#E76C82] flex items-center justify-center text-white font-bold shrink-0">
-          {user.name[0]}
+          {user.name?.charAt(0).toUpperCase()}
         </div>
 
         <div className="flex flex-col truncate">
@@ -372,6 +382,17 @@ function UserRow({ user, setIsResendOpen, setResendError, setIsInviteSentOpen}: 
         </span>
       </div>
 
+      {isRemoveOpen && (
+        <ModalOverlay onClose={() => setIsRemoveOpen(false)}>
+            <RemoveUserCard
+              onCancel={() => setIsRemoveOpen(false)}
+              onRemove={() => {
+                removeUser();
+              }}
+            />
+        </ModalOverlay>
+    )}
+
       {/* Actions */}
       <div className="relative w-[60px] text-right" ref={actionsRef}>
         <DropdownMenu>
@@ -381,11 +402,13 @@ function UserRow({ user, setIsResendOpen, setResendError, setIsInviteSentOpen}: 
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleResend}>
-              <Send className="mr-2 h-4 w-4" />
-              Resend Invite
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" >
+            {user.status === "Pending" && 
+              (<DropdownMenuItem onClick={handleResend}>
+                <Send className="mr-2 h-4 w-4" />
+                  Resend Invite
+                </DropdownMenuItem> 
+              )}
 
             <DropdownMenuItem onClick={handleRemove} className="text-red-600">
               <Trash2 className="mr-2 h-4 w-4" />

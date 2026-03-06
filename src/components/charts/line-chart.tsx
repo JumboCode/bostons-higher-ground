@@ -127,6 +127,8 @@ export function LineChart({
             .attr("r", 4)
             .attr("fill", lineColor);
 
+            
+
         const xAxis = chart
             .append("g")
             .attr("transform", `translate(0, ${innerHeight})`)

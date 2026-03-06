@@ -1,9 +1,8 @@
 "use client";
-"use client";
 
 import { useState, useEffect } from "react";
 import ReportBuilder from "./report_builder";
-import { FileText, Circle } from "lucide-react";
+import { File, Circle } from "lucide-react";
 
 export default function ReportBuilderToggle() {
     const [showRB, setShowRB] = useState(false);
@@ -29,7 +28,6 @@ export default function ReportBuilderToggle() {
                 // ignore
             }
         };
-
         fetchCount();
         const onUpdate = () => fetchCount();
         window.addEventListener("report-updated", onUpdate);
@@ -67,21 +65,32 @@ export default function ReportBuilderToggle() {
     return (
         <div>
             {!showRB ? (
-                <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
+                <div className="fixed bottom-8 right-8 z-50 group">
                     <button
                         id="showRBbutton"
                         onClick={() => setShowRB(true)}
-                        className="flex-col h-fit py-8 bg-white drop-shadow-md text-gray-600 hover:text-gray-800 px-4 py-3 rounded-lg shadow-md transition-all"
-                    >
-                        <FileText className="justify-self-center ml-1 mr-2 my-1 w-5 h-5" />
-                        Report
-                        {/* Number of graphs added, only show alert when there are graphs */}
+                        className="relative w-14 h-14 rounded-full text-white
+                        bg-[#D86A7A] flex items-center shadow-xl transition-all 
+                        duration-300 ease-in-out group-hover:w-44 overflow-hidden">
+                        {/* Icon */}
+                        <div className="flex items-center justify-center 
+                        w-14 h-14 shrink-0">
+                            <File className="w-6 h-6" />
+                        </div>
+                        {/* Expanding Text */}
+                        <span className="whitespace-nowrap opacity-0 
+                        group-hover:opacity-100 transition-opacity duration-200 
+                        pr-6 text-lg font-semibold">
+                            Report
+                        </span>
+                        {/* Yellow Count Badge */}
                         {count > 0 && (
-                            <div className="relative block mt-1 mx-auto w-fit">
-                                <Circle className="w-5 h-5 fill-[#E76C82] stroke-[#E76C82]" />
-                                <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold">
-                                    {count}
-                                </span>
+                            <div className="absolute top-2 right-2 
+                            group-hover:top-1/2 group-hover:-translate-y-1/2 
+                            transition-all duration-300 w-5 h-5 rounded-full
+                            bg-yellow-300 text-black text-xs font-bold flex 
+                            items-center justify-center shadow">
+                                {count}
                             </div>
                         )}
                     </button>
