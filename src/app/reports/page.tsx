@@ -1,37 +1,65 @@
-import { Download, SquarePen, Calendar, Trash2, FileText, ArchiveIcon, X} from "lucide-react";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+"use client";
+import { useState, useEffect } from "react";
+import React from "react";
+import html2canvas from "html2canvas-pro";
+import { Download, Calendar, Trash2, FileText, ArchiveIcon } from "lucide-react";
 import ReportChart from "@/components/ReportChart";
-import { db } from "@/lib/db";
-import { eq } from "drizzle-orm";
-import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
+import ChartPreview from "@/components/chartPreview";
 
 import ReportNameInput from "./reportNameInput";
 import ReportExportButton from "./reportExportButtons";
 
-async function DraftReportPopulated() {
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    });
+function DraftReportPopulated() {
+    const [charts, setCharts] = useState<StoredChart[]>([]);
 
-    if (!session) {
-        return (
-            <div className="p-10 text-gray-700">
-                Please sign in to view your in-progress report.
-            </div>
-        );
+    // Fetch charts once when component mounts
+    useEffect(() => {
+        const fetchCharts = async () => {
+            try {
+                const res = await fetch("/api/reports/in-progress");
+                if (!res.ok) return;
+                const data = await res.json();
+                setCharts(data.charts || []);
+            } catch (err) {
+                console.error("Failed to fetch in-progress charts", err);
+            }
+        };
+
+        fetchCharts();
+    }, []);
+
+    const handleDelete = async (index: number) => {
+    // Update UI immediately
+    const nextCharts = charts.filter((_, i) => i !== index);
+    setCharts(nextCharts);
+
+    // Delete from backend
+    try {
+        await fetch("/api/reports/in-progress", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index }),
+        });
+    } catch (err) {
+        console.error("Failed to delete chart", err);
     }
+};
 
-    const userId = session.user.id;
+    // Preview popup 
+    const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
 
-    const existing = await db.query.inProgressReports.findFirst({
-        where: eq(inProgressReports.userId, userId),
-    });
-
-    const charts = Array.isArray(existing?.charts)
-        ? (existing!.charts as StoredChart[])
-        : [];
+    const handlePreview = (title: string) => {
+        const safeId = title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
+        const element = document.getElementById(`chartElement-${safeId}`);
+        if (!element) {
+            console.log("element not found", `chartElement-${safeId}`);
+            return;
+        }
+        html2canvas(element, { useCORS: true }).then((canvas) => {
+            setPreviewSrc(canvas.toDataURL("image/png"));
+        });
+    };
 
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
@@ -57,21 +85,21 @@ async function DraftReportPopulated() {
                 <ReportNameInput />
             </div>
             <div className="w-full overflow-x-hidden">
-            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full">
+            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
                 {charts.length > 0 ? (
                     charts.map((chart, idx) => (
                         <ReportChart
                             key={`${chart.title}-${idx}`}
                             title={chart.title}
+                            onDelete={() => handleDelete(idx)}
+                            onPreview={() => handlePreview(chart.title)} 
                         />
                     ))
                 ) : (
                     <p className="px-4 text-gray-400">
-                        Add charts using the &quot;+&quot; buttons to see them
-                        here.
+                        Add charts using the &quot;+&quot; buttons to see them here.
                     </p>
                 )}
-            </div>
             </div>
             <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                 <ReportExportButton />
@@ -80,6 +108,11 @@ async function DraftReportPopulated() {
                     <div className="font-medium">Save to Archive</div>
                 </button>
             </div>
+            <ChartPreview
+                src={previewSrc}
+                onClose={() => setPreviewSrc(null)}
+            />
+        </div>
         </div>
     );
 }
@@ -163,7 +196,6 @@ export default function Archive() {
             <h1 className="text-4xl font-extrabold text-[#555555] gap-8">
                 Reports
             </h1>
-            {/* <DraftReport /> */}
             <DraftReportPopulated />
             <div className="flex flex-col gap-y-4">
                 <h2 className="text-xl font-extrabold text-[#555555] gap-8">

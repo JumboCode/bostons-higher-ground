@@ -8,31 +8,39 @@ export default function ReportBuilderToggle() {
     const [showRB, setShowRB] = useState(false);
     const [count, setCount] = useState(0);
 
+    const fetchCount = async () => {
+        try {
+            const res = await fetch("/api/reports/in-progress");
+            if (!res.ok) return;
+            const data = await res.json();
+            const nextCount =
+                typeof data.chartCount === "number"
+                    ? data.chartCount
+                    : Array.isArray(data.charts)
+                    ? data.charts.length
+                    : 0;
+            setCount(nextCount);
+        } catch {
+            // ignore
+        }
+    };
+
     useEffect(() => {
-        const fetchCount = async () => {
-            try {
-                const res = await fetch("/api/reports/in-progress");
-                if (!res.ok) return;
-                const data = (await res.json()) as {
-                    chartCount?: number;
-                    charts?: { title: string; filters: string | null }[];
-                };
-                const nextCount =
-                    typeof data.chartCount === "number"
-                        ? data.chartCount
-                        : Array.isArray(data.charts)
-                          ? data.charts.length
-                          : 0;
-                setCount(nextCount);
-            } catch {
-                // ignore
-            }
-        };
         fetchCount();
+
         const onUpdate = () => fetchCount();
         window.addEventListener("report-updated", onUpdate);
-        return () => window.removeEventListener("report-updated", onUpdate);
+
+        return () =>
+            window.removeEventListener("report-updated", onUpdate);
     }, []);
+
+    useEffect(() => {
+        // When builder closes, refresh the count
+        if (!showRB) {
+            fetchCount();
+        }
+    }, [showRB]);
 
     // Prevent body scroll when report builder is open
     useEffect(() => {
@@ -85,7 +93,8 @@ export default function ReportBuilderToggle() {
                         </span>
                         {/* Yellow Count Badge */}
                         {count > 0 && (
-                            <div className="absolute top-2 right-2 
+                            <div
+                            className="absolute top-2 right-2 
                             group-hover:top-1/2 group-hover:-translate-y-1/2 
                             transition-all duration-300 w-5 h-5 rounded-full
                             bg-yellow-300 text-black text-xs font-bold flex 
