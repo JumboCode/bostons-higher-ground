@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
+import { RemoveUserCard } from "../../components/onboarding/notifCard";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,6 +12,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+import {
+  InvitationSentCard,
+  ResendInviteCard,
+} from "@/components/onboarding/notifCard";
 
 import {
     Search,
@@ -22,7 +28,9 @@ import {
     Shield,
     Eye,
     Trash2,
+    X,
 } from "lucide-react";
+import { sendEmail } from "@/lib/email";
 
 type User = {
     id: string;
@@ -50,9 +58,12 @@ export default function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);  
+    const [resendError, setResendError] = useState(false);
     
     
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [isInviteSentOpen, setIsInviteSentOpen] = useState(false);
+    const [isResendOpen, setIsResendOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
@@ -77,7 +88,6 @@ export default function Admin() {
                 status: u.status === true ? "Active" : "Pending",
                 role: u.role ?? undefined,
                 }));
-                console.log(mapped);
                 setUsers(mapped);
             } catch (e: unknown){
                 const message = e instanceof Error ? e.message : "Error loading users";
@@ -185,7 +195,7 @@ export default function Admin() {
                             {/* Rows */}
                             <div className="flex flex-col gap-0.5 overflow-y-auto ">
                                 {filteredUsers.length > 0 ?
-                                    filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} />))
+                                    filteredUsers.map((user, idx) => ( <UserRow key={idx} user={user} setIsResendOpen={setIsResendOpen} setResendError={setResendError} setIsInviteSentOpen={setIsInviteSentOpen}/>))
                                 : <p>No users found.</p>
                                 }
                             </div>
@@ -209,18 +219,68 @@ export default function Admin() {
                         onCancel={() => setIsInviteOpen(false)}
                         onSend={({ name, email }) => {
                             console.log("Send invite", { name, email });
+                            fetch("/api/users/email/", {
+                                method: "POST",
+                                body: JSON.stringify({ email }),
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            })
                             setIsInviteOpen(false);
+                            setIsInviteSentOpen(true);
                         }}
                     />
                 </ModalOverlay>
             )}
+
+            {isInviteSentOpen && !resendError &&(
+              <ModalOverlay onClose={() => setIsInviteSentOpen(false)}>
+
+                <InvitationSentCard 
+                  showOverlay={false}
+                  onClose={() => setIsInviteSentOpen(false)}
+                />
+              </ModalOverlay>
+            )}
+
+            {isResendOpen && (
+              <ModalOverlay onClose={() => setIsResendOpen(false)}>
+                <ResendInviteCard
+                  showOverlay={false}
+                  onCancel={() => {setIsResendOpen(false);}}
+                  onResend={() => {setIsResendOpen(false); setIsInviteSentOpen(true) }}
+                />
+
+              </ModalOverlay>
+            )}
+
+            {resendError && (
+              <div
+                className="fixed top-10 right-4 w-80 bg-white border border-gray-300 px-4 py-3 shadow-lg shadow-gray-400 z-50 cursor-pointer rounded-md text-sm flex items-center gap-5"
+                
+                >
+                  
+                  
+                  <button 
+                   className=" left-4 hover:text-gray-700"
+                    onClick={() => setResendError(false)}
+                  >
+                    <X className="w-4 h-4"/>
+                  </button>
+                  <span className="text-left">Failed to resend invite </span>
+              </div>
+            )}
+
+            
+
         </main>
     );
 }
 
-function UserRow({ user }: { user: User }) {
+function UserRow({ user, setIsResendOpen, setResendError, setIsInviteSentOpen}: { user: User; setIsResendOpen: (value: boolean) => void; setResendError: (value: boolean) => void; setIsInviteSentOpen: (value: boolean) => void}) {
   const [actionVisible, setActionVisible] = useState(false);
   const actionsRef = useRef<HTMLDivElement | null>(null);
+  const [isRemoveOpen, setIsRemoveOpen] = useState(false);
 
   useEffect(() => {
     if (!actionVisible) return;
@@ -240,43 +300,47 @@ function UserRow({ user }: { user: User }) {
   }, [actionVisible]);
 
   async function handleResend() {
-    const ok = confirm("Do you want to resend invite?");
-    if (!ok) return;
+    
+    try{
+      const res = await fetch("/api/users/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      });
 
-    const res = await fetch("/api/users/email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error ?? "Failed to resend invite");
-      return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setResendError(true);
+        return;
+      }
+      setIsInviteSentOpen(true);
+    } catch (e) {
+      console.error(e);
+      setResendError(true);
     }
 
-    alert("Invite resent.");
-    window.location.reload();
+    
   }
 
   async function handleRemove() {
-    const ok = confirm("Remove this user?");
-    if (!ok) return;
-
-    const res = await fetch("/api/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: user.id }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data?.error ?? "Failed to remove user");
-      return;
-    }
-
-    window.location.reload();
+    setIsRemoveOpen(true);
   }
+
+  async function removeUser() {
+      const res = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data?.error ?? "Failed to remove user");
+        return;
+      }
+      setIsRemoveOpen(false);
+      window.location.reload();
+  };
 
   return (
     <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0]">
@@ -318,6 +382,17 @@ function UserRow({ user }: { user: User }) {
         </span>
       </div>
 
+      {isRemoveOpen && (
+        <ModalOverlay onClose={() => setIsRemoveOpen(false)}>
+            <RemoveUserCard
+              onCancel={() => setIsRemoveOpen(false)}
+              onRemove={() => {
+                removeUser();
+              }}
+            />
+        </ModalOverlay>
+    )}
+
       {/* Actions */}
       <div className="relative w-[60px] text-right" ref={actionsRef}>
         <DropdownMenu>
@@ -327,11 +402,13 @@ function UserRow({ user }: { user: User }) {
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleResend}>
-              <Send className="mr-2 h-4 w-4" />
-              Resend Invite
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" >
+            {user.status === "Pending" && 
+              (<DropdownMenuItem onClick={handleResend}>
+                <Send className="mr-2 h-4 w-4" />
+                  Resend Invite
+                </DropdownMenuItem> 
+              )}
 
             <DropdownMenuItem onClick={handleRemove} className="text-red-600">
               <Trash2 className="mr-2 h-4 w-4" />

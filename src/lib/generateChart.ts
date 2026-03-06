@@ -2,8 +2,11 @@ import { filterRecords, type FilterableRecord } from "@/lib/applyFilters";
 import { getAllData } from "@/lib/getAllData";
 import {
     LineChart,
+    LineChartPdf,
     VerticalBarChart,
+    VerticalBarChartPdf,
     HorizontalBarChart,
+    HorizontalBarChartPdf,
     type LineDatum,
     type VerticalBarDatum,
     type HorizontalBarDatum,
@@ -36,8 +39,6 @@ export type HousingRecord = FilterableRecord & {
     school: string | null;
     schoolId: string | null;
     studentCount: number | null;
-    intakeMonth: number | null;
-    housedMonth: number | null;
 };
 
 type ChartBuilder = (records: HousingRecord[]) => React.ReactElement | null;
@@ -99,10 +100,11 @@ const MONTH_NAMES = [
 function familyIntakeSeries(records: HousingRecord[]): VerticalBarDatum[] {
     const counts = new Array(12).fill(0);
     records.forEach((record) => {
-        if (record.intakeMonth === null || record.intakeMonth === undefined)
+        if (record.intakeDate === null || record.intakeDate === undefined)
             return;
-        if (record.intakeMonth >= 0 && record.intakeMonth < 12) {
-            counts[record.intakeMonth] += 1;
+        const intakeMonth = parseInt(record.intakeDate.split("-")[1]);
+        if (intakeMonth >= 1 && intakeMonth <= 12) {
+            counts[intakeMonth - 1] += 1;
         }
     });
     return MONTH_NAMES.map((label, index) => ({
@@ -114,10 +116,11 @@ function familyIntakeSeries(records: HousingRecord[]): VerticalBarDatum[] {
 function familiesHousedSeries(records: HousingRecord[]): LineDatum[] {
     const counts = new Array(12).fill(0);
     records.forEach((record) => {
-        if (record.housedMonth === null || record.housedMonth === undefined)
+        if (record.dateHoused === null || record.dateHoused === undefined)
             return;
-        if (record.housedMonth >= 0 && record.housedMonth < 12) {
-            counts[record.housedMonth] += 1;
+        const housedMonth = parseInt(record.dateHoused.split("-")[1]);
+        if (housedMonth >= 1 && housedMonth <= 12) {
+            counts[housedMonth - 1] += 1;
         }
     });
     return MONTH_NAMES.map((label, i) => ({ label, value: counts[i] || 0 }));
@@ -193,8 +196,6 @@ const chartBuilders: Record<ChartKey, ChartBuilder> = {
         const data = familiesHousedSeries(records);
         return React.createElement(LineChart, {
             data,
-            width: 800,
-            height: 400,
             xLabel: "Month",
             yLabel: "Families Housed",
         });
@@ -217,6 +218,41 @@ const chartBuilders: Record<ChartKey, ChartBuilder> = {
     },
 };
 
+const chartBuildersPdf: Record<ChartKey, ChartBuilder> = {
+    "family-intake-bar": (records) => {
+        const data = familyIntakeSeries(records);
+        return React.createElement(VerticalBarChartPdf, {
+            data,
+            xLabel: "Month",
+            yLabel: "Families",
+        });
+    },
+    "families-housed-line": (records) => {
+        const data = familiesHousedSeries(records);
+        return React.createElement(LineChartPdf, {
+            data,
+            xLabel: "Month",
+            yLabel: "Families Housed",
+        });
+    },
+    "days-to-house-bar": (records) => {
+        const data = daysToHouseSeries(records);
+        return React.createElement(VerticalBarChartPdf, {
+            data,
+            xLabel: "School",
+            yLabel: "Avg. days to house",
+        });
+    },
+    "location-bar": (records) => {
+        const data = locationSeries(records);
+        return React.createElement(HorizontalBarChartPdf, {
+            data,
+            xLabel: "# of Families",
+            yLabel: "Location",
+        });
+    },
+};
+
 function resolveChartKey(title: string): ChartKey | null {
     const mapped = (chartRegistry as Record<string, ChartKey | undefined>)[
         title
@@ -226,7 +262,7 @@ function resolveChartKey(title: string): ChartKey | null {
 
 import React from "react";
 
-export async function generateChart(stored: StoredChart) {
+export async function generateChart(stored: StoredChart, isForPdf = false) {
     const data = (await getAllData()) as HousingRecord[];
 
     const filters = parseFilters(stored.filters);
@@ -241,6 +277,6 @@ export async function generateChart(stored: StoredChart) {
     const chartKey = resolveChartKey(stored.title);
     if (!chartKey) return null;
 
-    const build = chartBuilders[chartKey];
+    const build = isForPdf ? chartBuildersPdf[chartKey] : chartBuilders[chartKey];
     return build(filtered as HousingRecord[]);
 }
