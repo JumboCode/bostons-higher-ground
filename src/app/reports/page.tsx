@@ -7,8 +7,8 @@ import { eq } from "drizzle-orm";
 import { inProgressReports } from "@/lib/schema";
 import { type StoredChart } from "@/lib/generateChart";
 
-import ReportNameInput from "./ReportNameInput";
-import ReportExportButton from "./ReportExportButtons";
+import ReportNameInput from "./reportNameInput";
+import ReportExportButton from "./reportExportButtons";
 
 /*
  * TODO: This component represents the draft report interface that goes at the
