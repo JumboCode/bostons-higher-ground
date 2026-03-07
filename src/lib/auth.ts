@@ -18,10 +18,13 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    emailVerification: {
+        autoSignInAfterVerification: true,
+    },
     user: {
         deleteUser: {
-            enabled: true 
-        }
+            enabled: true,
+        },
     },
     plugins: [
         nextCookies(),

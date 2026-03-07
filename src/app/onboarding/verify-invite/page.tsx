@@ -1,11 +1,12 @@
 "use client";
 import * as Icon from "feather-icons-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 export default function Page() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [email, setEmail] = useState("");
     const [tempCode, setTempCode] = useState("");
     const [isEmailValid, setIsEmailValid] = useState(false);
@@ -16,6 +17,23 @@ export default function Page() {
     const [tempCodeError, setTempCodeError] = useState("");
     const [tempCodePopup, setTempCodePopup] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const emailFromQuery = searchParams.get("email");
+        const otpFromQuery = searchParams.get("otp");
+
+        if (emailFromQuery) {
+            setEmail(emailFromQuery);
+            setIsEmailValid(true);
+            setEmailError("");
+        }
+
+        if (otpFromQuery) {
+            setTempCode(otpFromQuery);
+            setIsTempCodeValid(true);
+            setTempCodeError("");
+        }
+    }, [searchParams]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -44,7 +62,7 @@ export default function Page() {
             setIsEmailValid(true);
         }
     };
-    
+
     const blurHandlerTempCode = () => {
         setIsTempCodeBlur(true);
 
@@ -63,28 +81,19 @@ export default function Page() {
         setTempCodeError("");
 
         try {
-            const response = await fetch("/api/verify-invite", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email,
-                    tempCode,
-                }),
+            const result = await authClient.emailOtp.verifyEmail({
+                email: email.trim().toLowerCase(),
+                otp: tempCode.trim(),
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    setTempCodeError(data.error || "Invalid email or verification code");
-                } else {
-                    setTempCodeError(data.error || "An error occurred");
-                }
+            if (result.error) {
+                setTempCodeError(
+                    result.error.message || "Invalid email or verification code"
+                );
                 setIsSubmitting(false);
                 return;
             }
+
             router.push("/onboarding/create-account");
         } catch (error) {
             console.error("Verification error:", error);
@@ -96,7 +105,8 @@ export default function Page() {
         setTempCodePopup(!tempCodePopup);
     };
 
-    const isFormComplete = email.length && tempCode;
+    const isFormComplete =
+        email.trim().length > 0 && tempCode.trim().length > 0;
 
     return (
         <main className="flex flex-1 flex-col justify-center items-center space-y-5 -mt-[200px]">
@@ -106,15 +116,15 @@ export default function Page() {
                     Create your account to get started
                 </p>
             </div>
-<div className="flex flex-col bg-white p-14 rounded-2xl space-y-10 w-[500px] min-h-[440px] shadow-[0_30px_60px_rgba(167,74,91,0.18)]">                
-    <p className="text-3xl font-bold text-[#555555] text-center" >
+            <div className="flex flex-col bg-white p-14 rounded-2xl space-y-10 w-[500px] min-h-[440px] shadow-[0_30px_60px_rgba(167,74,91,0.18)]">
+                <p className="text-3xl font-bold text-[#555555] text-center">
                     Verify Your Invitation
                 </p>
                 <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                     <div className="flex flex-col space-y-1">
                         <div className="space-x-1">
                             <label>Email Address</label>
-                            <span className="text-[#D9534F]">  *</span>
+                            <span className="text-[#D9534F]"> *</span>
                         </div>
                         <input
                             name="email"
@@ -137,10 +147,11 @@ export default function Page() {
                         <div className="flex justify-between">
                             <div className="space-x-1">
                                 <label>Temporary Code</label>
-                                <span className="text-[#D9534F]">  *</span>
+                                <span className="text-[#D9534F]"> *</span>
                             </div>
                             <div>
                                 <button
+                                    type="button"
                                     className="hover:cursor-pointer"
                                     onClick={togglePopup}
                                 >
@@ -184,7 +195,9 @@ export default function Page() {
                         className="flex py-2.5 w-full rounded-xl text-white justify-center bg-[#E76C82] space-x-1 hover:cursor-pointer disabled:bg-[#E59AA8] disabled:text-white disabled:cursor-not-allowed hover:bg-[#e05a74]"
                     >
                         <p>{isSubmitting ? "Verifying..." : "Continue"}</p>
-                        {!isSubmitting && <Icon.ArrowRight className="stroke-2" />}
+                        {!isSubmitting && (
+                            <Icon.ArrowRight className="stroke-2" />
+                        )}
                     </button>
                 </form>
             </div>

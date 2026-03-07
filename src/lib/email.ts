@@ -7,15 +7,15 @@ export async function sendEmail({
 }: {
     email: string;
     otp: string;
-    type: string;
+    type: "sign-in" | "email-verification" | "forget-password";
 }): Promise<void> {
     const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
-        if (type === "invite") {
-            // Send invitation email
-            const {data, error} = await resend.emails.send({
+        if (type === "email-verification") {
+            const verifyInviteUrl = `${baseUrl}/onboarding/verify-invite?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`;
+            const { data, error } = await resend.emails.send({
                 from: "no-reply@bhg.jumbocode.org",
                 to: email,
                 subject: "You've been invited to join Boston's Higher Ground!",
@@ -24,10 +24,8 @@ export async function sendEmail({
                     <p>You've been invited to join our internal site. Use the code below to verify your invitation:</p>
                     <h2>${otp}</h2>
                     <p>
-                        Or click
-                        <a href="${baseUrl}/invite/verify?code=${otp}">
-                            this link
-                        </a>
+                        Open
+                        <a href="${verifyInviteUrl}">this link</a>
                         to continue registration.
                     </p>
                 `,
@@ -37,22 +35,40 @@ export async function sendEmail({
                 return console.error({ error });
             }
             console.log({ data });
-        } else {
-            // Send OTP verification email for other auth flows
+            return;
+        }
+
+        if (type === "sign-in") {
             await resend.emails.send({
-                from: "no-reply@bostonsground.com",
+                from: "no-reply@bhg.jumbocode.org",
                 to: email,
-                subject: "Your verification code",
+                subject: "Your sign-in code",
                 html: `
                     <p>Hello,</p>
-                    <p>Your verification code is:</p>
+                    <p>Your one-time sign-in code is:</p>
+                    <h2>${otp}</h2>
+                    <p>This code will expire in 15 minutes.</p>
+                `,
+            });
+            return;
+        } else {
+            await resend.emails.send({
+                from: "no-reply@bhg.jumbocode.org",
+                to: email,
+                subject: "Your password reset code",
+                html: `
+                    <p>Hello,</p>
+                    <p>Your password reset code is:</p>
                     <h2>${otp}</h2>
                     <p>This code will expire in 15 minutes.</p>
                 `,
             });
         }
     } catch (error) {
-        console.error(`[Email] Failed to send ${type} email to ${email}:`, error);
+        console.error(
+            `[Email] Failed to send ${type} email to ${email}:`,
+            error
+        );
         throw error;
     }
 }
