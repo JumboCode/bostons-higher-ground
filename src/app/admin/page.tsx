@@ -61,6 +61,7 @@ export default function Admin() {
 
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isInviteSentOpen, setIsInviteSentOpen] = useState(false);
+    const [inviteSentEmail, setInviteSentEmail] = useState("");
     const [isResendOpen, setIsResendOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -211,6 +212,9 @@ export default function Admin() {
                                             user={user}
                                             setIsResendOpen={setIsResendOpen}
                                             setResendError={setResendError}
+                                            setInviteSentEmail={
+                                                setInviteSentEmail
+                                            }
                                             setIsInviteSentOpen={
                                                 setIsInviteSentOpen
                                             }
@@ -256,6 +260,7 @@ export default function Admin() {
                             }
 
                             setIsInviteOpen(false);
+                            setInviteSentEmail(email);
                             setIsInviteSentOpen(true);
                         }}
                     />
@@ -265,6 +270,7 @@ export default function Admin() {
             {isInviteSentOpen && !resendError && (
                 <ModalOverlay onClose={() => setIsInviteSentOpen(false)}>
                     <InvitationSentCard
+                        email={inviteSentEmail}
                         showOverlay={false}
                         onClose={() => setIsInviteSentOpen(false)}
                     />
@@ -305,11 +311,13 @@ function UserRow({
     user,
     setIsResendOpen,
     setResendError,
+    setInviteSentEmail,
     setIsInviteSentOpen,
 }: {
     user: User;
     setIsResendOpen: (value: boolean) => void;
     setResendError: (value: boolean) => void;
+    setInviteSentEmail: (value: string) => void;
     setIsInviteSentOpen: (value: boolean) => void;
 }) {
     const [actionVisible, setActionVisible] = useState(false);
@@ -346,6 +354,7 @@ function UserRow({
                 setResendError(true);
                 return;
             }
+            setInviteSentEmail(user.email);
             setIsInviteSentOpen(true);
         } catch (e) {
             console.error(e);
