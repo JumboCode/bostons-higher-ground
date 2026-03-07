@@ -227,13 +227,6 @@ export default function Archive() {
                     category="Housing"
                     numOfCharts={4}
                 />
-                <ReportEntry
-                    title="Q4 Report 2025"
-                    date={new Date(2025, 0, 4)}
-                    schools="All Schools"
-                    category="Housing"
-                    numOfCharts={4}
-                />
             </div>
         </main>
     );

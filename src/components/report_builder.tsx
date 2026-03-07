@@ -244,6 +244,11 @@ export default function ReportBuilder({
         }
     };
 
+    const handleReroute = () => {
+        router.push("/reports");
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 z-50">
             {/* Dark overlay */}
@@ -310,7 +315,7 @@ export default function ReportBuilder({
                     <div className="mt-3 flex w-full py-2">
                         <button
                             disabled={charts.length === 0}
-                            onClick={() => router.push("/reports")}
+                            onClick={handleReroute}
                             className={`w-full px-3 py-3 rounded-full text-white font-medium transition-colors ${
                                 charts.length > 0
                                     ? "bg-[#E76C82] hover:bg-[#d9566e] cursor-pointer"
