@@ -10,7 +10,7 @@ export default function InviteCard({
     className = "",
 }: {
     onCancel?: () => void;
-    onSend?: (payload: { name: string; email: string }) => void;
+    onSend?: (payload: { name: string; email: string }) => void | Promise<void>;
     className?: string;
 }) {
     const [name, setName] = useState("");
@@ -43,11 +43,18 @@ export default function InviteCard({
 
                 <form
                     className="space-y-4"
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                         e.preventDefault();
                         if (!canSend) return;
-                        onSend?.({ name: name.trim(), email: email.trim() });
-                        setShowSent(true); // show Invitation Sent popup
+                        if (onSend) {
+                            await onSend({
+                                name: name.trim(),
+                                email: email.trim(),
+                            });
+                            return;
+                        }
+
+                        setShowSent(true);
                     }}
                 >
                     <label className="block">
