@@ -64,18 +64,18 @@ export default function Chart({
           };
 
     return (
-        <div className="relative bg-white rounded-3xl shadow-sm mb-6 w-full max-w-[900px]">
+        <div className="relative bg-white rounded-3xl shadow-sm mb-6 w-160 h-150">
             {/* Chart */}
             <div
                 id="chartElement"
-                className="flex flex-col w-full gap-y-10 p-8"
+                className="flex flex-col w-full h-full gap-y-10 p-8"
             >
                 <h2 className="text-2xl font-semibold text-gray-800">
                     {title}
                 </h2>
 
                 {/* Chart Content */}
-                <div>{children}</div>
+                <div className="flex-1">{children}</div>
 
                 {/* Applied Filters */}
                 {appliedFilters && (
