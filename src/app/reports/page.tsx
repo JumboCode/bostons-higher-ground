@@ -1,14 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 import React from "react";
-import html2canvas from "html2canvas-pro";
-import { Download, Calendar, Trash2, FileText, ArchiveIcon } from "lucide-react";
+import { type GeneratedChartModel } from "@/lib/generateChart";
+import {
+    Download,
+    Calendar,
+    Trash2,
+    FileText,
+    ArchiveIcon,
+} from "lucide-react";
 import ReportChart from "@/components/ReportChart";
 import { type StoredChart } from "@/lib/generateChart";
 import ChartPreview from "@/components/chartPreview";
 
 import ReportNameInput from "./reportNameInput";
 import ReportExportButton from "./reportExportButtons";
+import { ReportChartEntry } from "@/components/report_builder";
 
 function DraftReportPopulated() {
     const [charts, setCharts] = useState<StoredChart[]>([]);
@@ -30,35 +37,45 @@ function DraftReportPopulated() {
     }, []);
 
     const handleDelete = async (index: number) => {
-    // Update UI immediately
-    const nextCharts = charts.filter((_, i) => i !== index);
-    setCharts(nextCharts);
+        // Update UI immediately
+        const nextCharts = charts.filter((_, i) => i !== index);
+        setCharts(nextCharts);
 
-    // Delete from backend
-    try {
-        await fetch("/api/reports/in-progress", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ index }),
-        });
-    } catch (err) {
-        console.error("Failed to delete chart", err);
-    }
-};
-
-    // Preview popup 
-    const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
-
-    const handlePreview = (title: string) => {
-        const safeId = title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
-        const element = document.getElementById(`chartElement-${safeId}`);
-        if (!element) {
-            console.log("element not found", `chartElement-${safeId}`);
-            return;
+        // Delete from backend
+        try {
+            await fetch("/api/reports/in-progress", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ index }),
+            });
+        } catch (err) {
+            console.error("Failed to delete chart", err);
         }
-        html2canvas(element, { useCORS: true }).then((canvas) => {
-            setPreviewSrc(canvas.toDataURL("image/png"));
-        });
+    };
+
+    // Preview popup
+    // const [previewSrc, setPreviewSrc] = React.useState<string | null>(null);
+    const [previewChart, setPreviewChart] =
+        React.useState<GeneratedChartModel | null>(null);
+    const [previewTitle, setPreviewTitle] = React.useState<string | null>(null);
+
+    const handlePreview = async (chart: ReportChartEntry) => {
+        try {
+            const res = await fetch("/api/reports/chart-preview", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(chart),
+            });
+            if (!res.ok) return;
+
+            const payload = (await res.json()) as {
+                model?: GeneratedChartModel;
+            };
+            setPreviewChart(payload.model ?? null);
+            setPreviewTitle(chart.title);
+        } catch {
+            // ignore network errors for now
+        }
     };
 
     return (
@@ -85,34 +102,36 @@ function DraftReportPopulated() {
                 <ReportNameInput />
             </div>
             <div className="w-full overflow-x-hidden">
-            <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
-                {charts.length > 0 ? (
-                    charts.map((chart, idx) => (
-                        <ReportChart
-                            key={`${chart.title}-${idx}`}
-                            title={chart.title}
-                            onDelete={() => handleDelete(idx)}
-                            onPreview={() => handlePreview(chart.title)} 
-                        />
-                    ))
-                ) : (
-                    <p className="px-4 text-gray-400">
-                        Add charts using the &quot;+&quot; buttons to see them here.
-                    </p>
-                )}
+                <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
+                    {charts.length > 0 ? (
+                        charts.map((chart, idx) => (
+                            <ReportChart
+                                key={`${chart.title}-${idx}`}
+                                title={chart.title}
+                                onDelete={() => handleDelete(idx)}
+                                onPreview={() => handlePreview(chart)}
+                            />
+                        ))
+                    ) : (
+                        <p className="px-4 text-gray-400">
+                            Add charts using the &quot;+&quot; buttons to see
+                            them here.
+                        </p>
+                    )}
+                </div>
+                <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+                    <ReportExportButton />
+                    <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
+                        <ArchiveIcon className="w-4 h-4" />
+                        <div className="font-medium">Save to Archive</div>
+                    </button>
+                </div>
+                <ChartPreview
+                    chart={previewChart}
+                    title={previewTitle}
+                    onClose={() => setPreviewChart(null)}
+                />
             </div>
-            <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                <ReportExportButton />
-                <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
-                    <ArchiveIcon className="w-4 h-4" />
-                    <div className="font-medium">Save to Archive</div>
-                </button>
-            </div>
-            <ChartPreview
-                src={previewSrc}
-                onClose={() => setPreviewSrc(null)}
-            />
-        </div>
         </div>
     );
 }

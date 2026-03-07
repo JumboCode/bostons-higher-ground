@@ -223,6 +223,7 @@ export default function ReportBuilder({
     // Preview popup
     const [previewChart, setPreviewChart] =
         React.useState<GeneratedChartModel | null>(null);
+    const [previewTitle, setPreviewTitle] = React.useState<string | null>(null);
 
     const handlePreview = async (chart: ReportChartEntry) => {
         try {
@@ -237,6 +238,7 @@ export default function ReportBuilder({
                 model?: GeneratedChartModel;
             };
             setPreviewChart(payload.model ?? null);
+            setPreviewTitle(chart.title);
         } catch {
             // ignore network errors for now
         }
@@ -322,6 +324,7 @@ export default function ReportBuilder({
             </div>
             <ChartPreview
                 chart={previewChart}
+                title={previewTitle}
                 onClose={() => setPreviewChart(null)}
             />
         </div>

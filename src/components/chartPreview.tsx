@@ -12,6 +12,7 @@ import { type GeneratedChartModel } from "@/lib/generateChart";
 interface ChartPreviewModalProps {
     src?: string | null;
     chart?: GeneratedChartModel | null;
+    title?: string | null;
     onClose: () => void;
 }
 
@@ -60,6 +61,7 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
 export default function ChartPreviewModal({
     src,
     chart,
+    title,
     onClose,
 }: ChartPreviewModalProps) {
     if (!src && !chart) return null;
@@ -84,8 +86,9 @@ export default function ChartPreviewModal({
                         <X className="w-4 h-4" />
                     </button>
                 </div>
+                <h2 className="text-lg font-semibold mb-4 mx-5">{title}</h2>
                 {chart ? (
-                    <div className="w-full rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="w-full rounded-lg border border-gray-200 bg-white p-5">
                         <PreviewChart chart={chart} />
                     </div>
                 ) : (
