@@ -120,11 +120,11 @@ export default function Admin() {
             <NavBar userName="admin" />
             <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
-                <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div>
+                {/* <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div> */}
 
                 {/*Title*/}
-                <div className="mt-5 mx-[45px] flex items-center justify-between">
-                    <h1 className="text-[#555555] text-[28px] leading-[42px] font-poppins font-bold ">
+                <div className="mt-12.5 mx-[45px] flex items-center justify-between">
+                    <h1 className="text-4xl font-extrabold text-[#555555] gap-8 font-poppins">
                         Admin Settings
                     </h1>
                     <button className="px-2.5 py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2">
