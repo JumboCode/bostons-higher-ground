@@ -95,13 +95,15 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     title="Partner Schools & Homeless Student Counts"
                     appliedFilters={formattedFilters(filterState)}
                 >
-                    <PartnerAndHomeless data={filteredData} />
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
+                        <PartnerAndHomeless data={filteredData} />
+                    </div>
                 </Chart>
                 <Chart
                     title="Schools by City"
                     appliedFilters={formattedFilters(filterState)}
                 >
-                    <div className="w-full min-w-0">
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <SchoolsByCityChart data={filteredData} />
                     </div>
                 </Chart>
@@ -109,13 +111,15 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     title="Housing Sources"
                     appliedFilters={formattedFilters(filterState)}
                 >
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
                     <HousingSourceChart data={filteredData} />
+                    </div>
                 </Chart>
                 <Chart
                     title="Students by City"
                     appliedFilters={formattedFilters(filterState)}
                 >
-                    <div className="w-full min-w-0">
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <StudentsByCityChart data={filteredData} />
                     </div>
                 </Chart>

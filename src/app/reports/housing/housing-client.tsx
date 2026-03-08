@@ -118,7 +118,9 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <LocationBarChart data={filteredData} />
+                    <div className="overflow-y-auto max-h-150">
+                        <LocationBarChart data={filteredData} />
+                    </div>
                 </Chart>
             </div>
         </div>
