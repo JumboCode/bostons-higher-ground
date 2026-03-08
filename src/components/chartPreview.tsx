@@ -6,6 +6,7 @@ import {
     HorizontalBarChart,
     LineChart,
     VerticalBarChart,
+    DonutChart,
 } from "@/components/charts";
 import { type GeneratedChartModel } from "@/lib/generateChart";
 
@@ -42,6 +43,18 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
                 width={640}
                 height={320}
                 className="w-full h-[320px]"
+            />
+        );
+    }
+
+    if (chart.chartKey === "housing-sources-donut") {
+        return (
+            <DonutChart
+                data={chart.data}
+                centerLabel={chart.centerLabel}
+                width={640}
+                height={320}
+                className="w-full h-[380px]"
             />
         );
     }

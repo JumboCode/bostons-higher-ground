@@ -73,7 +73,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 subtext2="Intake to housed"
                 mt="-mt-[10px]"
             />
-            <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
                     title="Family Intake Over Time"
                     appliedFilters={formattedFilters(filterState)}
