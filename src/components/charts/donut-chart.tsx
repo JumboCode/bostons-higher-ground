@@ -32,8 +32,21 @@ export function DonutChart({
         if (!data.length) return;
 
         const outerWidth = width ?? (svgEl.clientWidth || 640);
-        const legendSpace = 100;
         const contentHeight = height ?? (svgEl.clientHeight || 420);
+        const maxLegendLabelLength =
+            d3.max(data, (entry) => Math.min(entry.label.length, 18)) ?? 0;
+        const legendItemWidth = Math.max(120, maxLegendLabelLength * 7 + 36);
+        const legendColumns = Math.max(
+            1,
+            Math.min(
+                data.length,
+                Math.floor((outerWidth - 40) / legendItemWidth)
+            )
+        );
+        const legendRows = Math.ceil(data.length / legendColumns);
+        const legendRowHeight = 25;
+        const legendHeight = legendRows * legendRowHeight;
+        const legendSpace = legendHeight + 30;
         const outerHeight = contentHeight + legendSpace;
         const margin = 40;
         const radius = Math.min(outerWidth, contentHeight) / 2 - margin;
@@ -115,7 +128,7 @@ export function DonutChart({
             .append("g")
             .attr(
                 "transform",
-                `translate(${outerWidth / 2 - 150}, ${outerHeight - 80})`
+                `translate(${(outerWidth - legendColumns * legendItemWidth) / 2}, ${outerHeight - legendSpace + 10})`
             );
 
         const legendItems = legend
@@ -126,7 +139,7 @@ export function DonutChart({
             .attr(
                 "transform",
                 (d, i) =>
-                    `translate(${(i % 3) * 120}, ${Math.floor(i / 3) * 25})`
+                    `translate(${(i % legendColumns) * legendItemWidth}, ${Math.floor(i / legendColumns) * legendRowHeight})`
             );
 
         legendItems
@@ -164,8 +177,7 @@ export function DonutChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full max-w-[900px] h-[520px]"}
-            style={{ overflow: "visible" }}
+            className={className ?? "h-[520px] w-full max-w-[900px]"}
             role="img"
         />
     );

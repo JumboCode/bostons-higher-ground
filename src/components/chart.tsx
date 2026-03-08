@@ -64,22 +64,22 @@ export default function Chart({
           };
 
     return (
-        <div className="relative bg-white rounded-3xl shadow-sm mb-6 w-full max-w-[900px]">
+        <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">
             {/* Chart */}
             <div
                 id="chartElement"
-                className="flex flex-col w-full gap-y-10 p-8"
+                className="flex w-full min-w-0 flex-col gap-6 p-8"
             >
-                <h2 className="text-2xl font-semibold text-gray-800">
+                <h2 className="pr-24 text-2xl font-semibold text-gray-800">
                     {title}
                 </h2>
 
                 {/* Chart Content */}
-                <div>{children}</div>
+                <div className="w-full min-w-0">{children}</div>
 
                 {/* Applied Filters */}
                 {appliedFilters && (
-                    <div className="text-sm text-gray-600">
+                    <div className="pt-1 text-sm text-gray-600">
                         <span className="font-medium">Applied filters: </span>
                         <span>{appliedFilters}</span>
                     </div>
