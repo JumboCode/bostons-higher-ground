@@ -398,7 +398,7 @@ function UserRow({
                     {user.role && (
                         <span className="flex text-[12px] text-[#E76C82] gap-1">
                             <Shield className="w-[15px] h-[15px]" />
-                            {user.role}
+                            {user.role.toUpperCase()}
                         </span>
                     )}
                 </div>
