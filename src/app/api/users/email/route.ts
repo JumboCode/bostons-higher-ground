@@ -65,7 +65,6 @@ export async function POST(request: Request) {
                 permissions: "user",
             });
         } else {
-
             await db
                 .update(userInfo)
                 .set({ authorized: false })
