@@ -1,7 +1,10 @@
 import { auth } from "./lib/auth";
+import { isAdmin } from "./lib/checkPermissions";
 import { NextResponse, NextRequest } from "next/server";
 
 const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite"];
+const ADMIN_ROUTE_PREFIX = "/admin";
+const OVERVIEW_ROUTE = "/reports/overview";
 
 export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
@@ -15,12 +18,14 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // if (ADMIN_ROUTES.some((route) => path.startsWith(route))) {
-    //     const userIsAdmin = await isAdmin(session.user.id);
-    //     if (!userIsAdmin) {
-    //         return NextResponse.redirect(new URL("/", req.url));
-    //     }
-    // }
+    const isAdminRoute =
+        path === ADMIN_ROUTE_PREFIX || path.startsWith(`${ADMIN_ROUTE_PREFIX}/`);
+    if (isAdminRoute) {
+        const userIsAdmin = await isAdmin(session.user.id);
+        if (!userIsAdmin) {
+            return NextResponse.redirect(new URL(OVERVIEW_ROUTE, req.url));
+        }
+    }
 
     return NextResponse.next();
 }
