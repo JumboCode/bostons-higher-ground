@@ -3,7 +3,7 @@ import { isAdmin } from "./lib/checkPermissions";
 import { NextResponse, NextRequest } from "next/server";
 
 const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite"];
-const ADMIN_ROUTE_PREFIX = "/admin";
+const ADMIN_ROUTE = "/admin";
 const OVERVIEW_ROUTE = "/reports/overview";
 
 export async function middleware(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
     }
 
     const isAdminRoute =
-        path === ADMIN_ROUTE_PREFIX || path.startsWith(`${ADMIN_ROUTE_PREFIX}/`);
+        path === ADMIN_ROUTE || path.startsWith(`${ADMIN_ROUTE}/`);
     if (isAdminRoute) {
         const userIsAdmin = await isAdmin(session.user.id);
         if (!userIsAdmin) {
