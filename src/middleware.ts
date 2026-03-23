@@ -8,11 +8,18 @@ const OVERVIEW_ROUTE = "/reports/overview";
 
 export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
+    const isLoginRoute = path === "/login";
+
+    const session = await auth.api.getSession({ headers: req.headers });
+
+    if (isLoginRoute && session) {
+        return NextResponse.redirect(new URL(OVERVIEW_ROUTE, req.url));
+    }
 
     if (PUBLIC_ROUTES.includes(path)) {
         return NextResponse.next();
     }
-    const session = await auth.api.getSession({ headers: req.headers });
+
 
     if (!session) {
         return NextResponse.redirect(new URL("/login", req.url));
