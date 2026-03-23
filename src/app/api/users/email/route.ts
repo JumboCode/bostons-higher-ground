@@ -62,7 +62,7 @@ export async function POST(request: Request) {
                 id: crypto.randomUUID(),
                 userId,
                 authorized: false,
-                permissions: "none",
+                permissions: "user",
             });
         } else if (!existingUserInfo.authorized) {
             await db

@@ -23,7 +23,7 @@ export async function POST(request: Request) {
             id: crypto.randomUUID(),
             userId: session.user.id,
             authorized: true,
-            permissions: "none",
+            permissions: "user",
         });
     } else {
         await db
