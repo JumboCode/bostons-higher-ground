@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { userInfo } from "@/lib/schema";
+import { user, userInfo } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
@@ -10,6 +10,19 @@ export async function POST(request: Request) {
 
     if (!session) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    const [existingUser] = await db
+        .select({ emailVerified: user.emailVerified })
+        .from(user)
+        .where(eq(user.id, session.user.id))
+        .limit(1);
+
+    if (!existingUser?.emailVerified) {
+        return Response.json(
+            { error: "email_not_verified" },
+            { status: 403 }
+        );
     }
 
     const [existingUserInfo] = await db
