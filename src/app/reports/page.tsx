@@ -17,8 +17,24 @@ import ReportNameInput from "./reportNameInput";
 import ReportExportButton from "./reportExportButtons";
 import { ReportChartEntry } from "@/components/report_builder";
 
+
 function DraftReportPopulated() {
     const [charts, setCharts] = useState<StoredChart[]>([]);
+
+    const handleClear = async () => {
+    // lear UI immediately
+    setCharts([]);
+
+    try {
+        await fetch("/api/reports/in-progress", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clearAll: true }),
+        });
+    } catch (err) {
+        console.error("Failed to clear report", err);
+    }
+    };
 
     // Fetch charts once when component mounts
     useEffect(() => {
@@ -93,13 +109,16 @@ function DraftReportPopulated() {
                         </p>
                     </div>
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
-                        <button className="flex flex-row items-center space-x-4 ">
+                        <button
+                            onClick={handleClear}
+                            className="flex flex-row items-center space-x-4 "
+                        >
                             <Trash2 className="w-[16] h-[16] " />
                             <p className="font-medium text-sm">Clear</p>
                         </button>
                     </div>
                 </div>
-                <ReportNameInput />
+                {charts.length > 0 && <ReportNameInput />}
             </div>
             <div className="w-full overflow-x-hidden">
                 <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
@@ -119,13 +138,15 @@ function DraftReportPopulated() {
                         </p>
                     )}
                 </div>
-                <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                    <ReportExportButton />
-                    <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
-                        <ArchiveIcon className="w-4 h-4" />
-                        <div className="font-medium">Save to Archive</div>
-                    </button>
-                </div>
+                {charts.length > 0 && (
+                    <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+                        <ReportExportButton />
+                        <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
+                            <ArchiveIcon className="w-4 h-4" />
+                            <div className="font-medium">Save to Archive</div>
+                        </button>
+                    </div>
+                )}
                 <ChartPreview
                     chart={previewChart}
                     title={previewTitle}
