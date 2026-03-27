@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Manrope } from "next/font/google";
 const manrope = Manrope({ subsets: ["latin"] });
 
-import useFilters from "@/lib/filterStore";
+import useFilters, { Timeframe } from "@/lib/filterStore";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ import {
 
 import { Funnel, ChevronDown, Calendar } from "lucide-react";
 
-const SCHOOL_LIST = [
+export const SCHOOL_LIST = [
     "Brighton High School",
     "Burke High School",
     "Charlestown High School",
@@ -62,7 +62,7 @@ const SCHOOL_LIST = [
     "Lyon Pilot High School",
 ];
 
-const LOCATION_LIST = [
+export const LOCATION_LIST = [
     "Allston",
     "Back Bay",
     "Beacon Hill",
@@ -86,13 +86,11 @@ const LOCATION_LIST = [
 type CustomRangeProps = {
     dateRange: DateRange | undefined;
     setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
-    applyRange: () => void;
 };
 
 type FiscalYearProps = {
-    fiscalYear: string;
-    setFiscalYearValue: React.Dispatch<React.SetStateAction<string>>;
-    applyFiscal: () => void;
+    timeFilter: Timeframe | string;
+    setTimeFilter: React.Dispatch<React.SetStateAction<Timeframe | string>>;
 };
 
 export function LocationFilter() {
@@ -260,7 +258,7 @@ export function DateFilter() {
         setCustomRange,
         setFiscalYear,
     } = useFilters();
-
+    const [ timeFilter, setTimeFilter ] = useState<Timeframe | string>("allTime");
     const [open, setOpen] = useState(false);
     const [mode, setMode] = useState<"fiscal" | "custom">(
         timeframe === "custom" ? "custom" : "fiscal"
@@ -297,13 +295,13 @@ export function DateFilter() {
     }, [timeframe, customRange, fiscalYear]);
 
     const handleQuickTimeframe = (value: typeof timeframe) => {
-        setTimeframe(value);
+        setTimeFilter(value);
         if (value !== "custom") {
             setCustomRange(undefined);
         }
-        if (value !== "thisFY") {
-            setFiscalYear(undefined);
-        }
+        // if (value !== "thisFY") {
+        //     setFiscalYear(undefined);
+        // }
     };
 
     const applyFiscal = () => {
@@ -365,7 +363,7 @@ export function DateFilter() {
                         <button
                             onClick={() => handleQuickTimeframe("thisMonth")}
                             className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
-                                timeframe === "thisMonth"
+                                timeFilter === "thisMonth"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
                             }`}
@@ -375,7 +373,7 @@ export function DateFilter() {
                         <button
                             onClick={() => handleQuickTimeframe("lastMonth")}
                             className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
-                                timeframe === "lastMonth"
+                                timeFilter === "lastMonth"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
                             }`}
@@ -385,7 +383,7 @@ export function DateFilter() {
                         <button
                             onClick={() => handleQuickTimeframe("thisFY")}
                             className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
-                                timeframe === "thisFY"
+                                timeFilter === "thisFY"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
                             }`}
@@ -395,7 +393,7 @@ export function DateFilter() {
                         <button
                             onClick={() => handleQuickTimeframe("allTime")}
                             className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
-                                timeframe === "allTime"
+                                timeFilter === "allTime"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
                             }`}
@@ -407,39 +405,59 @@ export function DateFilter() {
 
                     {mode === "fiscal" ? (
                         <FiscalYearContent
-                            fiscalYear={localFiscalYear}
-                            setFiscalYearValue={setLocalFiscalYear}
-                            applyFiscal={applyFiscal}
+                            // fiscalYear={localFiscalYear}
+                            // setFiscalYearValue={setLocalFiscalYear}
+                            // applyFiscal={applyFiscal}
+                            timeFilter={"allTime"}
+                            setTimeFilter={setTimeFilter}
                         />
                     ) : (
                         <CustomRangeContent
                             dateRange={localRange}
                             setDateRange={setLocalRange}
-                            applyRange={applyCustom}
                         />
                     )}
                 </div>
+                {mode === "fiscal" 
+                    ? <button
+                          onClick={applyFiscal}
+                          className={`w-full rounded-full py-2 bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+                      >
+                          Apply Filter
+                      </button> 
+                    : <button
+                          onClick={applyCustom}
+                          className={`w-full rounded-full py-2 bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+                      >
+                          Apply Custom Range
+                      </button>
+            }
             </DropdownMenuContent>
         </DropdownMenu>
     );
 }
 
 export function FiscalYearContent({
-    fiscalYear,
-    setFiscalYearValue,
-    applyFiscal,
+  timeFilter,
+  setTimeFilter,
 }: FiscalYearProps) {
+    const today = new Date;
+    const prev_yr = (today.getFullYear() - 1).toString();
+    const two_yr_ago = (today.getFullYear() - 2).toString();
+    const three_yr_ago = (today.getFullYear() - 3).toString();
+    const four_yr_ago = (today.getFullYear() - 4).toString();
+    
     return (
         <div className="flex-row">
             <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
                 Select Fiscal Year
                 <div className="flex mt-[8px] mb-[14px] gap-2 h-[30px]">
-                    {(["2022", "2023", "2024", "2025"] as const).map((fy) => (
+                    {([`${prev_yr}`, `${two_yr_ago}`, `${three_yr_ago}`, `${four_yr_ago}`] as const).map((fy) => (
                         <button
                             key={fy}
-                            onClick={() => setFiscalYearValue(fy)}
+                            onClick={() => setTimeFilter(fy)}
                             className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
-                                fiscalYear === fy
+                                timeFilter === fy
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
                             }`}
@@ -449,12 +467,6 @@ export function FiscalYearContent({
                     ))}
                 </div>
             </div>
-            <button
-                onClick={applyFiscal}
-                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
-            >
-                Apply Filter
-            </button>
         </div>
     );
 }
@@ -462,7 +474,6 @@ export function FiscalYearContent({
 export function CustomRangeContent({
     dateRange,
     setDateRange,
-    applyRange,
 }: CustomRangeProps) {
     return (
         <div className="w-full flex-row">
@@ -484,13 +495,6 @@ export function CustomRangeContent({
                     : ""} -{" "}
                 {dateRange?.to ? dateRange.to.toLocaleDateString() : ""}
             </div>
-            {/* apply range button */}
-            <button
-                onClick={applyRange}
-                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
-            >
-                Apply Custom Range
-            </button>
         </div>
     );
 }
