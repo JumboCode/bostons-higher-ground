@@ -41,13 +41,14 @@ export default function HousingSourceChart({
 }) {
     const chartData = useMemo(() => buildHousingSourceData(data), [data]);
 
-    if (!chartData.length) {
-        return (
-            <div className="text-sm text-gray-500">
-                No housed families to display.
-            </div>
-        );
-    }
-
-    return <DonutChart data={chartData} centerLabel="Total Housed" />;
+    return (
+        <div className="relative">
+            <DonutChart data={chartData} centerLabel="Total Housed" />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No source data to display</p>
+                </div>
+            )}
+        </div>
+    );
 }
