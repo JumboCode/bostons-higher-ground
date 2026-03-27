@@ -89,15 +89,17 @@ export function VerticalBarChartPdf({
                 />
 
                 {data.map((d) => (
-                    <Text
+                    <G
                         key={`xlabel-${d.label}`}
-                        x={x(d.label)! + x.bandwidth() / 2}
-                        y={innerHeight + 15}
-                        style={{ fontSize: 12 }}
-                        textAnchor="middle"
+                        transform={`translate(${x(d.label)! + x.bandwidth() / 2}, ${innerHeight + 10}) rotate(-45)`}
                     >
-                        {truncateLabel(d.label, Math.floor(x.bandwidth() / 5.5))}
-                    </Text>
+                        <Text
+                            style={{ fontSize: 12 }}
+                            textAnchor="end"
+                        >
+                            {truncateLabel(d.label, Math.floor(x.bandwidth() / 5.5))}
+                        </Text>
+                    </G>
                 ))}
 
                 {yTicks.map((tick) => (
