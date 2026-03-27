@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import React from "react";
 import { type GeneratedChartModel } from "@/lib/generateChart";
@@ -77,7 +78,18 @@ function DraftReportPopulated() {
             // ignore network errors for now
         }
     };
-
+    const [isArchivePopupOpen, setIsArchivePopupOpen] = useState(false);//pop up - auto false
+    useEffect(() => {//timer 
+    if (isArchivePopupOpen) {
+        // Set a timer to close the toast after 5000 milliseconds (5 seconds)
+        const timer = setTimeout(() => {
+            setIsArchivePopupOpen(false);
+        }, 5000);
+        
+        // Cleanup the timer if the component unmounts early
+        return () => clearTimeout(timer); 
+        }
+        }, [isArchivePopupOpen]);
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
             <div className="ReportNameEditBar space-y-2">
@@ -121,9 +133,12 @@ function DraftReportPopulated() {
                 </div>
                 <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                     <ReportExportButton />
-                    <button className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
-                        <ArchiveIcon className="w-4 h-4" />
-                        <div className="font-medium">Save to Archive</div>
+                <button 
+                        onClick={() => setIsArchivePopupOpen(true)}
+                        className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white"
+                    >                       
+                    <ArchiveIcon className="w-4 h-4" />
+                    <div className="font-medium">Save to Archive</div>
                     </button>
                 </div>
                 <ChartPreview
@@ -131,6 +146,23 @@ function DraftReportPopulated() {
                     title={previewTitle}
                     onClose={() => setPreviewChart(null)}
                 />
+                {/*Pop Up Window*/}
+                {isArchivePopupOpen && (
+                    <div className="fixed top-6 right-6 z-50">
+                        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-xl flex items-center space-x-3">
+                            {/* Success Checkmark Icon */}
+                            <div className="bg-black p-1.5 rounded-full">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <p className="text-gray-700 font-medium">
+                                Report saved to Archived Reports
+                            </p>
+                        </div>
+                    </div>
+                )}
+                {}
             </div>
         </div>
     );
