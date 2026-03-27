@@ -41,11 +41,14 @@ export function VerticalBarChart({
 
         if (!data.length) return;
 
+        const longestLabel = Math.max(...data.map((d) => d.label.length));
+        const estimatedLabelHeight = Math.min(longestLabel * 6, 100);
+
         const targetHeight = height ?? 420;
         const margin: Margin = {
             top: 10,
             right: 10,
-            bottom: xLabel ? 60 : 40,
+            bottom: (xLabel ? 60 : 40) + estimatedLabelHeight,
             left: yLabel ? 65 : 55,
         };
         const {
@@ -66,7 +69,7 @@ export function VerticalBarChart({
             .domain(data.map((d) => d.label))
             .range([0, innerWidth])
             .padding(0.25);
-        
+
         const maxY = d3.max(data, (d) => d.value) ?? 0; // setting 0 to be the min, not accepting negative values
         const y = d3
             .scaleLinear()
@@ -87,7 +90,6 @@ export function VerticalBarChart({
             .attr("stroke-dasharray", "4 4")
             .attr("stroke-width", 1);
         yGrid.select("line:last-of-type").remove();
-        
 
         const xGrid = chart
             .append("g")
@@ -129,7 +131,9 @@ export function VerticalBarChart({
             .selectAll("text")
             .style("font-size", "12px")
             .style("font-family", DEFAULT_FONT)
-            .style("fill", DEFAULT_TEXT);
+            .style("fill", DEFAULT_TEXT)
+            .style("text-anchor", "end")
+            .attr("transform", "rotate(-45)");
         xAxis.select(".domain").attr("stroke", "black").attr("stroke-width", 1);
 
         const yAxis = chart.append("g").call(d3.axisLeft(y));
@@ -165,7 +169,7 @@ export function VerticalBarChart({
                 .append("text")
                 .attr(
                     "transform",
-                    `translate(${innerWidth / 2}, ${innerHeight + (xLabel ? 48 : 32)})`
+                    `translate(${innerWidth / 2}, ${innerHeight + estimatedLabelHeight + (xLabel ? 48 : 32)})`
                 )
                 .style("text-anchor", "middle")
                 .style("font-family", DEFAULT_FONT)
@@ -202,7 +206,7 @@ export function VerticalBarChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full max-w-[900px] h-[420px]"}
+            className={className ?? "w-full max-w-[900px]"}
             role="img"
         />
     );
