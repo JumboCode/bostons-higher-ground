@@ -405,10 +405,7 @@ export function DateFilter() {
 
                     {mode === "fiscal" ? (
                         <FiscalYearContent
-                            // fiscalYear={localFiscalYear}
-                            // setFiscalYearValue={setLocalFiscalYear}
-                            // applyFiscal={applyFiscal}
-                            timeFilter={"allTime"}
+                            timeFilter={timeFilter}
                             setTimeFilter={setTimeFilter}
                         />
                     ) : (
