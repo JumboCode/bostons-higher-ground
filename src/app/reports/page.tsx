@@ -8,6 +8,7 @@ import {
     Trash2,
     FileText,
     ArchiveIcon,
+    X,
 } from "lucide-react";
 import ReportChart from "@/components/ReportChart";
 import { type StoredChart } from "@/lib/generateChart";
@@ -20,10 +21,12 @@ import { ReportChartEntry } from "@/components/report_builder";
 
 function DraftReportPopulated() {
     const [charts, setCharts] = useState<StoredChart[]>([]);
+    const [showClearModal, setShowClearModal] = useState(false);
 
     const handleClear = async () => {
     // lear UI immediately
     setCharts([]);
+    setShowClearModal(false);
 
     try {
         await fetch("/api/reports/in-progress", {
@@ -110,7 +113,7 @@ function DraftReportPopulated() {
                     </div>
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
                         <button
-                            onClick={handleClear}
+                            onClick={() => setShowClearModal(true)}
                             className="flex flex-row items-center space-x-4 "
                         >
                             <Trash2 className="w-[16] h-[16] " />
@@ -152,6 +155,49 @@ function DraftReportPopulated() {
                     title={previewTitle}
                     onClose={() => setPreviewChart(null)}
                 />
+                {showClearModal && (
+                    <div
+                        className="fixed inset-0 flex items-center justify-center bg-black/30 z-50"
+                        onClick={() => setShowClearModal(false)} // ADDED: clicking the backdrop dismisses the modal
+                    >
+                        <div
+                            className="bg-white rounded-3xl px-4 py-8 w-[360px] shadow-lg relative"
+                            onClick={(e) => e.stopPropagation()} // ADDED: prevents backdrop click from firing when clicking inside modal
+                        >
+                            {/* ADDED: X button to dismiss modal */}
+                            <button
+                                onClick={() => setShowClearModal(false)}
+                                className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+                            >
+                                <X className="w-3.5 h-3.5 text-gray-600" />
+                            </button>
+                            <h2 className="text-xl font-bold text-center text-[#555555]">
+                                Clear Draft Report
+                            </h2>
+                            <p className="text-sm text-center text-gray-500 mt-2">
+                                Are you sure you want to clear the draft report?
+                                <br />
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex justify-between mt-6 gap-3">
+                                {/* ADDED: Cancel button — closes modal without clearing */}
+                                <button
+                                    onClick={() => setShowClearModal(false)}
+                                    className="w-full border rounded-xl py-2 text-sm hover:bg-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                {/* ADDED: Confirm button — calls handleClear to clear charts and close modal */}
+                                <button
+                                    onClick={handleClear}
+                                    className="w-full bg-[#E76C82] text-white rounded-xl py-2 text-sm hover:opacity-90"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
