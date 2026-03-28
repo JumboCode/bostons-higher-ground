@@ -266,13 +266,9 @@ export function DateFilter() {
     const [localRange, setLocalRange] = useState<DateRange | undefined>(
         customRange
     );
-    const [localFiscalYear, setLocalFiscalYear] = useState<string>(
-        (fiscalYear ?? new Date().getFullYear()).toString()
-    );
 
     useEffect(() => {
         setLocalRange(customRange);
-        setLocalFiscalYear((fiscalYear ?? new Date().getFullYear()).toString());
         setMode(timeframe === "custom" ? "custom" : "fiscal");
     }, [customRange, fiscalYear, timeframe]);
 
@@ -299,16 +295,14 @@ export function DateFilter() {
         if (value !== "custom") {
             setCustomRange(undefined);
         }
-        // if (value !== "thisFY") {
-        //     setFiscalYear(undefined);
-        // }
     };
 
     const applyFiscal = () => {
-        const yr = Number(localFiscalYear);
-        if (!Number.isNaN(yr)) {
-            setFiscalYear(yr);
-            setTimeframe("thisFY");
+        if (typeof timeFilter === "number") {
+          setFiscalYear(Number(timeFilter));
+          setTimeframe("thisFY"); // placeholder
+        } else {
+          setTimeframe(timeFilter as Timeframe);
         }
         setOpen(false);
     };
