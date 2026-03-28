@@ -89,8 +89,8 @@ type CustomRangeProps = {
 };
 
 type FiscalYearProps = {
-    timeFilter: Timeframe | string;
-    setTimeFilter: React.Dispatch<React.SetStateAction<Timeframe | string>>;
+    timeFilter: Timeframe | number;
+    setTimeFilter: React.Dispatch<React.SetStateAction<Timeframe | number>>;
 };
 
 export function LocationFilter() {
@@ -258,7 +258,7 @@ export function DateFilter() {
         setCustomRange,
         setFiscalYear,
     } = useFilters();
-    const [ timeFilter, setTimeFilter ] = useState<Timeframe | string>("allTime");
+    const [ timeFilter, setTimeFilter ] = useState<Timeframe | number>("allTime");
     const [open, setOpen] = useState(false);
     const [mode, setMode] = useState<"fiscal" | "custom">(
         timeframe === "custom" ? "custom" : "fiscal"
@@ -272,25 +272,32 @@ export function DateFilter() {
         setMode(timeframe === "custom" ? "custom" : "fiscal");
     }, [customRange, fiscalYear, timeframe]);
 
+    const currDate = new Date;
+
     const formattedRange = useMemo(() => {
+        if (fiscalYear) {
+          return `Families Housed in ${fiscalYear}`
+        }
         switch (timeframe) {
             case "thisMonth":
-                return "This Month";
+                return `Families Housed in ${currDate.toLocaleString("default", { month: "long" })} ${currDate.getFullYear()}`;
             case "lastMonth":
-                return "Last Month";
+                const prevMonth = new Date(currDate.getFullYear(), currDate.getMonth() - 1);
+                return `Families Housed in ${prevMonth.toLocaleString("default", { month: "long" })} ${prevMonth.getFullYear()}`;
             case "thisFY":
-                return fiscalYear ? `FY${fiscalYear}` : "This Fiscal Year";
+                return `Families Housed in ${currDate.getFullYear()}`;
             case "custom":
                 return customRange?.from && customRange?.to
                     ? `${customRange.from.toLocaleDateString()} - ${customRange.to.toLocaleDateString()}`
                     : "Custom Range";
             case "allTime":
             default:
-                return "All Time";
+                return "Families Housed Over Time";
         }
     }, [timeframe, customRange, fiscalYear]);
 
     const handleQuickTimeframe = (value: typeof timeframe) => {
+        setMode("fiscal");
         setTimeFilter(value);
         if (value !== "custom") {
             setCustomRange(undefined);
@@ -303,6 +310,7 @@ export function DateFilter() {
           setTimeframe("thisFY"); // placeholder
         } else {
           setTimeframe(timeFilter as Timeframe);
+          setFiscalYear(undefined);
         }
         setOpen(false);
     };
@@ -432,28 +440,24 @@ export function FiscalYearContent({
   timeFilter,
   setTimeFilter,
 }: FiscalYearProps) {
-    const today = new Date;
-    const prev_yr = (today.getFullYear() - 1).toString();
-    const two_yr_ago = (today.getFullYear() - 2).toString();
-    const three_yr_ago = (today.getFullYear() - 3).toString();
-    const four_yr_ago = (today.getFullYear() - 4).toString();
-    
+    const currYear = (new Date).getFullYear()
+
     return (
         <div className="flex-row">
             <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
                 Select Fiscal Year
-                <div className="flex mt-[8px] mb-[14px] gap-2 h-[30px]">
-                    {([`${prev_yr}`, `${two_yr_ago}`, `${three_yr_ago}`, `${four_yr_ago}`] as const).map((fy) => (
+                <div className="flex mt-2 mb-3.5 gap-2 h-7.5">
+                    {[4, 3, 2, 1].map((fy) => (
                         <button
-                            key={fy}
-                            onClick={() => setTimeFilter(fy)}
-                            className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
-                                timeFilter === fy
+                            key={currYear - fy}
+                            onClick={() => setTimeFilter(currYear - fy)}
+                            className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] py-1.25 ${manrope.className} ${
+                                timeFilter === currYear - fy
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
                             }`}
                         >
-                            FY{fy}
+                            FY{currYear - fy}
                         </button>
                     ))}
                 </div>
