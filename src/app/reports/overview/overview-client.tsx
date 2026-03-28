@@ -126,6 +126,7 @@ function formattedFilters(filters: FilterSummary) {
 }
 
 function formatTitle(filters: FilterSummary, title: string) {
+  console.log(title)
     const today = new Date();
     if (
         filters.timeframe === "custom" &&
@@ -133,6 +134,9 @@ function formatTitle(filters: FilterSummary, title: string) {
         filters.customRange?.to
     ) {
         return title + " Between " + `${filters.customRange.from.toLocaleDateString()} and ${filters.customRange.to.toLocaleDateString()}`;
+    }
+    else if (filters.fiscalYear) {
+        return title + " in " + `${filters.fiscalYear}`;
     }
     else if (filters.timeframe == "allTime") {
         return title + " Over Time";
@@ -151,9 +155,6 @@ function formatTitle(filters: FilterSummary, title: string) {
         else {
             return title + " in " + `${today.getFullYear()}`;
         }
-    }
-    else if (filters.fiscalYear) {
-        return title + " in " + `${filters.fiscalYear}`;
     }
     else {
         return title;
