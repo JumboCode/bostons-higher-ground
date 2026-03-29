@@ -49,10 +49,17 @@ export default function StudentsByCityChart({
     const chartData = useMemo(() => buildCityStudentCounts(data), [data]);
 
     return (
-        <HorizontalBarChart
-            data={chartData}
-            xLabel="# of Students"
-            yLabel="City"
-        />
+        <div className="relative">
+            <HorizontalBarChart
+                data={chartData}
+                xLabel="# of Students"
+                yLabel="City"
+            />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No student data to display</p>
+                </div>
+            )}
+        </div>
     );
 }

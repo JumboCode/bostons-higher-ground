@@ -56,6 +56,13 @@ export default function FamilyIntakeBarChart({
     const chartData = useMemo(() => buildMonthlyIntakeData(data), [data]);
 
     return (
-        <VerticalBarChart data={chartData} xLabel="Month" yLabel="Families" />
+        <div className="relative">
+            <VerticalBarChart data={chartData} xLabel="Month" yLabel="Families" />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No family data to display</p>
+                </div>
+            )}
+        </div>
     );
 }
