@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import React from "react";
 import { type GeneratedChartModel } from "@/lib/generateChart";
@@ -96,7 +97,18 @@ function DraftReportPopulated() {
             // ignore network errors for now
         }
     };
-
+    const [isArchivePopupOpen, setIsArchivePopupOpen] = useState(false);//pop up - auto false
+    useEffect(() => {//timer 
+    if (isArchivePopupOpen) {
+        // Set a timer to close the toast after 5000 milliseconds (5 seconds)
+        const timer = setTimeout(() => {
+            setIsArchivePopupOpen(false);
+        }, 5000);
+        
+        // Cleanup the timer if the component unmounts early
+        return () => clearTimeout(timer); 
+        }
+        }, [isArchivePopupOpen]);
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
             <div className="ReportNameEditBar space-y-2">
