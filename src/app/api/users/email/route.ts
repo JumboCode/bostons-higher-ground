@@ -62,17 +62,24 @@ export async function POST(request: Request) {
                 id: crypto.randomUUID(),
                 userId,
                 authorized: false,
-                permissions: "none",
+                permissions: "user",
             });
-        } else if (!existingUserInfo.authorized) {
+        } else {
             await db
-                .delete(account)
-                .where(
-                    and(
-                        eq(account.userId, userId),
-                        eq(account.providerId, "credential")
-                    )
-                );
+                .update(userInfo)
+                .set({ authorized: false })
+                .where(eq(userInfo.userId, userId));
+
+            if (!existingUserInfo.authorized) {
+                await db
+                    .delete(account)
+                    .where(
+                        and(
+                            eq(account.userId, userId),
+                            eq(account.providerId, "credential")
+                        )
+                    );
+            }
         }
 
         await auth.api.sendVerificationOTP({

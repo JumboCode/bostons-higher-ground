@@ -1,26 +1,38 @@
 import { auth } from "./lib/auth";
+import { isAdmin } from "./lib/checkPermissions";
 import { NextResponse, NextRequest } from "next/server";
 
 const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite"];
+const ADMIN_ROUTE = "/admin";
+const OVERVIEW_ROUTE = "/reports/overview";
 
 export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
+    const isLoginRoute = path === "/login";
+
+    const session = await auth.api.getSession({ headers: req.headers });
+
+    if (isLoginRoute && session) {
+        return NextResponse.redirect(new URL(OVERVIEW_ROUTE, req.url));
+    }
 
     if (PUBLIC_ROUTES.includes(path)) {
         return NextResponse.next();
     }
-    const session = await auth.api.getSession({ headers: req.headers });
+
 
     if (!session) {
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // if (ADMIN_ROUTES.some((route) => path.startsWith(route))) {
-    //     const userIsAdmin = await isAdmin(session.user.id);
-    //     if (!userIsAdmin) {
-    //         return NextResponse.redirect(new URL("/", req.url));
-    //     }
-    // }
+    const isAdminRoute =
+        path === ADMIN_ROUTE || path.startsWith(`${ADMIN_ROUTE}/`);
+    if (isAdminRoute) {
+        const userIsAdmin = await isAdmin(session.user.id);
+        if (!userIsAdmin) {
+            return NextResponse.redirect(new URL(OVERVIEW_ROUTE, req.url));
+        }
+    }
 
     return NextResponse.next();
 }
