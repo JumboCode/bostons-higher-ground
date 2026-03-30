@@ -75,7 +75,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             />
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
-                    title="Family Intake Over Time"
+                    title = {formatTitle(filterState, "Family Intake")}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -83,7 +83,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title="Families Housed Over Time"
+                    title={formatTitle(filterState, "Family Intake")}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -122,4 +122,40 @@ function formattedFilters(filters: FilterSummary) {
         parts.push(`${filters.selectedLocations.length} locations`);
     }
     return parts.join(" • ");
+}
+
+function formatTitle(filters: FilterSummary, title: string) {
+  console.log(title)
+    const today = new Date();
+    if (
+        filters.timeframe === "custom" &&
+        filters.customRange?.from &&
+        filters.customRange?.to
+    ) {
+        return title + " Between " + `${filters.customRange.from.toLocaleDateString()} and ${filters.customRange.to.toLocaleDateString()}`;
+    }
+    else if (filters.fiscalYear) {
+        return title + " in " + `${filters.fiscalYear}`;
+    }
+    else if (filters.timeframe == "allTime") {
+        return title + " Over Time";
+    }
+    else if (filters.timeframe == "thisMonth") {
+        return title + " in " + `${today.toLocaleString('en-US', {month: 'long'})}`;
+    }
+    else if (filters.timeframe == "lastMonth") {
+        const last_month = new Date(today.setDate(0))
+        return title + " in " + `${last_month.toLocaleString('en-US', {month: 'long'})}`;
+    }
+    else if (filters.timeframe == "thisFY") {
+        if (today.getMonth() >= 9) {
+            return title + " in " + `${today.getFullYear() + 1 }`;
+        }
+        else {
+            return title + " in " + `${today.getFullYear()}`;
+        }
+    }
+    else {
+        return title;
+    }
 }
