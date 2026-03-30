@@ -8,6 +8,24 @@ import LineChart from "./linechart";
 import DaysHousedBarChart from "./barchart2";
 import LocationBarChart from "./locationchart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
+import { getAllData } from "@/lib/getAllData";
+import { filterRecords, type FilterableRecord } from "@/lib/applyFilters";
+
+const data = (await getAllData()) as HousingRecord[];
+
+function getFilteredRecords(
+    data: HousingRecord[],
+    stored: StoredChart
+): HousingRecord[] {
+    const filters = parseFilters(stored.filters);
+    return filterRecords(data, {
+        selectedLocations: filters.selectedLocations ?? [],
+        selectedSchools: filters.selectedSchools ?? [],
+        timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
+        fiscalYear: filters.fiscalYear,
+        customRange: filters.customRange,
+    }) as HousingRecord[];
+}
 
 export type FilterSummary = Pick<
     FilterState,
@@ -18,9 +36,7 @@ export type FilterSummary = Pick<
     | "customRange"
 >;
 
-import { filterRecords } from "@/lib/applyFilters";
-
-export type HousingRecord = {
+export type HousingRecord =  FilterableRecord &{
     id: number;
     familyId: string;
     intakeDate: string | null;
