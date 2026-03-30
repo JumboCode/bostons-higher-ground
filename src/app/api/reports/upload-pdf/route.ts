@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     try {
         await uploadFile(pathname, body, {
-            access: "private",
+            access: "public",
             contentType: "application/pdf",
             addRandomSuffix: true,
         });

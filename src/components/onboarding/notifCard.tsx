@@ -267,7 +267,7 @@ export function AccountCreatedCard({
             primaryAction={{ label: "Login", onClick: onLogin }}
         >
             {
-                "Your account has been successfully created.\nYou can now log in to access your dashboard."
+                "Your account has been successfully created. You can now log in to access your dashboard."
             }
         </NotifCard>
     );

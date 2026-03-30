@@ -2,7 +2,14 @@
 
 console.log("Rendering current NavBar version");
 
-import { House, FileText, Settings, GraduationCap, School, LayoutDashboard} from "lucide-react";
+import {
+    House,
+    FileText,
+    Settings,
+    GraduationCap,
+    School,
+    LayoutDashboard,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,20 +17,20 @@ import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 //logout functionality
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SOFT_PINK = "bg-[#DE8F9C]";
 const LIGHT_GRAY = "bg-[#414141]";
 
-// Icons 
+// Icons
 const TAB_CONFIG = [
     { name: "Overview", Icon: LayoutDashboard, href: "/reports/overview" },
     { name: "Housing", Icon: House, href: "/reports/housing" },
-    { name: "Education", Icon: GraduationCap, href: "/reports/education" },
+    // { name: "Education", Icon: GraduationCap, href: "/reports/education" },
     { name: "Schools", Icon: School, href: "/reports/schools" },
     { name: "Reports", Icon: FileText, href: "/reports" },
     { name: "Admin", Icon: Settings, href: "/admin" },
@@ -49,14 +56,13 @@ export default function Navbar({ userName }: { userName: string }) {
                     height={10}
                 />
             </div>
-            
 
             <ul className="flex flex-col gap-4 p-5">
                 {TAB_CONFIG.map(({ name, Icon, href }) => {
                     const isSelected =
                         pathname === href ||
-                        (href !== "/reports" && pathname.startsWith(href + "/"));
-
+                        (href !== "/reports" &&
+                            pathname.startsWith(href + "/"));
 
                     return (
                         <Link
@@ -83,38 +89,38 @@ export default function Navbar({ userName }: { userName: string }) {
                     );
                 })}
             </ul>
-            
+
             {/* <button onClick={async () => {
                 await authClient.signOut();
                 redirect("/");
             }}
             className="cursor-pointer underline">{userName}</button> */}
 
-{/* This is the bottom left button */}
-<div className="mt-auto pb-6 px-4">
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <button
-        className="w-12 h-12 rounded-full bg-[#E5737D] flex items-center justify-center text-white font-medium hover:brightness-90 transition-all cursor-pointer shadow-md"
-        aria-label="User profile"
-      >
-        {userName?.charAt(0).toUpperCase()}
-      </button>
-    </DropdownMenuTrigger>
+            {/* This is the bottom left button */}
+            <div className="mt-auto pb-6 px-4">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button
+                            className="w-12 h-12 rounded-full bg-[#E5737D] flex items-center justify-center text-white font-medium hover:brightness-90 transition-all cursor-pointer shadow-md"
+                            aria-label="User profile"
+                        >
+                            {userName?.charAt(0).toUpperCase()}
+                        </button>
+                    </DropdownMenuTrigger>
 
-    <DropdownMenuContent align="start">
-      <DropdownMenuItem
-        onClick={async () => {
-          await authClient.signOut();
-          router.replace("/");   // redirect after logout
-        }}
-        className="cursor-pointer"
-      >
-        Logout
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-</div>
+                    <DropdownMenuContent align="start">
+                        <DropdownMenuItem
+                            onClick={async () => {
+                                await authClient.signOut();
+                                router.replace("/"); // redirect after logout
+                            }}
+                            className="cursor-pointer"
+                        >
+                            Logout
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </nav>
     );
 }

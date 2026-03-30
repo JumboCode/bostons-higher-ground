@@ -85,23 +85,25 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     body2="92%"
                     subtext1=""
                     subtext2=""
-                    mt="mt-10"
+                    mt=""
                 >
-                    <SchoolFilterBar />
+                    {/* <SchoolFilterBar /> */}
                 </DashboardTop>
             </div>
-            <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
                     title="Partner Schools & Homeless Student Counts"
                     appliedFilters={formattedFilters(filterState)}
                 >
-                    <PartnerAndHomeless data={filteredData} />
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
+                        <PartnerAndHomeless data={filteredData} />
+                    </div>
                 </Chart>
                 <Chart
                     title="Schools by City"
                     appliedFilters={formattedFilters(filterState)}
                 >
-                    <div className="w-[600px]">
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <SchoolsByCityChart data={filteredData} />
                     </div>
                 </Chart>
@@ -109,13 +111,15 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     title="Housing Sources"
                     appliedFilters={formattedFilters(filterState)}
                 >
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
                     <HousingSourceChart data={filteredData} />
+                    </div>
                 </Chart>
                 <Chart
                     title="Students by City"
                     appliedFilters={formattedFilters(filterState)}
                 >
-                    <div className="w-[600px]">
+                    <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <StudentsByCityChart data={filteredData} />
                     </div>
                 </Chart>

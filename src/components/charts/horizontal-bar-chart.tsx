@@ -52,7 +52,8 @@ export function HorizontalBarChart({
             new Set(data.flatMap((d) => d.series.map((s) => s.label)))
         );
         const seriesCount = Math.max(seriesKeys.length, 1);
-        const legendSpace = seriesKeys.length > 1 ? 60 : 0;
+        const legendSpace = seriesKeys.length > 1 ? 76 : 0;
+        const maxCategoryLength = d3.max(data, (d) => d.category.length) ?? 0;
 
         const targetHeight =
             height ?? Math.max(360, data.length * 52 + 120 + legendSpace);
@@ -60,7 +61,13 @@ export function HorizontalBarChart({
             top: 20,
             right: 80,
             bottom: (xLabel ? 70 : 50) + legendSpace,
-            left: yLabel ? 160 : 140,
+            left: Math.min(
+                yLabel ? 280 : 240,
+                Math.max(
+                    yLabel ? 160 : 140,
+                    maxCategoryLength * 7 + (yLabel ? 36 : 20)
+                )
+            ),
         };
         const {
             width: innerWidth,
@@ -178,18 +185,28 @@ export function HorizontalBarChart({
         }
 
         if (seriesKeys.length > 1) {
+            const legendGap = 20;
+            const legendItemWidths = seriesKeys.map((key) =>
+                Math.max(84, key.length * 7 + 36)
+            );
+            const legendWidth = legendItemWidths.reduce(
+                (sum, itemWidth, index) =>
+                    sum + itemWidth + (index > 0 ? legendGap : 0),
+                0
+            );
             const legend = chart
                 .append("g")
                 .attr(
                     "transform",
-                    `translate(${innerWidth / 2 - 80}, ${innerHeight + 60})`
+                    `translate(${(innerWidth - legendWidth) / 2}, ${innerHeight + 58})`
                 )
                 .attr("class", "legend");
 
+            let offset = 0;
             seriesKeys.forEach((key, index) => {
                 const item = legend
                     .append("g")
-                    .attr("transform", `translate(${index * 120}, 0)`);
+                    .attr("transform", `translate(${offset}, 0)`);
 
                 item.append("rect")
                     .attr("x", 0)
@@ -206,6 +223,8 @@ export function HorizontalBarChart({
                     .style("font-family", DEFAULT_FONT)
                     .style("font-size", "12px")
                     .style("fill", "#4A5565");
+
+                offset += legendItemWidths[index] + legendGap;
             });
         }
     }, [data, width, height, colors, xLabel, yLabel]);
@@ -223,8 +242,7 @@ export function HorizontalBarChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full max-w-[900px]"}
-            style={{ overflow: "visible" }}
+            className={className ?? "h-auto w-full max-w-[900px]"}
             role="img"
         />
     );

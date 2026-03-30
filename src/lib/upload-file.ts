@@ -1,6 +1,6 @@
 import { put, type PutBlobResult } from '@vercel/blob'
 
-type UploadAccess = 'public' | 'private'
+type UploadAccess = 'public' // vercel blob currently only supports public...
 
 export type UploadFileOptions = {
     access?: UploadAccess

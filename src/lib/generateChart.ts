@@ -7,9 +7,12 @@ import {
     VerticalBarChartPdf,
     HorizontalBarChart,
     HorizontalBarChartPdf,
+    DonutChart,
+    DonutChartPdf,
     type LineDatum,
     type VerticalBarDatum,
     type HorizontalBarDatum,
+    type DonutDatum,
 } from "@/components/charts";
 import type { FilterState } from "@/lib/filterStore";
 
@@ -24,6 +27,10 @@ const chartRegistry = {
     "Families Housed Over Time": "families-housed-line",
     "Days to House Distribution": "days-to-house-bar",
     "Active vs Housed Families by Location": "location-bar",
+    "Partner Schools & Homeless Student Counts": "partner-schools-bar",
+    "Schools by City": "schools-by-city-bar",
+    "Housing Sources": "housing-sources-donut",
+    "Students by City": "students-by-city-bar",
 } as const;
 
 type ChartKey = (typeof chartRegistry)[keyof typeof chartRegistry];
@@ -41,7 +48,54 @@ export type HousingRecord = FilterableRecord & {
     studentCount: number | null;
 };
 
-type ChartBuilder = (records: HousingRecord[]) => React.ReactElement | null;
+export type GeneratedChartModel =
+    | {
+          chartKey: "family-intake-bar";
+          data: VerticalBarDatum[];
+          xLabel: "Month";
+          yLabel: "Families";
+      }
+    | {
+          chartKey: "families-housed-line";
+          data: LineDatum[];
+          xLabel: "Month";
+          yLabel: "Families Housed";
+      }
+    | {
+          chartKey: "days-to-house-bar";
+          data: VerticalBarDatum[];
+          xLabel: "School";
+          yLabel: "Avg. days to house";
+      }
+    | {
+          chartKey: "location-bar";
+          data: HorizontalBarDatum[];
+          xLabel: "# of Families";
+          yLabel: "Location";
+      }
+    | {
+          chartKey: "partner-schools-bar";
+          data: HorizontalBarDatum[];
+          xLabel: "# of Students";
+          yLabel: "School";
+      }
+    | {
+          chartKey: "schools-by-city-bar";
+          data: HorizontalBarDatum[];
+          xLabel: "# of Schools";
+          yLabel: "City";
+      }
+    | {
+          chartKey: "students-by-city-bar";
+          data: HorizontalBarDatum[];
+          xLabel: "# of Students";
+          yLabel: "City";
+      }
+    | {
+          chartKey: "housing-sources-donut";
+          data: DonutDatum[];
+          centerLabel: "Total Housed";
+      };
 
 // Parse a filters string back into a filter state subset
 function parseFilters(filters: string | null): Partial<FilterState> {
@@ -183,75 +237,168 @@ function locationSeries(records: HousingRecord[]): HorizontalBarDatum[] {
         );
 }
 
-const chartBuilders: Record<ChartKey, ChartBuilder> = {
-    "family-intake-bar": (records) => {
-        const data = familyIntakeSeries(records);
-        return React.createElement(VerticalBarChart, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families",
-        });
-    },
-    "families-housed-line": (records) => {
-        const data = familiesHousedSeries(records);
-        return React.createElement(LineChart, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families Housed",
-        });
-    },
-    "days-to-house-bar": (records) => {
-        const data = daysToHouseSeries(records);
-        return React.createElement(VerticalBarChart, {
-            data,
-            xLabel: "School",
-            yLabel: "Avg. days to house",
-        });
-    },
-    "location-bar": (records) => {
-        const data = locationSeries(records);
-        return React.createElement(HorizontalBarChart, {
-            data,
-            xLabel: "# of Families",
-            yLabel: "Location",
-        });
-    },
-};
+function partnerSchoolsSeries(records: HousingRecord[]): HorizontalBarDatum[] {
+    const schoolCounts = new Map<string, { active: number; housed: number }>();
 
-const chartBuildersPdf: Record<ChartKey, ChartBuilder> = {
-    "family-intake-bar": (records) => {
-        const data = familyIntakeSeries(records);
-        return React.createElement(VerticalBarChartPdf, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families",
-        });
-    },
-    "families-housed-line": (records) => {
-        const data = familiesHousedSeries(records);
-        return React.createElement(LineChartPdf, {
-            data,
-            xLabel: "Month",
-            yLabel: "Families Housed",
-        });
-    },
-    "days-to-house-bar": (records) => {
-        const data = daysToHouseSeries(records);
-        return React.createElement(VerticalBarChartPdf, {
-            data,
-            xLabel: "School",
-            yLabel: "Avg. days to house",
-        });
-    },
-    "location-bar": (records) => {
-        const data = locationSeries(records);
-        return React.createElement(HorizontalBarChartPdf, {
-            data,
-            xLabel: "# of Families",
-            yLabel: "Location",
-        });
-    },
-};
+    records.forEach((record) => {
+        if (!record.school || !record.studentCount) return;
+
+        const existing = schoolCounts.get(record.school) ?? {
+            active: 0,
+            housed: 0,
+        };
+
+        if (record.currentStatus === "active") {
+            existing.active += record.studentCount;
+        } else if (record.currentStatus === "housed") {
+            existing.housed += record.studentCount;
+        }
+
+        schoolCounts.set(record.school, existing);
+    });
+
+    return Array.from(schoolCounts.entries())
+        .map(([school, counts]) => ({
+            category: school,
+            series: [
+                { label: "Active", value: counts.active },
+                { label: "Housed", value: counts.housed },
+            ],
+        }))
+        .sort(
+            (a, b) =>
+                b.series.reduce((sum, s) => sum + s.value, 0) -
+                a.series.reduce((sum, s) => sum + s.value, 0)
+        );
+}
+
+function schoolsByCitySeries(records: HousingRecord[]): HorizontalBarDatum[] {
+    const citySchools = new Map<string, Set<string>>();
+
+    records.forEach((record) => {
+        if (!record.city || !record.school) return;
+        const current = citySchools.get(record.city) ?? new Set<string>();
+        current.add(record.school);
+        citySchools.set(record.city, current);
+    });
+
+    return Array.from(citySchools.entries())
+        .map(([city, schools]) => ({
+            category: city,
+            series: [{ label: "Schools", value: schools.size }],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value);
+}
+
+function studentsByCitySeries(records: HousingRecord[]): HorizontalBarDatum[] {
+    const cityTotals = new Map<string, number>();
+
+    records.forEach((record) => {
+        if (!record.city || !record.studentCount) return;
+        const current = cityTotals.get(record.city) ?? 0;
+        cityTotals.set(record.city, current + record.studentCount);
+    });
+
+    return Array.from(cityTotals.entries())
+        .map(([city, totalStudents]) => ({
+            category: city,
+            series: [{ label: "Students", value: totalStudents }],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value);
+}
+
+function housingSourcesSeries(records: HousingRecord[]): DonutDatum[] {
+    const counts = new Map<string, number>();
+
+    records.forEach((record) => {
+        if (record.currentStatus !== "housed" || !record.sourceOfHousing) {
+            return;
+        }
+        const current = counts.get(record.sourceOfHousing) ?? 0;
+        counts.set(record.sourceOfHousing, current + 1);
+    });
+
+    return Array.from(counts.entries())
+        .map(([source, count]) => ({ label: source, value: count }))
+        .sort((a, b) => b.value - a.value);
+}
+
+function getFilteredRecords(
+    data: HousingRecord[],
+    stored: StoredChart
+): HousingRecord[] {
+    const filters = parseFilters(stored.filters);
+    return filterRecords(data, {
+        selectedLocations: filters.selectedLocations ?? [],
+        selectedSchools: filters.selectedSchools ?? [],
+        timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
+        fiscalYear: filters.fiscalYear,
+        customRange: filters.customRange,
+    }) as HousingRecord[];
+}
+
+function buildChartModel(
+    chartKey: ChartKey,
+    records: HousingRecord[]
+): GeneratedChartModel {
+    switch (chartKey) {
+        case "family-intake-bar":
+            return {
+                chartKey,
+                data: familyIntakeSeries(records),
+                xLabel: "Month",
+                yLabel: "Families",
+            };
+        case "families-housed-line":
+            return {
+                chartKey,
+                data: familiesHousedSeries(records),
+                xLabel: "Month",
+                yLabel: "Families Housed",
+            };
+        case "days-to-house-bar":
+            return {
+                chartKey,
+                data: daysToHouseSeries(records),
+                xLabel: "School",
+                yLabel: "Avg. days to house",
+            };
+        case "location-bar":
+            return {
+                chartKey,
+                data: locationSeries(records),
+                xLabel: "# of Families",
+                yLabel: "Location",
+            };
+        case "partner-schools-bar":
+            return {
+                chartKey,
+                data: partnerSchoolsSeries(records),
+                xLabel: "# of Students",
+                yLabel: "School",
+            };
+        case "schools-by-city-bar":
+            return {
+                chartKey,
+                data: schoolsByCitySeries(records),
+                xLabel: "# of Schools",
+                yLabel: "City",
+            };
+        case "students-by-city-bar":
+            return {
+                chartKey,
+                data: studentsByCitySeries(records),
+                xLabel: "# of Students",
+                yLabel: "City",
+            };
+        case "housing-sources-donut":
+            return {
+                chartKey,
+                data: housingSourcesSeries(records),
+                centerLabel: "Total Housed",
+            };
+    }
+}
 
 function resolveChartKey(title: string): ChartKey | null {
     const mapped = (chartRegistry as Record<string, ChartKey | undefined>)[
@@ -262,21 +409,108 @@ function resolveChartKey(title: string): ChartKey | null {
 
 import React from "react";
 
-export async function generateChart(stored: StoredChart, isForPdf = false) {
-    const data = (await getAllData()) as HousingRecord[];
-
-    const filters = parseFilters(stored.filters);
-    const filtered = filterRecords(data, {
-        selectedLocations: filters.selectedLocations ?? [],
-        selectedSchools: filters.selectedSchools ?? [],
-        timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
-        fiscalYear: filters.fiscalYear,
-        customRange: filters.customRange,
-    });
-
+export async function generateChartModel(
+    stored: StoredChart
+): Promise<GeneratedChartModel | null> {
     const chartKey = resolveChartKey(stored.title);
     if (!chartKey) return null;
 
-    const build = isForPdf ? chartBuildersPdf[chartKey] : chartBuilders[chartKey];
-    return build(filtered as HousingRecord[]);
+    const data = (await getAllData()) as HousingRecord[];
+    const filteredRecords = getFilteredRecords(data, stored);
+    return buildChartModel(chartKey, filteredRecords);
+}
+
+export async function generateChart(stored: StoredChart, isForPdf = false) {
+    const model = await generateChartModel(stored);
+    if (!model) return null;
+
+    if (isForPdf) {
+        if (model.chartKey === "family-intake-bar") {
+            return React.createElement(VerticalBarChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        if (model.chartKey === "families-housed-line") {
+            return React.createElement(LineChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        if (model.chartKey === "days-to-house-bar") {
+            return React.createElement(VerticalBarChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        if (
+            model.chartKey === "partner-schools-bar" ||
+            model.chartKey === "schools-by-city-bar" ||
+            model.chartKey === "students-by-city-bar"
+        ) {
+            return React.createElement(HorizontalBarChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
+        if (model.chartKey === "housing-sources-donut") {
+            return React.createElement(DonutChartPdf, {
+                data: model.data,
+                centerLabel: model.centerLabel,
+            });
+        }
+        return React.createElement(HorizontalBarChartPdf, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+
+    if (model.chartKey === "family-intake-bar") {
+        return React.createElement(VerticalBarChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    if (model.chartKey === "families-housed-line") {
+        return React.createElement(LineChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    if (model.chartKey === "days-to-house-bar") {
+        return React.createElement(VerticalBarChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    if (
+        model.chartKey === "partner-schools-bar" ||
+        model.chartKey === "schools-by-city-bar" ||
+        model.chartKey === "students-by-city-bar"
+    ) {
+        return React.createElement(HorizontalBarChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
+        });
+    }
+    if (model.chartKey === "housing-sources-donut") {
+        return React.createElement(DonutChart, {
+            data: model.data,
+            centerLabel: model.centerLabel,
+        });
+    }
+    return React.createElement(HorizontalBarChart, {
+        data: model.data,
+        xLabel: model.xLabel,
+        yLabel: model.yLabel,
+    });
 }

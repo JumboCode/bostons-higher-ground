@@ -3,7 +3,7 @@
 import React from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
-import html2canvas from 'html2canvas-pro';
+import html2canvas from "html2canvas-pro";
 
 interface ChartProps {
     title: string;
@@ -27,18 +27,20 @@ export default function Chart({
             return;
         }
         //chart container to canvas
-        html2canvas(element, {useCORS: true,}).then((canvas)=>{
-            //generate image
-            const image = canvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.href = image;
-            console.log(link.href);
-            link.download = title + ".png";
-            // programmatically click the link so that the image automatically downloads
-            link.click();
-        }).catch(err=> {
-            console.error("Unable to take screenshot.")
-        })
+        html2canvas(element, { useCORS: true })
+            .then((canvas) => {
+                //generate image
+                const image = canvas.toDataURL("image/png");
+                const link = document.createElement("a");
+                link.href = image;
+                console.log(link.href);
+                link.download = title + ".png";
+                // programmatically click the link so that the image automatically downloads
+                link.click();
+            })
+            .catch((err) => {
+                console.error("Unable to take screenshot.");
+            });
     };
 
     const handleAdd = onAddToReport
@@ -62,41 +64,44 @@ export default function Chart({
           };
 
     return (
-        <div id="chartElement" className="bg-white rounded-3xl shadow-sm p-8 mb-6 w-full max-w-[900px]">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">
+        <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">
+            {/* Chart */}
+            <div
+                id="chartElement"
+                className="flex w-full min-w-0 flex-col gap-6 p-8"
+            >
+                <h2 className="pr-24 text-2xl font-semibold text-gray-800">
                     {title}
                 </h2>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleDownload}
-                        className="p-2.5 rounded-2xl hover:bg-gray-100 cursor-pointer transition-colors"
-                        aria-label="Download chart"
-                    >
-                        <Download className="w-5 h-5 text-gray-600" />
-                    </button>
-                    <button
-                        onClick={handleAdd}
-                        
-                        className="p-2.5 rounded-2xl hover:bg-red-100 cursor-pointer hover:text-white transition-colors"
-                        aria-label="Add"
-                    >
-                        <Plus className="w-5 h-5 text-gray-600" />
-                    </button>
-                </div>
+
+                {/* Chart Content */}
+                <div className="w-full min-w-0">{children}</div>
+
+                {/* Applied Filters */}
+                {appliedFilters && (
+                    <div className="pt-1 text-sm text-gray-600">
+                        <span className="font-medium">Applied filters: </span>
+                        <span>{appliedFilters}</span>
+                    </div>
+                )}
             </div>
 
-            {/* Chart Content */}
-            <div>{children}</div>
-
-            {/* Applied Filters */}
-            {appliedFilters && (
-                <div className="text-sm text-gray-600">
-                    <span className="font-medium">Applied filters: </span>
-                    <span>{appliedFilters}</span>
-                </div>
-            )}
+            <div className="absolute top-8 right-8 flex items-center gap-3">
+                <button
+                    onClick={handleDownload}
+                    className="p-2.5 rounded-2xl hover:bg-gray-100 cursor-pointer transition-colors"
+                    aria-label="Download chart"
+                >
+                    <Download className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
+                    onClick={handleAdd}
+                    className="p-2.5 rounded-2xl hover:bg-red-100 cursor-pointer hover:text-white transition-colors"
+                    aria-label="Add"
+                >
+                    <Plus className="w-5 h-5 text-gray-600" />
+                </button>
+            </div>
         </div>
     );
 }

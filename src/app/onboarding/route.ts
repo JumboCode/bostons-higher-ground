@@ -1,3 +1,3 @@
 export function GET() {
-    return Response.redirect("/onboarding/create-account");
+    return Response.redirect("/onboarding/verify-invite");
 }
