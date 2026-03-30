@@ -75,7 +75,6 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             />
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
-                    // title="Family Intake Over Time"
                     title = {formatTitle(filterState, "Family Intake")}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
@@ -84,7 +83,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title="Families Housed Over Time"
+                    title={formatTitle(filterState, "Family Intake")}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >

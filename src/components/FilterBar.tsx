@@ -275,24 +275,20 @@ export function DateFilter() {
     const currDate = new Date;
 
     const formattedRange = useMemo(() => {
-        if (fiscalYear) {
-          return `Families Housed in ${fiscalYear}`
-        }
         switch (timeframe) {
             case "thisMonth":
-                return `Families Housed in ${currDate.toLocaleString("default", { month: "long" })} ${currDate.getFullYear()}`;
+                return "This Month";
             case "lastMonth":
-                const prevMonth = new Date(currDate.getFullYear(), currDate.getMonth() - 1);
-                return `Families Housed in ${prevMonth.toLocaleString("default", { month: "long" })} ${prevMonth.getFullYear()}`;
+                return "Last Month";
             case "thisFY":
-                return `Families Housed in ${currDate.getFullYear()}`;
+                return fiscalYear ? `FY${fiscalYear}` : "This Fiscal Year";
             case "custom":
                 return customRange?.from && customRange?.to
                     ? `${customRange.from.toLocaleDateString()} - ${customRange.to.toLocaleDateString()}`
                     : "Custom Range";
             case "allTime":
             default:
-                return "Families Housed Over Time";
+                return "All Time";
         }
     }, [timeframe, customRange, fiscalYear]);
 
