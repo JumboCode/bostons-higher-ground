@@ -272,8 +272,6 @@ export function DateFilter() {
         setMode(timeframe === "custom" ? "custom" : "fiscal");
     }, [customRange, fiscalYear, timeframe]);
 
-    const currDate = new Date;
-
     const formattedRange = useMemo(() => {
         switch (timeframe) {
             case "thisMonth":

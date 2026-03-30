@@ -9,10 +9,11 @@ import DaysHousedBarChart from "../housing/barchart2";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
 import { type HousingRecord } from "../housing/housing-client";
+import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 
 export type OverviewRecord = HousingRecord;
 
-type FilterSummary = Pick<
+export type FilterSummary = Pick<
     FilterState,
     | "selectedLocations"
     | "selectedSchools"
@@ -83,7 +84,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title={formatTitle(filterState, "Family Intake")}
+                    title={formatTitle(filterState, "Family Housed")}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -91,7 +92,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title="Days to House Distribution"
+                    title={formatTitle(filterState, "Days to House Distribution")}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -100,62 +101,4 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             </div>
         </div>
     );
-}
-
-function formattedFilters(filters: FilterSummary) {
-    const parts: string[] = [];
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        parts.push(
-            `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-        );
-    } else {
-        parts.push(filters.timeframe);
-    }
-    if (filters.selectedSchools.length) {
-        parts.push(`${filters.selectedSchools.length} schools`);
-    }
-    if (filters.selectedLocations.length) {
-        parts.push(`${filters.selectedLocations.length} locations`);
-    }
-    return parts.join(" • ");
-}
-
-function formatTitle(filters: FilterSummary, title: string) {
-  console.log(title)
-    const today = new Date();
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        return title + " Between " + `${filters.customRange.from.toLocaleDateString()} and ${filters.customRange.to.toLocaleDateString()}`;
-    }
-    else if (filters.fiscalYear) {
-        return title + " in " + `${filters.fiscalYear}`;
-    }
-    else if (filters.timeframe == "allTime") {
-        return title + " Over Time";
-    }
-    else if (filters.timeframe == "thisMonth") {
-        return title + " in " + `${today.toLocaleString('en-US', {month: 'long'})}`;
-    }
-    else if (filters.timeframe == "lastMonth") {
-        const last_month = new Date(today.setDate(0))
-        return title + " in " + `${last_month.toLocaleString('en-US', {month: 'long'})}`;
-    }
-    else if (filters.timeframe == "thisFY") {
-        if (today.getMonth() >= 9) {
-            return title + " in " + `${today.getFullYear() + 1 }`;
-        }
-        else {
-            return title + " in " + `${today.getFullYear()}`;
-        }
-    }
-    else {
-        return title;
-    }
 }

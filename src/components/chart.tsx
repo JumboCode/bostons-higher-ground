@@ -6,8 +6,6 @@ import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
 import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar"
 
-
-
 interface ChartProps {
     title: string;
     children: React.ReactNode;
