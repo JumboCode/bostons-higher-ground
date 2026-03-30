@@ -4,6 +4,7 @@ import React from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
+import { useId } from "react";
 
 interface ChartProps {
     title: string;
@@ -20,9 +21,11 @@ export default function Chart({
     filterState,
     onAddToReport,
 }: ChartProps) {
+    const id = useId(); 
+
     const handleDownload = () => {
         //initializing element
-        const element = document.getElementById("chartElement");
+        const element = document.getElementById(id);
         if (!element) {
             return;
         }
@@ -67,7 +70,7 @@ export default function Chart({
         <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">
             {/* Chart */}
             <div
-                id="chartElement"
+                id={id}
                 className="flex w-full min-w-0 flex-col gap-6 p-8"
             >
                 <h2 className="pr-24 text-2xl font-semibold text-gray-800">
