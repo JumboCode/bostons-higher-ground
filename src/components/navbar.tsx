@@ -44,7 +44,7 @@ export default function Navbar({ userName }: { userName: string }) {
 
     return (
         <nav
-            className={`w-[250px] flex-shrink-0 h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
+            className={`w-[250px] flex-shrink-0 h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm z-60`}
         >
             {/* Logo Area */}
             <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">

@@ -7,10 +7,14 @@ type ChartProps = {
     onPreview?: () => void;
 };
 
-export default function ReportChart({ title, onDelete, onPreview }: ChartProps) {
-    // assign id to each chart by title 
+export default function ReportChart({
+    title,
+    onDelete,
+    onPreview,
+}: ChartProps) {
+    // assign id to each chart by title
     const safeId = title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, "");
-    
+
     return (
         <div
             id={`chartElement-${safeId}`}

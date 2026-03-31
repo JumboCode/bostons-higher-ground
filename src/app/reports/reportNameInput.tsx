@@ -16,14 +16,14 @@ export default function ReportNameInput() {
         <div className="flex flex-col ReportNameEdit space-y-1">
             <div className="text-sm font-medium">Report Name</div>
             <div className="ReportNameTextField">
-                <div className="relative w-full">
-                    <SquarePen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <div className="flex items-center w-full bg-[#F3F3F5] rounded-2xl px-3">
+                    <SquarePen className="text-gray-400 w-4 h-4 ml-2 shrink-0" />
                     <input
                         type="text"
                         value={filename}
                         onChange={onChange}
                         placeholder="Enter report name (e.g., October 2025 Housing Report)"
-                        className="w-full text-sm pl-9 pr-3 p-2 bg-[#F3F3F5] rounded-2xl font-normal focus:outline-none"
+                        className="flex-1 text-sm p-2 bg-transparent font-normal focus:outline-none"
                     />
                 </div>
             </div>

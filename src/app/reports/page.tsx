@@ -19,25 +19,24 @@ import ReportNameInput from "./reportNameInput";
 import ReportExportButton from "./reportExportButtons";
 import { ReportChartEntry } from "@/components/report_builder";
 
-
 function DraftReportPopulated() {
     const [charts, setCharts] = useState<StoredChart[]>([]);
     const [showClearModal, setShowClearModal] = useState(false);
 
     const handleClear = async () => {
-    // lear UI immediately
-    setCharts([]);
-    setShowClearModal(false);
+        // lear UI immediately
+        setCharts([]);
+        setShowClearModal(false);
 
-    try {
-        await fetch("/api/reports/in-progress", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ clearAll: true }),
-        });
-    } catch (err) {
-        console.error("Failed to clear report", err);
-    }
+        try {
+            await fetch("/api/reports/in-progress", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clearAll: true }),
+            });
+        } catch (err) {
+            console.error("Failed to clear report", err);
+        }
     };
 
     // Fetch charts once when component mounts
@@ -97,20 +96,21 @@ function DraftReportPopulated() {
             // ignore network errors for now
         }
     };
-    const [isArchivePopupOpen, setIsArchivePopupOpen] = useState(false);//pop up - auto false
-    useEffect(() => {//timer 
-    if (isArchivePopupOpen) {
-        // Set a timer to close the toast after 5000 milliseconds (5 seconds)
-        const timer = setTimeout(() => {
-            setIsArchivePopupOpen(false);
-        }, 5000);
-        
-        // Cleanup the timer if the component unmounts early
-        return () => clearTimeout(timer); 
+    const [isArchivePopupOpen, setIsArchivePopupOpen] = useState(false); //pop up - auto false
+    useEffect(() => {
+        //timer
+        if (isArchivePopupOpen) {
+            // Set a timer to close the toast after 5000 milliseconds (5 seconds)
+            const timer = setTimeout(() => {
+                setIsArchivePopupOpen(false);
+            }, 5000);
+
+            // Cleanup the timer if the component unmounts early
+            return () => clearTimeout(timer);
         }
-        }, [isArchivePopupOpen]);
+    }, [isArchivePopupOpen]);
     return (
-        <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
+        <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10 min-w-0">
             <div className="ReportNameEditBar space-y-2">
                 <div className="DraftHeading+NoOfChartsAdded+ClearButton flex flex-row items-center">
                     <div className="Name+ChartNoDisplay">
@@ -136,7 +136,8 @@ function DraftReportPopulated() {
                 {charts.length > 0 && <ReportNameInput />}
             </div>
             <div className="w-full overflow-x-hidden">
-                <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
+                <div className="Reports grid auto-cols-max md:grid-flow-col gap-3 w-full max-w-[1200px] mx-auto pb-5 overflow-scroll">
+                    {" "}
                     {charts.length > 0 ? (
                         charts.map((chart, idx) => (
                             <ReportChart
