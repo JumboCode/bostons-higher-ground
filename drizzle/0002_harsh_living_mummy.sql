@@ -1,0 +1,1 @@
+ALTER TABLE "in_progress_reports" ADD COLUMN "chart_type_id" text;
