@@ -59,10 +59,17 @@ export default function LocationBarChart({ data }: { data: HousingRecord[] }) {
     const chartData = useMemo(() => buildLocationSeries(data), [data]);
 
     return (
-        <HorizontalBarChart
-            data={chartData}
-            xLabel="# of Families"
-            yLabel="Location"
-        />
+        <div className="relative">
+            <HorizontalBarChart
+                data={chartData}
+                xLabel="# of Families"
+                yLabel="Location"
+            />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No location data to display</p>
+                </div>
+            )}
+        </div>
     );
 }

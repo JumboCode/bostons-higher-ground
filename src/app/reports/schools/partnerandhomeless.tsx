@@ -63,10 +63,18 @@ export default function PartnerAndHomeless({
     const chartData = useMemo(() => buildSchoolSeries(data), [data]);
 
     return (
-        <HorizontalBarChart
-            data={chartData}
-            xLabel="# of Students"
-            yLabel="School"
-        />
+        
+        <div className="relative">
+            <HorizontalBarChart
+                data={chartData}
+                xLabel="# of Students"
+                yLabel="School"
+            />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No counts data to display</p>
+                </div>
+            )}
+        </div>
     );
 }

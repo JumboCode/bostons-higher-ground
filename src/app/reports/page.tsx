@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import React from "react";
 import { type GeneratedChartModel } from "@/lib/generateChart";
@@ -9,6 +10,7 @@ import {
     FileText,
     ArchiveIcon,
     Info,
+    X,
 } from "lucide-react";
 import ReportChart from "@/components/ReportChart";
 import { type StoredChart } from "@/lib/generateChart";
@@ -23,6 +25,23 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
     const [charts, setCharts] = useState<StoredChart[]>([]);
     const [archiving, setArchiving] = useState(false);
     const filename = usePdfMetadataStore((s) => s.filename);
+    const [showClearModal, setShowClearModal] = useState(false);
+
+    const handleClear = async () => {
+        // lear UI immediately
+        setCharts([]);
+        setShowClearModal(false);
+
+        try {
+            await fetch("/api/reports/in-progress", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clearAll: true }),
+            });
+        } catch (err) {
+            console.error("Failed to clear report", err);
+        }
+    };
 
     // Fetch charts once when component mounts
     useEffect(() => {
@@ -81,7 +100,18 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
             // ignore network errors for now
         }
     };
+    const [isArchivePopupOpen, setIsArchivePopupOpen] = useState(false);//pop up - auto false
+    useEffect(() => {//timer 
+        if (isArchivePopupOpen) {
+            // Set a timer to close the toast after 5000 milliseconds (5 seconds)
+            const timer = setTimeout(() => {
+                setIsArchivePopupOpen(false);
+            }, 5000);
 
+            // Cleanup the timer if the component unmounts early
+            return () => clearTimeout(timer);
+        }
+    }, [isArchivePopupOpen]);
     return (
         <div className="flex flex-col grow bg-white mb-6 border rounded-2xl py-6 px-6 border-[rgba(0,0,0,0.1)] space-y-10">
             <div className="ReportNameEditBar space-y-2">
@@ -97,13 +127,16 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                         </p>
                     </div>
                     <div className="ClearButton ml-auto border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white">
-                        <button className="flex flex-row items-center space-x-4 ">
+                        <button
+                            onClick={() => setShowClearModal(true)}
+                            className="flex flex-row items-center space-x-4 "
+                        >
                             <Trash2 className="w-[16] h-[16] " />
                             <p className="font-medium text-sm">Clear</p>
                         </button>
                     </div>
                 </div>
-                <ReportNameInput />
+                {charts.length > 0 && <ReportNameInput />}
             </div>
             <div className="w-full overflow-x-hidden">
                 <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
@@ -123,43 +156,88 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                         </p>
                     )}
                 </div>
-                <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
-                    <ReportExportButton />
-                    <button
-                        disabled={archiving || charts.length === 0}
-                        onClick={async () => {
-                            setArchiving(true);
-                            try {
-                                const res = await fetch("/api/reports/upload-pdf", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ title: filename }),
-                                });
-                                if (res.ok) {
-                                    onArchived();
-                                } else {
-                                    const data = await res.json();
-                                    console.error("Archive failed:", data.error);
+                {charts.length > 0 && (
+                    <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+                        <ReportExportButton />
+                        <button
+                            disabled={archiving || charts.length === 0}
+                            onClick={async () => {
+                                setArchiving(true);
+                                try {
+                                    const res = await fetch("/api/reports/upload-pdf", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ title: filename }),
+                                    });
+                                    if (res.ok) {
+                                        onArchived();
+                                    } else {
+                                        const data = await res.json();
+                                        console.error("Archive failed:", data.error);
+                                    }
+                                } catch (err) {
+                                    console.error("Failed to archive report", err);
+                                } finally {
+                                    setArchiving(false);
                                 }
-                            } catch (err) {
-                                console.error("Failed to archive report", err);
-                            } finally {
-                                setArchiving(false);
-                            }
-                        }}
-                        className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <ArchiveIcon className="w-4 h-4" />
-                        <div className="font-medium">
-                            {archiving ? "Saving..." : "Save to Archive"}
-                        </div>
-                    </button>
-                </div>
+                            }}
+                            className="flex flex-row items-center space-x-4 border border-[rgba(0,0,0,0.1)] rounded-2xl p-3 min-w-40 h-10 hover:bg-[#E76C82] transition-colors duration-150 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ArchiveIcon className="w-4 h-4" />
+                            <div className="font-medium">
+                                {archiving ? "Saving..." : "Save to Archive"}
+                            </div>
+                        </button>
+                    </div>
+                )}
                 <ChartPreview
                     chart={previewChart}
                     title={previewTitle}
                     onClose={() => setPreviewChart(null)}
                 />
+                {showClearModal && (
+                    <div
+                        className="fixed inset-0 flex items-center justify-center bg-black/30 z-50"
+                        onClick={() => setShowClearModal(false)} // ADDED: clicking the backdrop dismisses the modal
+                    >
+                        <div
+                            className="bg-white rounded-3xl px-4 py-8 w-[360px] shadow-lg relative"
+                            onClick={(e) => e.stopPropagation()} // ADDED: prevents backdrop click from firing when clicking inside modal
+                        >
+                            {/* ADDED: X button to dismiss modal */}
+                            <button
+                                onClick={() => setShowClearModal(false)}
+                                className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+                            >
+                                <X className="w-3.5 h-3.5 text-gray-600" />
+                            </button>
+                            <h2 className="text-xl font-bold text-center text-[#555555]">
+                                Clear Draft Report
+                            </h2>
+                            <p className="text-sm text-center text-gray-500 mt-2">
+                                Are you sure you want to clear the draft report?
+                                <br />
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex justify-between mt-6 gap-3">
+                                {/* ADDED: Cancel button — closes modal without clearing */}
+                                <button
+                                    onClick={() => setShowClearModal(false)}
+                                    className="w-full border rounded-xl py-2 text-sm hover:bg-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                {/* ADDED: Confirm button — calls handleClear to clear charts and close modal */}
+                                <button
+                                    onClick={handleClear}
+                                    className="w-full bg-[#E76C82] text-white rounded-xl py-2 text-sm hover:opacity-90"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

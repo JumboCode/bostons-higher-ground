@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { generateChartModel, type StoredChart } from "@/lib/generateChart";
 
+
+
 function parseStoredChart(input: unknown): StoredChart | null {
     if (!input || typeof input !== "object") return null;
 

@@ -38,7 +38,7 @@ export function LineChart({
         const svgEl = svgRef.current;
         const svg = d3.select(svgEl);
         svg.selectAll("*").remove();
-        if (!data.length) return;
+        if (!data.length) return; // current empty state
 
         const targetHeight = height ?? 420;
         const margin: Margin = {

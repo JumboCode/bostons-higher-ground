@@ -52,6 +52,13 @@ export default function HousingLineChart({ data }: { data: HousingRecord[] }) {
     const chartData = useMemo(() => buildHousedSeries(data), [data]);
 
     return (
-        <LineChart data={chartData} xLabel="Month" yLabel="Families housed" />
+        <div className="relative">
+            <LineChart data={chartData} xLabel="Month" yLabel="Families housed" />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No housing data to display</p>
+                </div>
+            )}
+        </div>
     );
 }

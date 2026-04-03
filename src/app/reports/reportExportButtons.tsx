@@ -3,27 +3,35 @@
 import { Download } from "lucide-react";
 import { usePdfMetadataStore } from "@/lib/pdfMetadataStore";
 import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";// include router
 
 export default function ReportExportButton() {
     const filename = usePdfMetadataStore((s) => s.filename);
+    const router = useRouter(); // declare router
+
 
     async function setPdfTitle() {
         try {
-            const res = await fetch("/api/reports/drafts", {
+            console.log("Sending filename:", filename);
+
+            const res = await fetch("/api/reports/in-progress", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     title: filename,
                 }),
             });
+            const data = await res.json();
+            console.log("PATCH response:", data);
 
             if (!res.ok) {
                 throw new Error("Failed to update report name");
             }
+            router.push("/preview");
+
         } catch (error) {
             console.log(error);
         }
-        redirect("/preview");
     }
 
     const baseBtn =
