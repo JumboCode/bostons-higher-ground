@@ -17,10 +17,12 @@ import ChartPreview from "@/components/chartPreview";
 import ReportNameInput from "./reportNameInput";
 import ReportExportButton from "./reportExportButtons";
 import { ReportChartEntry } from "@/components/report_builder";
+import { usePdfMetadataStore } from "@/lib/pdfMetadataStore";
 
 function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
     const [charts, setCharts] = useState<StoredChart[]>([]);
     const [archiving, setArchiving] = useState(false);
+    const filename = usePdfMetadataStore((s) => s.filename);
 
     // Fetch charts once when component mounts
     useEffect(() => {
@@ -130,6 +132,8 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                             try {
                                 const res = await fetch("/api/reports/upload-pdf", {
                                     method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ title: filename }),
                                 });
                                 if (res.ok) {
                                     onArchived();
@@ -176,9 +180,9 @@ function ReportEntry({
     onDelete: (url: string) => void;
 }) {
     const date = new Date(report.uploadedAt);
-    // Derive a display name from the pathname (e.g. "report-1712345678901")
+    // Derive a display name from the pathname (e.g. "October_2025_Housing_Report")
     const filename = report.pathname.split("/").pop() ?? "report.pdf";
-    const displayName = filename.replace(/\.pdf$/, "").replace(/-/g, " ");
+    const displayName = filename.replace(/\.pdf$/, "").replace(/[_-]/g, " ").replace(/ +/g, " ").trim();
 
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">

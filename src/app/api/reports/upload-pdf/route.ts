@@ -108,6 +108,12 @@ export async function POST(request: Request) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
+    const body = await request.json().catch(() => null);
+    const clientTitle =
+        body && typeof (body as Record<string, unknown>).title === "string"
+            ? ((body as Record<string, unknown>).title as string).trim()
+            : "";
+
     const report = await db.query.inProgressReports.findFirst({
         where: eq(inProgressReports.userId, session.user.id),
     });
@@ -132,7 +138,7 @@ export async function POST(request: Request) {
 
     const visible = rendered.filter((c) => c.node !== null);
 
-    const reportTitle = report.title ?? "Untitled Report";
+    const reportTitle = clientTitle || report.title || "Untitled Report";
     const formattedDate = new Intl.DateTimeFormat("en-US", {
         month: "long",
         day: "numeric",
@@ -232,7 +238,8 @@ export async function POST(request: Request) {
         );
     }
 
-    const pathname = `reports/${session.user.id}/report-${Date.now()}.pdf`;
+    const safeName = reportTitle.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 100);
+    const pathname = `reports/${session.user.id}/${safeName}.pdf`;
 
     try {
         const arrayBuffer = pdfBuffer.buffer.slice(
