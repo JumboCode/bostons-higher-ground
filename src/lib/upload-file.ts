@@ -1,5 +1,27 @@
-import { put } from '@vercel/blob'
+import { put, type PutBlobResult } from '@vercel/blob'
 
-export async function uploadFile() {
-    // TODO: complete functionality to save a file to vercel blob
+type UploadAccess = 'public' // vercel blob currently only supports public...
+
+export type UploadFileOptions = {
+    access?: UploadAccess
+    contentType?: string
+    addRandomSuffix?: boolean
+    token?: string
+}
+
+export async function uploadFile(
+    pathname: string,
+    body: Blob | File | ArrayBuffer | ReadableStream<Uint8Array> | string,
+    options: UploadFileOptions = {}
+): Promise<PutBlobResult> {
+    const { access = 'public', contentType, addRandomSuffix, token } = options
+
+    const result = await put(pathname, body, {
+        access,
+        contentType,
+        addRandomSuffix,
+        token,
+    })
+
+    return result
 }
