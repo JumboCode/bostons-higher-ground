@@ -139,7 +139,7 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                 {charts.length > 0 && <ReportNameInput />}
             </div>
             <div className="w-full overflow-x-hidden">
-                <div className="Reports flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5">
+                <div className="flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5 overflow-x-scroll">
                     {charts.length > 0 ? (
                         charts.map((chart, idx) => (
                             <ReportChart
@@ -157,7 +157,7 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                     )}
                 </div>
                 {charts.length > 0 && (
-                    <div className="ExportOptions flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
+                    <div className="flex flex-col md:flex-row md:space-x-3 space-y-3 w-full">
                         <ReportExportButton />
                         <button
                             disabled={archiving || charts.length === 0}
