@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+
 
 type ChartEntry = {
     title: string;
@@ -149,6 +151,8 @@ export async function DELETE(request: Request) {
     }
 
     const body = await request.json().catch(() => null);
+    const clearAll = body && (body as Record<string, unknown>).clearAll === true;
+
     const indexValue: number | null =
         body && typeof (body as Record<string, unknown>).index === "number"
             ? ((body as Record<string, unknown>).index as number)
@@ -171,6 +175,29 @@ export async function DELETE(request: Request) {
 
     if (!existing) {
         return Response.json({ error: "not found" }, { status: 404 });
+    }
+
+    // Clear entire in-progress report
+    if (clearAll) {
+        const [updated] = await db
+            .update(inProgressReports)
+            .set({
+                title: null,
+                charts: [],
+            })
+            .where(eq(inProgressReports.id, existing.id))
+            .returning({
+                id: inProgressReports.id,
+                title: inProgressReports.title,
+                charts: inProgressReports.charts,
+            });
+
+        return Response.json({
+            success: true,
+            reportId: updated.id,
+            chartCount: 0,
+            message: "In-progress report cleared",
+        });
     }
 
     const existingCharts: ChartEntry[] = Array.isArray(existing.charts)
@@ -235,14 +262,41 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json().catch(() => null);
+    const userId = session.user.id;
+
+    
+    if (body && typeof body.title === "string") {
+        const title = body.title.trim();
+
+        if (!title) {
+            return Response.json({ error: "invalid title" }, { status: 400 });
+        }
+
+        const existing = await db.query.inProgressReports.findFirst({
+            where: eq(inProgressReports.userId, userId),
+        });
+
+        if (!existing) {
+            return Response.json({ error: "not found" }, { status: 404 });
+        }
+
+        const [updated] = await db
+            .update(inProgressReports)
+            .set({ title })
+            .where(eq(inProgressReports.id, existing.id))
+            .returning({
+                id: inProgressReports.id,
+                title: inProgressReports.title,
+            });
+
+        return Response.json({ success: true, reportId: updated.id, title: updated.title });
+    }
+
+    
     const fromIndex =
-        body && typeof (body as Record<string, unknown>).fromIndex === "number"
-            ? ((body as Record<string, unknown>).fromIndex as number)
-            : null;
+        body && typeof body.fromIndex === "number" ? body.fromIndex : null;
     const toIndex =
-        body && typeof (body as Record<string, unknown>).toIndex === "number"
-            ? ((body as Record<string, unknown>).toIndex as number)
-            : null;
+        body && typeof body.toIndex === "number" ? body.toIndex : null;
 
     if (
         fromIndex === null ||
@@ -250,10 +304,8 @@ export async function PATCH(request: Request) {
         fromIndex < 0 ||
         toIndex < 0
     ) {
-        return Response.json({ error: "invalid indices" }, { status: 400 });
+        return Response.json({ error: "invalid patch payload" }, { status: 400 });
     }
-
-    const userId = session.user.id;
 
     const existing = await db.query.inProgressReports.findFirst({
         where: eq(inProgressReports.userId, userId),

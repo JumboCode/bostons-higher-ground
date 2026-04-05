@@ -54,10 +54,18 @@ export default function DaysHousedBarChart({
     const chartData = useMemo(() => buildAverageDaysBySchool(data), [data]);
 
     return (
-        <VerticalBarChart
-            data={chartData}
-            xLabel="School"
-            yLabel="Avg. days to house"
-        />
+        
+        <div className="relative">
+            <VerticalBarChart
+                data={chartData}
+                xLabel="School"
+                yLabel="Avg. days to house"
+            />
+            {data.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 pl-8">
+                    <p className="text-gray-600 text-lg font-semibold">No days to house data to display</p>
+                </div>
+            )}
+        </div>
     );
 }
