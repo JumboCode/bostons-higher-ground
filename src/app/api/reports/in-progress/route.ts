@@ -44,13 +44,9 @@ export async function GET(request: Request) {
         where: eq(inProgressReports.userId, userId),
     });
 
-    console.log("in progress get existing:", existing);
-
     const charts: ChartEntry[] = Array.isArray(existing?.charts)
         ? (existing!.charts as ChartEntry[])
         : [];
-
-    console.log("in progress get:", charts);
 
     return Response.json({
         success: true,
@@ -61,7 +57,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  console.log("posting chart to report")
     const session = await auth.api.getSession({ headers: request.headers });
 
     if (!session) {
@@ -69,9 +64,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => null);
-    console.log(body)
     const chartEntry = parseChartEntry(body);
-    console.log(chartEntry)
 
     if (!chartEntry) {
         return Response.json(
@@ -81,7 +74,6 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id;
-    console.log("userId:", userId)
 
     const existing = await db.query.inProgressReports.findFirst({
         where: eq(inProgressReports.userId, userId),
