@@ -7,17 +7,23 @@ import { headers } from "next/headers";
 
 type ChartEntry = {
     title: string;
+    chartType: string;
     filters: string | null;
 };
 
 function parseChartEntry(input: unknown): ChartEntry | null {
     if (!input || typeof input !== "object") return null;
-    const { title, filters } = input as Record<string, unknown>;
+    const { title, chartType, filters } = input as {
+      title: string;
+      chartType: string;
+      filters: unknown;
+    };
 
     if (typeof title !== "string" || !title.trim()) return null;
 
     return {
         title: title.trim(),
+        chartType,
         filters:
             typeof filters === "string" && filters.trim().length
                 ? filters.trim()
