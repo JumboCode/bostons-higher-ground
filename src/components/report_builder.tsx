@@ -88,6 +88,7 @@ function ChartEntry({
 
 export type ReportChartEntry = {
     title: string;
+    chartType: string;
     filters: string | null;
 };
 

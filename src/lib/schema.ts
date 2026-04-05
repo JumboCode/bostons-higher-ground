@@ -43,7 +43,6 @@ export const inProgressReports = pgTable(
             .notNull()
             .references(() => user.id, { onDelete: "cascade" }),
         title: text("title"),
-        chartTypeId: text("chart_type_id"),
         charts: jsonb("charts").notNull().default([]),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")

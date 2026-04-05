@@ -94,6 +94,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
                     title = {formatTitle(filterState, "Partner Schools & Homeless Student Counts")}
+                    chartType="partner-schools-bar"
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
@@ -102,6 +103,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                 </Chart>
                 <Chart
                     title = {formatTitle(filterState, "Schools by City")}
+                    chartType="schools-by-city-bar"
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
@@ -110,6 +112,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                 </Chart>
                 <Chart
                     title = {formatTitle(filterState, "Housing Sources")}
+                    chartType="housing-sources-donut"
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
@@ -118,6 +121,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                 </Chart>
                 <Chart
                     title = {formatTitle(filterState, "Students by City")}
+                    chartType="students-by-city-bar"
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">

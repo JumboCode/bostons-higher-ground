@@ -3,7 +3,6 @@
 import { type FilterSummary } from "@/app/reports/housing/housing-client";
 
 export default function formatTitle(filters: FilterSummary, title: string) {
-  console.log(title)
     const today = new Date();
     if (
         filters.timeframe === "custom" &&

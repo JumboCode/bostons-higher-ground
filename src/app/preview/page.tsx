@@ -30,13 +30,9 @@ export default async function PreviewPage() {
         );
     }
 
-    console.log("report:", report)
-
     const charts = Array.isArray(report?.charts)
         ? (report!.charts as StoredChart[])
         : [];
-
-    console.log("charts:", charts)
 
     const rendered = await Promise.all(
         charts.map(async (chart, idx) => ({
@@ -45,11 +41,7 @@ export default async function PreviewPage() {
         }))
     );
 
-    console.log("rendered:", rendered)
-
     const visible = rendered.filter((c) => c.node !== null);
-
-    console.log("visible:", visible)
 
     return (
         <ReportDoc

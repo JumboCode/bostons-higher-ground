@@ -5,17 +5,23 @@ import { eq } from "drizzle-orm";
 
 type ChartEntry = {
     title: string;
+    chartType: string;
     filters: string | null;
 };
 
 function parseChartEntry(input: unknown): ChartEntry | null {
     if (!input || typeof input !== "object") return null;
-    const { title, filters } = input as Record<string, unknown>;
+    const { title, chartType, filters } = input as {
+      title: string;
+      chartType: string;
+      filters: unknown;
+    };
 
     if (typeof title !== "string" || !title.trim()) return null;
 
     return {
         title: title.trim(),
+        chartType,
         filters:
             typeof filters === "string" && filters.trim().length
                 ? filters.trim()
@@ -36,9 +42,13 @@ export async function GET(request: Request) {
         where: eq(inProgressReports.userId, userId),
     });
 
+    console.log("in progress get existing:", existing);
+
     const charts: ChartEntry[] = Array.isArray(existing?.charts)
         ? (existing!.charts as ChartEntry[])
         : [];
+
+    console.log("in progress get:", charts);
 
     return Response.json({
         success: true,

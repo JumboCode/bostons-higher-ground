@@ -5,9 +5,11 @@ import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
 import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar"
+import { chartRegistry } from "@/lib/generateChart";
 
 interface ChartProps {
     title: string;
+    chartType: string;
     children: React.ReactNode;
     appliedFilters?: string; // human-readable display string
     filterState?: Partial<FilterState>; // raw filter state to persist
@@ -16,6 +18,7 @@ interface ChartProps {
 
 export default function Chart({
     title,
+    chartType,
     children,
     appliedFilters,
     filterState,
@@ -53,6 +56,7 @@ export default function Chart({
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                           title,
+                          chartType,
                           filters: filterState
                               ? JSON.stringify(filterState)
                               : (appliedFilters ?? null),

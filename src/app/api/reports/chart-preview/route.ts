@@ -4,11 +4,16 @@ import { generateChartModel, type StoredChart } from "@/lib/generateChart";
 function parseStoredChart(input: unknown): StoredChart | null {
     if (!input || typeof input !== "object") return null;
 
-    const { title, filters } = input as Record<string, unknown>;
+    const { title, chartType, filters } = input as {
+      title: string;
+      chartType: string;
+      filters: unknown;
+    };
     if (typeof title !== "string" || !title.trim()) return null;
 
     return {
         title: title.trim(),
+        chartType,
         filters:
             typeof filters === "string" && filters.trim().length > 0
                 ? filters
