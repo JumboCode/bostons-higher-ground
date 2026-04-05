@@ -72,7 +72,7 @@ export default function Chart({
           };
 
     return (
-        <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">
+        <div className="relative w-full max-w-225 overflow-hidden rounded-3xl bg-white shadow-sm">
             {/* Chart */}
             <div
                 id={id}

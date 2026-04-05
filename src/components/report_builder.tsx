@@ -262,7 +262,7 @@ export default function ReportBuilder({
             <div
                 className="
                 absolute right-0 top-0
-                h-full w-1/3 min-w-[400px]
+                h-full w-1/3 min-w-100
                 rounded-l-lg
                 bg-white
                 flex flex-col
@@ -319,7 +319,7 @@ export default function ReportBuilder({
                             onClick={handleReroute}
                             className={`w-full px-3 py-3 rounded-full text-white font-medium transition-colors ${
                                 charts.length > 0
-                                    ? "bg-[#E76C82] hover:bg-[#d9566e] cursor-pointer"
+                                    ? "bg-bhg-pink hover:bg-[#d9566e] cursor-pointer"
                                     : "bg-[#E59AA8] cursor-not-allowed"
                             }`}
                         >
