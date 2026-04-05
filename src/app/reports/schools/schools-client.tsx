@@ -132,25 +132,3 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
         </>
     );
 }
-
-// function formattedFilters(filters: FilterSummary) {
-//     const parts: string[] = [];
-//     if (
-//         filters.timeframe === "custom" &&
-//         filters.customRange?.from &&
-//         filters.customRange?.to
-//     ) {
-//         parts.push(
-//             `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-//         );
-//     } else {
-//         parts.push(filters.timeframe);
-//     }
-//     if (filters.selectedSchools.length) {
-//         parts.push(`${filters.selectedSchools.length} schools`);
-//     }
-//     if (filters.selectedLocations.length) {
-//         parts.push(`${filters.selectedLocations.length} locations`);
-//     }
-//     return parts.join(" • ");
-// }
