@@ -119,7 +119,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
 
                 <Chart
                     title = {formatTitle(filterState, "Active vs Housed Families by Location")}
-                    chartType=""
+                    chartType="location-bar"
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
