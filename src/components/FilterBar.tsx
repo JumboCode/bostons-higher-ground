@@ -299,6 +299,7 @@ export function DateFilter() {
     };
 
     const applyFiscal = () => {
+        setCustomRange(undefined);
         if (typeof timeFilter === "number") {
           setFiscalYear(Number(timeFilter));
           setTimeframe("thisFY"); // placeholder
@@ -355,55 +356,56 @@ export function DateFilter() {
                 </div>
 
                 <div className="mt-4">
-                    <div className="flex mb-3.5 gap-2 h-7.5">
-                        <button
-                            onClick={() => handleQuickTimeframe("thisMonth")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                timeFilter === "thisMonth"
-                                    ? "border-bhg-pink text-bhg-pink"
-                                    : "border-bhg-gray-200 text-[#555555]"
-                            }`}
-                        >
-                            This Month
-                        </button>
-                        <button
-                            onClick={() => handleQuickTimeframe("lastMonth")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                timeFilter === "lastMonth"
-                                    ? "border-bhg-pink text-bhg-pink"
-                                    : "border-bhg-gray-200 text-[#555555]"
-                            }`}
-                        >
-                            Last Month
-                        </button>
-                        <button
-                            onClick={() => handleQuickTimeframe("thisFY")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                timeFilter === "thisFY"
-                                    ? "border-bhg-pink text-bhg-pink"
-                                    : "border-bhg-gray-200 text-[#555555]"
-                            }`}
-                        >
-                            This FY
-                        </button>
-                        <button
-                            onClick={() => handleQuickTimeframe("allTime")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                timeFilter === "allTime"
-                                    ? "border-bhg-pink text-bhg-pink"
-                                    : "border-bhg-gray-200 text-[#555555]"
-                            }`}
-                        >
-                            All Time
-                        </button>
-                    </div>
-                    <hr className="w-full border-t border-bhg-gray-200 mb-2.5" />
-
                     {mode === "fiscal" ? (
-                        <FiscalYearContent
-                            timeFilter={timeFilter}
-                            setTimeFilter={setTimeFilter}
-                        />
+                        <>
+                            <div className="flex mb-3.5 gap-2 h-7.5">
+                                <button
+                                    onClick={() => handleQuickTimeframe("thisMonth")}
+                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
+                                        timeFilter === "thisMonth"
+                                            ? "border-bhg-pink text-bhg-pink"
+                                            : "border-bhg-gray-200 text-[#555555]"
+                                    }`}
+                                >
+                                    This Month
+                                </button>
+                                <button
+                                    onClick={() => handleQuickTimeframe("lastMonth")}
+                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
+                                        timeFilter === "lastMonth"
+                                            ? "border-bhg-pink text-bhg-pink"
+                                            : "border-bhg-gray-200 text-[#555555]"
+                                    }`}
+                                >
+                                    Last Month
+                                </button>
+                                <button
+                                    onClick={() => handleQuickTimeframe("thisFY")}
+                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
+                                        timeFilter === "thisFY"
+                                            ? "border-bhg-pink text-bhg-pink"
+                                            : "border-bhg-gray-200 text-[#555555]"
+                                    }`}
+                                >
+                                    This FY
+                                </button>
+                                <button
+                                    onClick={() => handleQuickTimeframe("allTime")}
+                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
+                                        timeFilter === "allTime"
+                                            ? "border-bhg-pink text-bhg-pink"
+                                            : "border-bhg-gray-200 text-[#555555]"
+                                    }`}
+                                >
+                                    All Time
+                                </button>
+                            </div>
+                            <hr className="w-full border-t border-bhg-gray-200 mb-2.5" />
+                            <FiscalYearContent
+                                timeFilter={timeFilter}
+                                setTimeFilter={setTimeFilter}
+                            />
+                        </>
                     ) : (
                         <CustomRangeContent
                             dateRange={localRange}
