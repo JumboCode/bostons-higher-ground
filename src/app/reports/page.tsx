@@ -367,7 +367,7 @@ function ArchivedReportsSection({
                     />
                     <span
                         role="tooltip"
-                        className="pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 w-[320px] rounded-xl bg-[rgba(239,246,255,1)] px-2 py-2 text-left text-sm text-[rgba(28,57,142,1)] shadow-lg ring-1 ring-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className=" pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 w-[320px] rounded-2xl bg-[rgba(239,246,255,1)] px-4 py-4 text-left text-sm text-[rgba(28,57,142,1)] shadow-lg ring-1 ring-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                         The system can save a maximum of 20 archived reports.
                         When the limit is reached, you&apos;ll need to remove old
