@@ -60,7 +60,7 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                     <div className="flex gap-3 mt-4 items-center">
                         <button
                             className="w-[193px] h-9 rounded-[14px] border border-[#0000001A]  py-2 px-4 font-manrope font-medium leading-5 hover:opacity-80 
-                        text-[#555555] font-manrope text-[14px]"
+                        text-[#555555] font-manrope text-[14px] cursor-pointer hover:bg-gray-100"
                             onClick={onClose}
                         >
                             Cancel
@@ -68,13 +68,26 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
 
                         <button
                             type="button"
-                            className="w-[193px] h-9 rounded-[14px] bg-[#D26879] py-2 px-4 font-manrope font-medium leading-5 text-[#FFFFFF] font-manrope text-[14px]"
+                            className="w-[193px] h-9 rounded-[14px] bg-[#D26879] py-2 px-4 font-manrope font-medium leading-5 text-[#FFFFFF] font-manrope text-[14px] enabled:cursor-pointer"
                             style={{
                                 backgroundColor: hasEmail
                                     ? "#E76C82"
                                     : "#E59AA8",
                             }}
                             disabled={!hasEmail}
+                            onClick={async () => {
+                                console.log("reset");
+                                const { data, error } = await authClient.requestPasswordReset({
+                                    email,
+                                    redirectTo: process.env.NEXT_PUBLIC_URL ? `${process.env.NEXT_PUBLIC_URL}/onboarding/forgot-password` : "http://localhost:3000/onboarding/forgot-password"
+                                });
+
+                                if (!error) {
+                                    console.log(data.status, data.message);
+                                } else {
+                                    console.error(error.status, error.statusText, error.message || "");
+                                }
+                            }}
                         >
                             Send Reset Link
                         </button>

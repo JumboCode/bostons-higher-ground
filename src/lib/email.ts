@@ -52,15 +52,16 @@ export async function sendEmail({
             });
             return;
         } else {
+            console.log("email.ts 55: sending...", email);
             await resend.emails.send({
                 from: "no-reply@bhg.jumbocode.org",
                 to: email,
-                subject: "Your password reset code",
+                subject: "Boston's Higher Ground Password Reset",
                 html: `
                     <p>Hello,</p>
-                    <p>Your password reset code is:</p>
+                    <p>Reset your password at the following url:</p>
                     <h2>${otp}</h2>
-                    <p>This code will expire in 15 minutes.</p>
+                    <p>If you did not request a password reset, you can ignore this email.</p>
                 `,
             });
         }

@@ -17,6 +17,17 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        sendResetPassword: async({ user, url, token }) => {
+            console.log("auth.ts 21: sending email...");
+            await sendEmail({
+                email: user.email,
+                otp: url,
+                type: "forget-password"
+            });
+        },
+        onPasswordReset: async({ user }, request) => {
+            console.log(`password successfully reset for ${user.email}`);
+        }
     },
     emailVerification: {
         autoSignInAfterVerification: true,
