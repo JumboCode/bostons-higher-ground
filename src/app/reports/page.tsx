@@ -257,10 +257,14 @@ function ReportEntry({
     report: ArchivedReport;
     onDelete: (url: string) => void;
 }) {
+  console.log(report)
     const date = new Date(report.uploadedAt);
     // Derive a display name from the pathname (e.g. "October_2025_Housing_Report")
     const filename = report.pathname.split("/").pop() ?? "report.pdf";
-    const displayName = filename.replace(/\.pdf$/, "").replace(/[_-]/g, " ").replace(/ +/g, " ").trim();
+    const displayName = filename.replace(/\.pdf$/, "").replace(/[_-]/g, " ").replace(/ +/g, " ").trim().split(" ").slice(0, -1).join(" ");
+
+    console.log("filename:", filename)
+    console.log("displayName:", displayName)
 
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
