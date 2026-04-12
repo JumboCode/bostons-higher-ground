@@ -4,10 +4,13 @@ import React from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
+import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar"
+import { chartRegistry } from "@/lib/generateChart";
 import { useId } from "react";
 
 interface ChartProps {
     title: string;
+    chartType: string;
     children: React.ReactNode;
     appliedFilters?: string; // human-readable display string
     filterState?: Partial<FilterState>; // raw filter state to persist
@@ -16,6 +19,7 @@ interface ChartProps {
 
 export default function Chart({
     title,
+    chartType,
     children,
     appliedFilters,
     filterState,
@@ -55,6 +59,7 @@ export default function Chart({
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                           title,
+                          chartType,
                           filters: filterState
                               ? JSON.stringify(filterState)
                               : (appliedFilters ?? null),
@@ -67,7 +72,7 @@ export default function Chart({
           };
 
     return (
-        <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">
+        <div className="relative w-full max-w-225 overflow-hidden rounded-3xl bg-white shadow-sm">
             {/* Chart */}
             <div
                 id={id}
@@ -80,12 +85,28 @@ export default function Chart({
                 {/* Chart Content */}
                 <div className="w-full min-w-0">{children}</div>
 
-                {/* Applied Filters */}
-                {appliedFilters && (
+                {filterState && (
                     <div className="pt-1 text-sm text-gray-600">
-                        <span className="font-medium">Applied filters: </span>
-                        <span>{appliedFilters}</span>
+                        {(filterState.selectedLocations || []).length > 0 &&  (filterState.selectedLocations || []).length < LOCATION_LIST.length && (
+                            <div>
+                                <span className="font-medium">Cities: </span>
+                                <span>{(filterState.selectedLocations || []).join(", ")}</span>
+                                
+                            </div>
+                        )}
+
+                        {(filterState.selectedSchools || []).length > 0 && (filterState.selectedSchools || []).length < SCHOOL_LIST.length && (
+                            <div>
+                                <span className="font-medium">Schools: </span>
+                                <span>{(filterState.selectedSchools || []).join(", ")}</span>
+                                
+                            </div>
+                        )}
+
+                    
+                    
                     </div>
+
                 )}
             </div>
 
