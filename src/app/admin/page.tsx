@@ -357,6 +357,7 @@ function UserRow({
             setInviteSentEmail(user.email);
             setIsInviteSentOpen(true);
         } catch (e) {
+            console.log("testing")
             console.error(e);
             setResendError(true);
         }
