@@ -93,6 +93,10 @@ export default function VerifyInviteClient() {
                     result.error.message || "Invalid email or verification code"
                 );
                 setIsSubmitting(false);
+                if (email != searchParams.get("email")) {
+                    setIsEmailValid(false);
+                    setEmailError("Email is invalid")
+                }
                 return;
             }
 
