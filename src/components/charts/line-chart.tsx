@@ -210,7 +210,7 @@ export function LineChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full max-w-[900px] h-[420px]"}
+            className={className ?? "w-full max-w-[900px]"}
             role="img"
         />
     );

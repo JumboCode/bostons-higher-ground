@@ -35,7 +35,7 @@ export function DonutChart({
         const contentHeight = height ?? (svgEl.clientHeight || 420);
         const maxLegendLabelLength =
             d3.max(data, (entry) => Math.min(entry.label.length, 18)) ?? 0;
-        const legendItemWidth = Math.max(120, maxLegendLabelLength * 7 + 36);
+        const legendItemWidth = Math.max(120, maxLegendLabelLength * 10 + 36);
         const legendColumns = Math.max(
             1,
             Math.min(

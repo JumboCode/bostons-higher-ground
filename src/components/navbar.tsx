@@ -99,14 +99,12 @@ export default function Navbar({ userName }: { userName: string }) {
             {/* This is the bottom left button */}
             <div className="mt-auto pb-6 px-4">
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            className="w-12 h-12 rounded-full bg-[#E5737D] flex items-center justify-center text-white font-medium hover:brightness-90 transition-all cursor-pointer shadow-md"
-                            aria-label="User profile"
-                        >
-                            {userName?.charAt(0).toUpperCase()}
-                        </button>
-                    </DropdownMenuTrigger>
+                <DropdownMenuTrigger
+                    className="w-12 h-12 rounded-full bg-[#E5737D] flex items-center justify-center text-white font-medium hover:brightness-90 transition-all cursor-pointer shadow-md"
+                    aria-label="User profile"
+                >
+                    
+                </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="start">
                         <DropdownMenuItem
