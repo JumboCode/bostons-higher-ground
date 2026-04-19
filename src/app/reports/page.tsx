@@ -139,7 +139,7 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                 {charts.length > 0 && <ReportNameInput />}
             </div>
             <div className="w-full overflow-x-hidden">
-                <div className="flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5 overflow-x-scroll">
+                <div className="flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pt-2 pr-2 pb-5 overflow-x-scroll overflow-y-visible">
                     {charts.length > 0 ? (
                         charts.map((chart, idx) => (
                             <ReportChart

@@ -8,6 +8,7 @@ import {
     Settings,
     GraduationCap,
     School,
+    LogOut,
     LayoutDashboard,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -101,22 +102,36 @@ export default function Navbar({ userName }: { userName: string }) {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
+                            suppressHydrationWarning
                             className="w-12 h-12 rounded-full bg-[#E5737D] flex items-center justify-center text-white font-medium hover:brightness-90 transition-all cursor-pointer shadow-md"
                             aria-label="User profile"
                         >
-                            {userName?.charAt(0).toUpperCase()}
+                            {/* Fallback to 'U' if name is missing */}
+                {userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                         </button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent align="start">
+                    <DropdownMenuContent align="start" side="top" className="w-64 rounded-2xl p-0 overflow-hidden mb-2">
+                        {/* User Info Header */}
+                    <div className="px-5 py-4 border-b border-gray-100">
+                    <div className="text-[#1A1A1A] font-semibold text-xl leading-tight">
+                    {userName || "User Name"}
+                        </div>
+                        <div className="text-gray-400 text-sm mt-0.5 font-medium">
+                        {/* Checking for who is logged in */}
+                    {userName?.toLowerCase().includes("admin") ? "Admin" : "Staff Member"}
+                    </div>
+                    </div>       
+                        {/* Logout Action */}
                         <DropdownMenuItem
                             onClick={async () => {
                                 await authClient.signOut();
                                 router.replace("/"); // redirect after logout
                             }}
-                            className="cursor-pointer"
+                            className="flex items-center px-5 py-4 cursor-pointer focus:bg-gray-50 group"
                         >
-                            Logout
+                            <LogOut className="w-5 h-5 mr-4 text-gray-400 group-hover:text-rose-500" />
+                            <span className="text-rose-500 font-medium text-lg">Log Out</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
