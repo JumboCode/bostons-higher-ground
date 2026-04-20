@@ -13,7 +13,7 @@ export default function FastFactCard({
 }: FastFactCardProps) {
     return (
         <div
-            className={`relative h-auto min-h-[160px] w-full max-w-[320px] overflow-hidden rounded-2xl px-5 pb-5 pt-6 sm:px-7 ${bgColor}`}
+            className={`relative w-[320px] h-[160px] rounded-2xl px-7 pt-6 pb-5 ${bgColor} overflow-hidden`}
             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
         >
             {/* Subtle decorative circle for depth */}
@@ -25,7 +25,7 @@ export default function FastFactCard({
             <p className="text-[#6B7280] text-[13px] font-medium tracking-wide uppercase mb-2">
                 {title}
             </p>
-            <p className="mb-2 text-[32px] font-bold leading-none tracking-tight text-[#1B1B1B] sm:text-[38px]">
+            <p className="text-[#1B1B1B] text-[38px] font-bold leading-none mb-2 tracking-tight">
                 {body}
             </p>
             <p className="text-[#9CA3AF] text-[12px] font-medium">{subtext}</p>
