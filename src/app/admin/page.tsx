@@ -229,12 +229,7 @@ export default function Admin() {
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="absolute bottom-0 left-[250px] right-0">
-                <div className="h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px] bg-white">
-                    
-                </div>
-            </div>
+            
 
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
