@@ -116,9 +116,9 @@ export default function Admin() {
     );
 
     return (
-        <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#F5F5F5] md:flex-row">
+        <main className="flex min-h-screen bg-[#F5F5F5] overflow-x-hidden">
             <NavBar userName="admin" />
-            <div className="relative flex-1 overflow-x-hidden pt-16 md:pt-0">
+            <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
                 {/* <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div> */}
 
@@ -230,7 +230,7 @@ export default function Admin() {
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-0 left-0 right-0 md:left-[250px]">
+            <div className="absolute bottom-0 left-[250px] right-0">
                 <div className="h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px] bg-white">
                     <footer className="text-[12px] text-[#6A7282]">
                         © 2025 Higher Ground Boston. For authorized staff use

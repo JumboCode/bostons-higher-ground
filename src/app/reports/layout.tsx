@@ -24,9 +24,9 @@ export default async function Layout({
 
     return (
         <>
-            <div className="flex flex-col md:flex-row">
+            <div className="flex">
                 <NavBar userName={userName}/>
-                <div className="w-full overflow-hidden bg-[#F5F5F5] pt-16 md:pt-0">
+                <div className="bg-[#F5F5F5] w-full overflow-hidden">
                     {children}
                 </div>
             </div>
