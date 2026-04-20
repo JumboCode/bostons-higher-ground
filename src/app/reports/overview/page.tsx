@@ -13,7 +13,7 @@ const final_Data = data.map((d) => ({
 export default function Overview() {
     return (
         <div>
-            <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between py-3 drop-shadow-sm z-50">
+            <div className="sticky top-16 min-h-[40px] bg-white flex justify-between py-3 drop-shadow-sm z-30 md:top-0 md:z-50">
                         <FilterBar />
                         {/* {userName || "John Doe"} */}
             </div>
