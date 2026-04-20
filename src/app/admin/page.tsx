@@ -232,10 +232,7 @@ export default function Admin() {
             {/* Footer */}
             <div className="absolute bottom-0 left-[250px] right-0">
                 <div className="h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px] bg-white">
-                    <footer className="text-[12px] text-[#6A7282]">
-                        © 2025 Higher Ground Boston. For authorized staff use
-                        only.
-                    </footer>
+                    
                 </div>
             </div>
 
