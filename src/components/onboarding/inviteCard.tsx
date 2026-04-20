@@ -3,7 +3,14 @@
 import React, { useState } from "react";
 import { Send } from "lucide-react";
 import { InvitationSentCard, ModalOverlay } from "./notifCard";
+import { Manrope } from "next/font/google";
+const manrope = Manrope({ subsets: ["latin"] });
+import { Poppins } from "next/font/google";
 
+const poppins = Poppins({
+    subsets: ["latin"],
+    weight: ["700"],
+});
 export default function InviteCard({
     onCancel,
     onSend,
@@ -26,17 +33,14 @@ export default function InviteCard({
                 aria-labelledby="invite-title"
                 aria-modal="true"
                 className={[
-                    "w-[384px] max-w-[94vw] rounded-[20px] border border-white/30 bg-white p-[30px] shadow-xl ring-1 ring-black/5",
+                    "w-[384px] max-w-[94vw] rounded-[20px] border border-white/30 bg-white p-7.5 shadow-xl ring-1 ring-black/5",
                     className,
                 ].join(" ")}
                 style={{ boxShadow: "0px 24px 50px rgba(167,165,181,.20)" }}
             >
                 <h2
                     id="invite-title"
-                    className="mb-[40px] text-center text-[24px] leading-[42px] font-bold text-[#555]"
-                    style={{
-                        fontFamily: "Poppins, var(--font-poppins, inherit)",
-                    }}
+                    className="font-poppins mb-10 text-center text-[24px] leading-10.5 font-bold text-[#555]"
                 >
                     Invite Member
                 </h2>
@@ -59,28 +63,25 @@ export default function InviteCard({
                 >
                     <label className="block">
                         <span
-                            className="mb-1 block text-[14px] font-medium text-[#555]"
-                            style={{ fontFamily: "Manrope" }}
+                            className="font-manrope mb-1 block text-[14px] font-medium text-[#555]"
                         >
-                            Full Name <span className="text-[#E76C82]">*</span>
+                            Full Name <span className="text-bhg-pink">*</span>
                         </span>
                         <input
                             type="text"
                             placeholder="First Last"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                            style={{ fontFamily: "Manrope" }}
+                            className="font-manrope h-9 w-81 rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                         />
                     </label>
 
                     <label className="block">
                         <span
-                            className="mb-1 block text-[14px] font-medium text-[#555]"
-                            style={{ fontFamily: "Manrope" }}
+                            className="font-manrope mb-1 block text-[14px] font-medium text-[#555]"
                         >
                             Email Address{" "}
-                            <span className="text-[#E76C82]">*</span>
+                            <span className="text-bhg-pink">*</span>
                         </span>
                         <input
                             type="email"
@@ -88,33 +89,29 @@ export default function InviteCard({
                             placeholder="name@higherground.org"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                            style={{ fontFamily: "Manrope" }}
+                            className="font-manrope h-9 w-81 rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                         />
                     </label>
 
                     <div
-                        className="mt-4 w-[324px] rounded-[20px] border border-[#DBEAFE] bg-[#EFF6FF] px-[17px] py-[17px] text-[13px] leading-5 text-[#1C398E]"
-                        style={{ fontFamily: "Manrope" }}
+                        className="font-manrope mt-4 w-81 rounded-[20px] border border-[#DBEAFE] bg-[#EFF6FF] px-4.25 py-4.25 text-[13px] leading-5 text-[#1C398E]"
                     >
                         The staff member will receive an email with a temporary
                         code and link to create their account.
                     </div>
 
-                    <div className="mt-6 flex w-[324px] items-center justify-between gap-2">
+                    <div className="mt-6 flex w-81 items-center justify-between gap-2">
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="h-[36px] w-[156px] rounded-[14px] border border-black/10 bg-white text-[14px] font-medium text-[#555] hover:bg-gray-50"
-                            style={{ fontFamily: "Manrope" }}
+                            className="font-manrope h-9 w-39 rounded-[14px] border border-black/10 bg-white text-[14px] font-medium text-[#555] hover:bg-gray-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={!canSend}
-                            className="inline-flex h-[36px] w-[156px] items-center justify-center gap-4 rounded-[14px] bg-[#E76C82] px-[9px] py-[8px] text-[14px] font-medium text-white hover:bg-[#d35f73] disabled:opacity-50"
-                            style={{ fontFamily: "Manrope" }}
+                            className="font-manrope inline-flex h-9 w-39 items-center justify-center gap-4 rounded-[14px] bg-bhg-pink px-2.25 py-2 text-[14px] font-medium text-white hover:bg-[#d35f73] disabled:opacity-50"
                         >
                             <Send className="h-4 w-4" />
                             <span>Send Invite</span>
