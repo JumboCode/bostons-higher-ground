@@ -1,14 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
 import { useId } from "react";
+import { StoredChart } from "@/lib/generateChart";
 
 interface ChartProps {
     title: string;
     children: React.ReactNode;
+    reportCharts: StoredChart[];
     appliedFilters?: string; // human-readable display string
     filterState?: Partial<FilterState>; // raw filter state to persist
     onAddToReport?: () => Promise<void> | void;
@@ -17,11 +19,13 @@ interface ChartProps {
 export default function Chart({
     title,
     children,
+    reportCharts,
     appliedFilters,
     filterState,
     onAddToReport,
 }: ChartProps) {
     const id = useId(); 
+    const isAdding = useRef(false);
 
     const handleDownload = () => {
         //initializing element
@@ -46,25 +50,30 @@ export default function Chart({
             });
     };
 
-    const handleAdd = onAddToReport
-        ? () => onAddToReport()
-        : async () => {
-              try {
-                  await fetch("/api/reports/in-progress", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                          title,
-                          filters: filterState
-                              ? JSON.stringify(filterState)
-                              : (appliedFilters ?? null),
-                      }),
-                  });
-                  window.dispatchEvent(new Event("report-updated"));
-              } catch (error) {
-                  console.error("Failed to add chart to report", error);
-              }
-          };
+    const handleAdd = async () => {
+        if (isAdding.current || reportCharts.find(c => c.title == title)) return;
+        isAdding.current = true;
+        try {
+            if (onAddToReport) {
+                await onAddToReport();
+            } else {
+                await fetch("/api/reports/in-progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title,
+                        filters: filterState
+                            ? JSON.stringify(filterState)
+                            : (appliedFilters ?? null),
+                    }),
+                });
+                window.dispatchEvent(new Event("report-updated"));
+            }
+        } catch (error) {
+            console.error("Failed to add chart to report", error);
+            isAdding.current = false;
+        }
+    };
 
     return (
         <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">

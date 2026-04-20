@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardTop from "@/components/DashboardTop";
 import Chart from "@/components/chart";
 import FamilyIntakeBarChart from "../housing/barchart";
@@ -9,6 +9,7 @@ import DaysHousedBarChart from "../housing/barchart2";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
 import { type HousingRecord } from "../housing/housing-client";
+import { StoredChart } from "@/lib/generateChart";
 
 export type OverviewRecord = HousingRecord;
 
@@ -22,6 +23,7 @@ type FilterSummary = Pick<
 >;
 
 export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
+    const [charts, setCharts] = useState<StoredChart[]>([]);
     const selectedLocations = useFilters((s) => s.selectedLocations);
     const selectedSchools = useFilters((s) => s.selectedSchools);
     const timeframe = useFilters((s) => s.timeframe);
@@ -55,6 +57,24 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
         customRange,
     };
 
+    useEffect(() => {
+        const fetchCharts = async () => {
+            try {
+                const res = await fetch("/api/reports/in-progress");
+                if (!res.ok) return;
+                const data = await res.json();
+                setCharts(data.charts || []);
+            } catch (err) {
+                console.error("Failed to fetch in-progress charts", err);
+            }
+        };
+
+        fetchCharts();
+
+        window.addEventListener("report-updated", fetchCharts);
+        return () => window.removeEventListener("report-updated", fetchCharts);
+    }, []);
+
     return (
         <div className="w-full">
             <DashboardTop
@@ -76,6 +96,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
                     title="Family Intake Over Time"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -84,6 +105,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
 
                 <Chart
                     title="Families Housed Over Time"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -92,6 +114,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
 
                 <Chart
                     title="Days to House Distribution"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
