@@ -10,7 +10,7 @@ import {
     School,
     LayoutDashboard,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -68,6 +68,7 @@ export default function Navbar({ userName }: { userName: string }) {
                         <Link
                             href={href}
                             key={name}
+                            prefetch={false}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
                             className="px-0"
@@ -112,6 +113,7 @@ export default function Navbar({ userName }: { userName: string }) {
                         <DropdownMenuItem
                             onClick={async () => {
                                 await authClient.signOut();
+                                router.refresh();
                                 router.replace("/"); // redirect after logout
                             }}
                             className="cursor-pointer"

@@ -72,8 +72,8 @@ export async function DELETE(request: Request) {
     const Id = user_session.user.id;
 
     /* If the client is not an admin, return an unauthorized error */
-    const isAdmin = await getUserPermission(Id);
-    if (!isAdmin) {
+    const userPermission = await getUserPermission(Id);
+    if (userPermission !== "admin") {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
     const Id = session.user.id;
 
     /* If the client is not an admin, return an unauthorized error */
-    if (!getUserPermission(Id)) {
+    if ((await getUserPermission(Id)) !== "admin") {
         return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 

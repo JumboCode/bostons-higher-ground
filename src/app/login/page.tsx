@@ -130,6 +130,7 @@ export default function LogIn() {
                 setEmailError("");
                 setPasswordError("");
                 console.log("Successfully logged in!");
+                router.refresh();
                 router.replace("/reports/overview");
             }
         } catch (err: unknown) {

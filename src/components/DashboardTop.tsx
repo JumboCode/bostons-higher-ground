@@ -64,7 +64,7 @@ const DashboardTop: React.FC<DashboardTopProps> = ({
             {/* <div>{children}</div> */}
 
             <div className="flex">
-                <div className="flex w-full justify-center items-center sm:gap-16">
+                <div className="flex w-full justify-center items-center sm:gap-16 mx-12">
                     <FastFactCard
                         title={title}
                         body={body}
