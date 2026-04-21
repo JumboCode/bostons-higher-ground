@@ -56,12 +56,8 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
                 centerLabel={chart.centerLabel}
                 width={600}
                 height={320}
-<<<<<<< HEAD
-                className="w-full h-95"
-=======
                 
-                className="w-full"
->>>>>>> upstream/ui_bug_fixes
+                className="w-full h-95"
             />
         );
     }
