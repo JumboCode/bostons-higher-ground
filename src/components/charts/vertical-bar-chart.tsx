@@ -41,11 +41,11 @@ export function VerticalBarChart({
 
         if (!data.length) return;
 
-        const targetHeight = height ?? 420;
+        const targetHeight = height ?? 500;
         const margin: Margin = {
             top: 10,
             right: 10,
-            bottom: xLabel ? 60 : 40,
+            bottom: xLabel ? 100 : 50,
             left: yLabel ? 65 : 55,
         };
         const {
@@ -65,7 +65,7 @@ export function VerticalBarChart({
             .scaleBand()
             .domain(data.map((d) => d.label))
             .range([0, innerWidth])
-            .padding(0.25);
+            .padding(0.35);
         
         const maxY = d3.max(data, (d) => d.value) ?? 0; // setting 0 to be the min, not accepting negative values
         const y = d3

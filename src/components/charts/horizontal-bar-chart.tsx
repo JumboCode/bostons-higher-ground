@@ -56,16 +56,16 @@ export function HorizontalBarChart({
         const maxCategoryLength = d3.max(data, (d) => d.category.length) ?? 0;
 
         const targetHeight =
-            height ?? Math.max(360, data.length * 52 + 120 + legendSpace);
+            height ?? Math.max(300, data.length * 36 + 140 + legendSpace);
         const margin: Margin = {
             top: 20,
-            right: 80,
-            bottom: (xLabel ? 70 : 50) + legendSpace,
+            right: 30,
+            bottom: (xLabel ? 150 : 50) + legendSpace,
             left: Math.min(
-                yLabel ? 280 : 240,
+                yLabel ? 240 : 200,
                 Math.max(
-                    yLabel ? 160 : 140,
-                    maxCategoryLength * 7 + (yLabel ? 36 : 20)
+                    yLabel ? 200 : 180,
+                    maxCategoryLength * 5 + (yLabel ? 35 : 20)
                 )
             ),
         };
