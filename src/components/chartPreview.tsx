@@ -9,6 +9,8 @@ import {
     DonutChart,
 } from "@/components/charts";
 import { type GeneratedChartModel } from "@/lib/generateChart";
+import { Manrope } from "next/font/google";
+const manrope = Manrope({ subsets: ["latin"] });
 
 interface ChartPreviewModalProps {
     src?: string | null;
@@ -54,7 +56,7 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
                 centerLabel={chart.centerLabel}
                 width={640}
                 height={320}
-                className="w-full h-[380px]"
+                className="w-full h-95"
             />
         );
     }
