@@ -64,6 +64,7 @@ export default function Admin() {
     const [inviteSentEmail, setInviteSentEmail] = useState("");
     const [isResendOpen, setIsResendOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isNameValid, setIsNameValid] = useState(true);
 
     useEffect(() => {
         async function load() {
@@ -109,8 +110,8 @@ export default function Admin() {
                 (user) =>
                     user.name
                         .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+                        .includes(searchQuery.toLowerCase()) 
+                        || user.email.toLowerCase().includes(searchQuery.toLowerCase())
             ),
         [users, searchQuery]
     );
@@ -238,26 +239,34 @@ export default function Admin() {
                     </footer>
                 </div>
             </div>
-
+            
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
                     <InviteCard
                         onCancel={() => setIsInviteOpen(false)}
                         onSend={async ({ name, email }) => {
+                            const specialChars = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
                             console.log("Send invite", { name, email });
-                            const res = await fetch("/api/users/email/", {
+
+                            if (specialChars.test(name)) {
+                                setIsNameValid(false);
+                                return;
+                            } else {
+                                const res = await fetch("/api/users/email/", {
                                 method: "POST",
                                 body: JSON.stringify({ email }),
                                 headers: {
                                     "Content-Type": "application/json",
-                                },
-                            });
+                                    },
+                                });
 
-                            if (!res.ok) {
-                                setResendError(true);
-                                setIsInviteOpen(false);
-                                return;
-                            }
+                                if (!res.ok) {
+                                    setResendError(true);
+                                    setIsInviteOpen(false);
+                                    return;
+                                }
+
+                            };
 
                             setIsInviteOpen(false);
                             setInviteSentEmail(email);

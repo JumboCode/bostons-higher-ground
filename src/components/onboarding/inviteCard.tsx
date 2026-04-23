@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Send } from "lucide-react";
+import * as Icon from "feather-icons-react";
 import { InvitationSentCard, ModalOverlay } from "./notifCard";
 
 export default function InviteCard({
@@ -16,8 +17,19 @@ export default function InviteCard({
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [showSent, setShowSent] = useState(false);
+    const [isNameValid, setIsNameValid] = useState(true);
 
     const canSend = name.trim() !== "" && email.trim() !== "";
+
+    const specialChars = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+
+    useEffect(() => {
+        if (specialChars.test(name)) {
+            setIsNameValid(false);
+        } else {
+            setIsNameValid(true);
+        };
+    }, [name])
 
     return (
         <>
@@ -68,11 +80,18 @@ export default function InviteCard({
                             type="text"
                             placeholder="First Last"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                            onChange={(e) => {setName(e.target.value)}}
+                            className="h-[36px] w-[324px] rounded-[14px] border border-[#F3F3F5] bg-[#F3F3F5] px-3 text-[14px] placeholder:text-[#AAAAAA] focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 invalid:border-red-500" 
                             style={{ fontFamily: "Manrope" }}
                         />
                     </label>
+
+                    {!isNameValid && (
+                        <span className="flex items-center text-[#D9534F]">
+                                <Icon.AlertCircle className="w-4 h-4 mr-1 stroke-2" />
+                                Name is invalid.
+                        </span>
+                    )} 
 
                     <label className="block">
                         <span
@@ -112,7 +131,7 @@ export default function InviteCard({
                         </button>
                         <button
                             type="submit"
-                            disabled={!canSend}
+                            disabled={!canSend || !isNameValid}
                             className="inline-flex h-[36px] w-[156px] items-center justify-center gap-4 rounded-[14px] bg-[#E76C82] px-[9px] py-[8px] text-[14px] font-medium text-white hover:bg-[#d35f73] disabled:opacity-50"
                             style={{ fontFamily: "Manrope" }}
                         >
