@@ -245,14 +245,8 @@ export default function Admin() {
                     <InviteCard
                         onCancel={() => setIsInviteOpen(false)}
                         onSend={async ({ name, email }) => {
-                            const specialChars = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
                             console.log("Send invite", { name, email });
-
-                            if (specialChars.test(name)) {
-                                setIsNameValid(false);
-                                return;
-                            } else {
-                                const res = await fetch("/api/users/email/", {
+                            const res = await fetch("/api/users/email/", {
                                 method: "POST",
                                 body: JSON.stringify({ email }),
                                 headers: {
@@ -265,8 +259,6 @@ export default function Admin() {
                                     setIsInviteOpen(false);
                                     return;
                                 }
-
-                            };
 
                             setIsInviteOpen(false);
                             setInviteSentEmail(email);
