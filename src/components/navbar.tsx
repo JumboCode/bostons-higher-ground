@@ -41,6 +41,7 @@ export default function Navbar({ userName }: { userName: string }) {
     //for logout functionality
     const router = useRouter();
     const [hovered, setHovered] = useState("");
+    const [isSigningOut, setIsSigningOut] = useState(false);
 
     return (
         <nav
@@ -110,13 +111,20 @@ export default function Navbar({ userName }: { userName: string }) {
 
                     <DropdownMenuContent align="start">
                         <DropdownMenuItem
+                            disabled={isSigningOut}
                             onClick={async () => {
-                                await authClient.signOut();
-                                router.replace("/"); // redirect after logout
+                                if (isSigningOut) return;
+                                setIsSigningOut(true);
+                                try {
+                                    await authClient.signOut();
+                                    router.replace("/"); // redirect after logout
+                                } finally {
+                                    setIsSigningOut(false);
+                                }
                             }}
                             className="cursor-pointer"
                         >
-                            Logout
+                            {isSigningOut ? "Logging out..." : "Logout"}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
