@@ -27,7 +27,7 @@ Font.register({
 const styles = StyleSheet.create({
     pageContent: {
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
         justifyContent: "space-between",
     },
     logo: {
@@ -53,11 +53,13 @@ const styles = StyleSheet.create({
     },
     chartSection: {
         display: "flex",
-        flexDirection: "column",
-        rowGap: 16,
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        rowGap: 12,
     },
     chart: {
-        width: "100%",
+        width: "48%",
         marginTop: 12,
     },
     chartTitle: {
@@ -139,7 +141,7 @@ function ReportDoc({
                                       {charts.length > 0 ? (charts.map((chart, i) => (
                                           <View key={i} style={styles.chart} wrap={false}>
                                               <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
-                                              <View>{chart.node}</View>
+                                              <View style={{ aspectRatio: "1/1" }}>{chart.node}</View>
                                           </View>
                                       ))) : (
                                           <Text style={{ fontSize: 12, color: "#364152", }}>
