@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Manrope } from "next/font/google";
 const manrope = Manrope({ subsets: ["latin"] });
 
-import useFilters, { Timeframe } from "@/lib/filterStore";
+import useFilters from "@/lib/filterStore";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -86,11 +86,13 @@ export const LOCATION_LIST = [
 type CustomRangeProps = {
     dateRange: DateRange | undefined;
     setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
+    applyRange: () => void;
 };
 
 type FiscalYearProps = {
-    timeFilter: Timeframe | number;
-    setTimeFilter: React.Dispatch<React.SetStateAction<Timeframe | number>>;
+    fiscalYear: string;
+    setFiscalYearValue: React.Dispatch<React.SetStateAction<string>>;
+    applyFiscal: () => void;
 };
 
 export function LocationFilter() {
@@ -117,13 +119,13 @@ export function LocationFilter() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-max">
-                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
+                <button className="cursor-pointer bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
                     <span className={` text-[#555555] ${manrope.className}`}>
                         {label}
                     </span>
                     <ChevronDown
                         size={16}
-                        className="mt-px text-[#717182]"
+                        className="mt-[1px] text-[#717182]"
                     />
                 </button>
             </DropdownMenuTrigger>
@@ -140,7 +142,7 @@ export function LocationFilter() {
 
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <div
-                        className={`flex items-center gap-3 text-[#555555] ${manrope.className}`}
+                        className={`flex items-center cursor-pointer gap-3 text-[#555555] ${manrope.className}`}
                     >
                         <Checkbox
                             checked={allSelected}
@@ -193,13 +195,13 @@ export function SchoolFilter() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-max">
-                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
+                <button className="cursor-pointer bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
                     <span className={` text-[#555555] ${manrope.className}`}>
                         {label}
                     </span>
                     <ChevronDown
                         size={16}
-                        className="mt-px text-[#717182]"
+                        className="mt-[1px] text-[#717182]"
                     />
                 </button>
             </DropdownMenuTrigger>
@@ -216,7 +218,7 @@ export function SchoolFilter() {
 
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <div
-                        className={`flex items-center gap-3 text-[#555555] ${manrope.className}`}
+                        className={`flex items-center gap-3 cursor-pointer text-[#555555] ${manrope.className}`}
                     >
                         <Checkbox
                             checked={allSelected}
@@ -258,7 +260,7 @@ export function DateFilter() {
         setCustomRange,
         setFiscalYear,
     } = useFilters();
-    const [ timeFilter, setTimeFilter ] = useState<Timeframe | number>("allTime");
+
     const [open, setOpen] = useState(false);
     const [mode, setMode] = useState<"fiscal" | "custom">(
         timeframe === "custom" ? "custom" : "fiscal"
@@ -266,9 +268,13 @@ export function DateFilter() {
     const [localRange, setLocalRange] = useState<DateRange | undefined>(
         customRange
     );
+    const [localFiscalYear, setLocalFiscalYear] = useState<string>(
+        (fiscalYear ?? new Date().getFullYear()).toString()
+    );
 
     useEffect(() => {
         setLocalRange(customRange);
+        setLocalFiscalYear((fiscalYear ?? new Date().getFullYear()).toString());
         setMode(timeframe === "custom" ? "custom" : "fiscal");
     }, [customRange, fiscalYear, timeframe]);
 
@@ -291,21 +297,20 @@ export function DateFilter() {
     }, [timeframe, customRange, fiscalYear]);
 
     const handleQuickTimeframe = (value: typeof timeframe) => {
-        setMode("fiscal");
-        setTimeFilter(value);
+        setTimeframe(value);
         if (value !== "custom") {
             setCustomRange(undefined);
+        }
+        if (value !== "thisFY") {
+            setFiscalYear(undefined);
         }
     };
 
     const applyFiscal = () => {
-        setCustomRange(undefined);
-        if (typeof timeFilter === "number") {
-          setFiscalYear(Number(timeFilter));
-          setTimeframe("thisFY"); // placeholder
-        } else {
-          setTimeframe(timeFilter as Timeframe);
-          setFiscalYear(undefined);
+        const yr = Number(localFiscalYear);
+        if (!Number.isNaN(yr)) {
+            setFiscalYear(yr);
+            setTimeframe("thisFY");
         }
         setOpen(false);
     };
@@ -320,24 +325,24 @@ export function DateFilter() {
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <button
-                    className={`flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
+                    className={`cursor-pointer flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
                 >
-                    <Calendar className="w-4.5 h-4.5" />
-                    {formattedRange}
+                    <Calendar className="w-[18px] h-[18px]" />
+                    <span className="truncate">{formattedRange}</span>
                 </button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-                className="w-130 flex-row px-3.75 py-3.75 rounded-xl"
+                className="w-[calc(100vw-2rem)] sm:w-[520px] flex-row px-[15px] py-[15px] rounded-xl max-h-[80vh] overflow-y-auto"
                 align="start"
                 sideOffset={10}
             >
-                <div className="flex rounded-full bg-bhg-gray-100 w-full h-11.5 px-2 py-1.5">
+                <div className="flex rounded-full bg-[#EBEBEB] w-full h-[46px] px-[8px] py-[6px]">
                     <button
                         onClick={() => setMode("fiscal")}
                         className={`w-1/2 justify-center items-center rounded-full text-[15px] ${manrope.className} ${
                             mode === "fiscal"
-                                ? "bg-white text-bhg-pink shadow"
+                                ? "bg-white text-[#E76C82] shadow"
                                 : "text-[#555555]"
                         }`}
                     >
@@ -347,7 +352,7 @@ export function DateFilter() {
                         onClick={() => setMode("custom")}
                         className={`w-1/2 justify-center items-center rounded-full text-[15px] ${manrope.className} ${
                             mode === "custom"
-                                ? "bg-white text-bhg-pink shadow"
+                                ? "bg-white text-[#E76C82] shadow"
                                 : "text-[#555555]"
                         }`}
                     >
@@ -356,108 +361,100 @@ export function DateFilter() {
                 </div>
 
                 <div className="mt-4">
+                    <div className="flex mb-[14px] gap-2 h-[30px] cursor-pointer">
+                        <button
+                            onClick={() => handleQuickTimeframe("thisMonth")}
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                                timeframe === "thisMonth"
+                                    ? "border-[#E76C82] text-[#E76C82]"
+                                    : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                        >
+                            This Month
+                        </button>
+                        <button
+                            onClick={() => handleQuickTimeframe("lastMonth")}
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                                timeframe === "lastMonth"
+                                    ? "border-[#E76C82] text-[#E76C82]"
+                                    : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                        >
+                            Last Month
+                        </button>
+                        <button
+                            onClick={() => handleQuickTimeframe("thisFY")}
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                                timeframe === "thisFY"
+                                    ? "border-[#E76C82] text-[#E76C82]"
+                                    : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                        >
+                            This FY
+                        </button>
+                        <button
+                            onClick={() => handleQuickTimeframe("allTime")}
+                            className={`w-1/4 rounded-full cursor-pointer justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                                timeframe === "allTime"
+                                    ? "border-[#E76C82] text-[#E76C82]"
+                                    : "border-[#D9D9D9] text-[#555555]"
+                            }`}
+                        >
+                            All Time
+                        </button>
+                    </div>
+                    <hr className="w-full border-t-1 border-[#D9D9D9] mb-[10px]" />
+
                     {mode === "fiscal" ? (
-                        <>
-                            <div className="flex mb-3.5 gap-2 h-7.5">
-                                <button
-                                    onClick={() => handleQuickTimeframe("thisMonth")}
-                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                        timeFilter === "thisMonth"
-                                            ? "border-bhg-pink text-bhg-pink"
-                                            : "border-bhg-gray-200 text-[#555555]"
-                                    }`}
-                                >
-                                    This Month
-                                </button>
-                                <button
-                                    onClick={() => handleQuickTimeframe("lastMonth")}
-                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                        timeFilter === "lastMonth"
-                                            ? "border-bhg-pink text-bhg-pink"
-                                            : "border-bhg-gray-200 text-[#555555]"
-                                    }`}
-                                >
-                                    Last Month
-                                </button>
-                                <button
-                                    onClick={() => handleQuickTimeframe("thisFY")}
-                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                        timeFilter === "thisFY"
-                                            ? "border-bhg-pink text-bhg-pink"
-                                            : "border-bhg-gray-200 text-[#555555]"
-                                    }`}
-                                >
-                                    This FY
-                                </button>
-                                <button
-                                    onClick={() => handleQuickTimeframe("allTime")}
-                                    className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-1 ${manrope.className} ${
-                                        timeFilter === "allTime"
-                                            ? "border-bhg-pink text-bhg-pink"
-                                            : "border-bhg-gray-200 text-[#555555]"
-                                    }`}
-                                >
-                                    All Time
-                                </button>
-                            </div>
-                            <hr className="w-full border-t border-bhg-gray-200 mb-2.5" />
-                            <FiscalYearContent
-                                timeFilter={timeFilter}
-                                setTimeFilter={setTimeFilter}
-                            />
-                        </>
+                        <FiscalYearContent
+                            fiscalYear={localFiscalYear}
+                            setFiscalYearValue={setLocalFiscalYear}
+                            applyFiscal={applyFiscal}
+                        />
                     ) : (
                         <CustomRangeContent
                             dateRange={localRange}
                             setDateRange={setLocalRange}
+                            applyRange={applyCustom}
                         />
                     )}
                 </div>
-                {mode === "fiscal" 
-                    ? <button
-                          onClick={applyFiscal}
-                          className={`w-full rounded-full py-2 bg-bhg-pink text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
-                      >
-                          Apply Filter
-                      </button> 
-                    : <button
-                          onClick={applyCustom}
-                          className={`w-full rounded-full py-2 bg-bhg-pink text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
-                      >
-                          Apply Custom Range
-                      </button>
-            }
             </DropdownMenuContent>
         </DropdownMenu>
     );
 }
 
 export function FiscalYearContent({
-  timeFilter,
-  setTimeFilter,
+    fiscalYear,
+    setFiscalYearValue,
+    applyFiscal,
 }: FiscalYearProps) {
-    const currYear = (new Date).getFullYear()
-
     return (
         <div className="flex-row">
             <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
                 Select Fiscal Year
-                <div className="flex mt-2 mb-3.5 gap-2 h-7.5">
-                    {[4, 3, 2, 1].map((fy) => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 mt-[8px] mb-[14px] gap-2 min-h-[30px]">
+                    {(["2022", "2023", "2024", "2025"] as const).map((fy) => (
                         <button
-                            key={currYear - fy}
-                            onClick={() => setTimeFilter(currYear - fy)}
-                            className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] py-1.25 ${manrope.className} ${
-                                timeFilter === currYear - fy
-                                    ? "border-bhg-pink text-bhg-pink"
-                                    : "border-bhg-gray-200 text-[#555555]"
+                            key={fy}
+                            onClick={() => setFiscalYearValue(fy)}
+                            className={`cursor-pointer w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
+                                fiscalYear === fy
+                                    ? "border-[#E76C82] text-[#E76C82]"
+                                    : "border-[#D9D9D9] text-[#555555]"
                             }`}
                         >
-                            FY{currYear - fy}
+                            FY{fy}
                         </button>
                     ))}
                 </div>
             </div>
+            <button
+                onClick={applyFiscal}
+                className={`cursor-pointer w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+            >
+                Apply Filter
+            </button>
         </div>
     );
 }
@@ -465,7 +462,22 @@ export function FiscalYearContent({
 export function CustomRangeContent({
     dateRange,
     setDateRange,
+    applyRange,
 }: CustomRangeProps) {
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 768px)");
+        const update = () => setIsDesktop(mediaQuery.matches);
+
+        update();
+        mediaQuery.addEventListener("change", update);
+
+        return () => {
+            mediaQuery.removeEventListener("change", update);
+        };
+    }, []);
+
     return (
         <div className="w-full flex-row">
             <UiCalendar
@@ -473,19 +485,26 @@ export function CustomRangeContent({
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
-                className="rounded-lg border shadow-sm w-full mb-3.25"
+                numberOfMonths={isDesktop ? 2 : 1}
+                className="rounded-lg border shadow-sm w-full mb-[13px]"
             />
             {/* range confirmation */}
             <div
-                className={`flex w-full rounded-full mb-3.25 px-5 py-2 bg-bhg-mint-100 text-[#555555] border border-[#85CFCA4D] justify-start items-center ${manrope.className} gap-2`}
+                className={`flex w-full rounded-full mb-[13px] px-[20px] py-[8px] bg-[#E0F7F4] text-[#555555] border border-[#85CFCA4D] justify-start items-center ${manrope.className} gap-2`}
             >
-                <Calendar className="w-3.75 h-3.75" />
+                <Calendar className="w-[15px] h-[15px]" />
                 {dateRange?.from
                     ? dateRange.from.toLocaleDateString()
                     : ""} -{" "}
                 {dateRange?.to ? dateRange.to.toLocaleDateString() : ""}
             </div>
+            {/* apply range button */}
+            <button
+                onClick={applyRange}
+                className={`cursor-pointer w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+            >
+                Apply Custom Range
+            </button>
         </div>
     );
 }
@@ -494,28 +513,28 @@ export default function FilterBar() {
     const { clearAll } = useFilters();
 
     return (
-        <div className="flex flex-row items-center w-full h-full">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full h-full px-4 py-3 sm:px-0 sm:py-0">
             <div
-                className={`flex items-center ${manrope.className} text-[#4A5565]`}
+                className={`flex items-center w-full sm:w-auto ${manrope.className} text-[#4A5565]`}
             >
-                <Funnel className="ml-6.25 mr-2.5 w-5 h-5 text-[#6A7282]" />
+                <Funnel className="sm:ml-[25px] mr-[10px] w-[20px] h-[20px] text-[#6A7282]" />
                 Filters:
             </div>
             {/* The three actual filters */}
-            <div className="ml-4">
+            <div className="cursor-pointer ml-4">
                 <DateFilter />
             </div>
-            <div className="ml-4">
+            <div className="cursor-pointer ml-4">
                 <SchoolFilter />
             </div>
-            <div className="ml-4">
+            <div className="cursor-pointer ml-4">
                 <LocationFilter />
             </div>
 
             {/* Clear Button */}
             <button
                 onClick={clearAll}
-                className={`flex justify-center items-center ${manrope.className} bg-bhg-pink text-[#EBEDEF] rounded-2xl ml-auto h-7.5 px-5 py-5 mr-6.25`}
+                className={`cursor-pointer flex justify-center items-center ${manrope.className} bg-[#E76C82] text-[#EBEDEF] rounded-2xl ml-auto h-[30px] px-[20px] py-[20px] mr-[25px]`}
             >
                 Clear
             </button>

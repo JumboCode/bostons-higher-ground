@@ -177,7 +177,7 @@ export function DonutChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "h-[520px] w-full max-w-[900px]"}
+            className={className ?? "min-h-[520px] w-full max-w-[900px]"}
             role="img"
         />
     );

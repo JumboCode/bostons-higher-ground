@@ -1,17 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
 import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar"
 import { chartRegistry } from "@/lib/generateChart";
 import { useId } from "react";
+import { StoredChart } from "@/lib/generateChart";
 
 interface ChartProps {
     title: string;
     chartType: string;
     children: React.ReactNode;
+    reportCharts: StoredChart[];
     appliedFilters?: string; // human-readable display string
     filterState?: Partial<FilterState>; // raw filter state to persist
     onAddToReport?: () => Promise<void> | void;
@@ -21,11 +23,13 @@ export default function Chart({
     title,
     chartType,
     children,
+    reportCharts,
     appliedFilters,
     filterState,
     onAddToReport,
 }: ChartProps) {
     const id = useId(); 
+    const isAdding = useRef(false);
 
     const handleDownload = () => {
         //initializing element

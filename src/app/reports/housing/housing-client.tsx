@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Chart from "@/components/chart";
 import DashboardTop from "@/components/DashboardTop";
 import FamilyIntakeBarChart from "./barchart";
@@ -20,6 +20,7 @@ export type FilterSummary = Pick<
 >;
 
 import { filterRecords } from "@/lib/applyFilters";
+import { StoredChart } from "@/lib/generateChart";
 
 export type HousingRecord = {
     id: number;
@@ -38,6 +39,7 @@ export type HousingRecord = {
 };
 
 export default function HousingClient({ data }: { data: HousingRecord[] }) {
+    const [charts, setCharts] = useState<StoredChart[]>([]);
     const selectedLocations = useFilters((s) => s.selectedLocations);
     const selectedSchools = useFilters((s) => s.selectedSchools);
     const timeframe = useFilters((s) => s.timeframe);
@@ -71,6 +73,24 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
         customRange,
     };
 
+    useEffect(() => {
+        const fetchCharts = async () => {
+            try {
+                const res = await fetch("/api/reports/in-progress");
+                if (!res.ok) return;
+                const data = await res.json();
+                setCharts(data.charts || []);
+            } catch (err) {
+                console.error("Failed to fetch in-progress charts", err);
+            }
+        };
+
+        fetchCharts();
+
+        window.addEventListener("report-updated", fetchCharts);
+        return () => window.removeEventListener("report-updated", fetchCharts);
+    }, []);
+
     return (
         <div className="w-full">
             <DashboardTop
@@ -93,6 +113,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title = {formatTitle(filterState, "Family Intake")}
                     chartType="family-intake-bar"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -102,6 +123,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title = {formatTitle(filterState, "Families Housed")}
                     chartType="families-housed-line"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -111,6 +133,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title = {formatTitle(filterState, "Days to House Distribution")}
                     chartType="days-to-house-bar"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
@@ -120,6 +143,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 <Chart
                     title = {formatTitle(filterState, "Active vs Housed Families by Location")}
                     chartType="location-bar"
+                    reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >

@@ -116,7 +116,7 @@ export default function Admin() {
     );
 
     return (
-        <main className="flex min-h-screen bg-[#F5F5F5] overflow-x-hidden">
+        <main className="flex flex-col md:flex-row min-h-screen bg-[#F5F5F5] overflow-x-hidden">
             <NavBar userName="admin" />
             <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
@@ -127,7 +127,7 @@ export default function Admin() {
                     <h1 className="text-4xl font-extrabold text-[#555555] gap-8 font-poppins">
                         Admin Settings
                     </h1>
-                    <button className="px-2.5 py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2">
+                    <button className="cursor-pointer px-2.5 py-[5px] rounded-xl border border-[#E76C82] text-[#E76C82] flex items-center justify-center gap-2 cursor-pointer">
                         <RefreshCcw className="w-[17px] h-[17px] text-[#E76C82]" />
                         Update Data
                     </button>
@@ -164,7 +164,7 @@ export default function Admin() {
                         <button
                             onClick={() => setIsInviteOpen(true)}
                             className="pl-[15px] pr-[18px] py-2 h-10 rounded-[14px] bg-[#E76C82] hover:bg-[#d75c6f] flex items-center justify-center
-                            text-[#FFFFFF] font-manrope text-[15px] leading-5 gap-3"
+                            text-[#FFFFFF] font-manrope text-[15px] leading-5 gap-3 cursor-pointer"
                         >
                             <Send className="w-[18px] h-[18px]" />
                             Invite Staff
@@ -226,16 +226,6 @@ export default function Admin() {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Footer */}
-            <div className="absolute bottom-0 left-[250px] right-0">
-                <div className="h-[66px] border-t border-[#E5E7EB] flex items-center justify-center px-[32px] bg-white">
-                    <footer className="text-[12px] text-[#6A7282]">
-                        © 2025 Higher Ground Boston. For authorized staff use
-                        only.
-                    </footer>
                 </div>
             </div>
 

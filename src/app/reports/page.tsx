@@ -139,7 +139,7 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                 {charts.length > 0 && <ReportNameInput />}
             </div>
             <div className="w-full overflow-x-hidden">
-                <div className="flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pb-5 overflow-x-scroll">
+                <div className="flex flex-col md:flex-row md:space-x-3 space-y-3 md:space-y-0 w-full pt-2 pr-2 pb-5 overflow-x-scroll overflow-y-visible">
                     {charts.length > 0 ? (
                         charts.map((chart, idx) => (
                             <ReportChart
@@ -257,10 +257,14 @@ function ReportEntry({
     report: ArchivedReport;
     onDelete: (url: string) => void;
 }) {
+  console.log(report)
     const date = new Date(report.uploadedAt);
     // Derive a display name from the pathname (e.g. "October_2025_Housing_Report")
     const filename = report.pathname.split("/").pop() ?? "report.pdf";
-    const displayName = filename.replace(/\.pdf$/, "").replace(/[_-]/g, " ").replace(/ +/g, " ").trim();
+    const displayName = filename.replace(/\.pdf$/, "").replace(/[_-]/g, " ").replace(/ +/g, " ").trim().split(" ").slice(0, -1).join(" ");
+
+    console.log("filename:", filename)
+    console.log("displayName:", displayName)
 
     return (
         <div className="items-center flex px-4 py-4 border border-[rgba(0,0,0,0.1)] rounded-2xl mb-4 bg-white">
