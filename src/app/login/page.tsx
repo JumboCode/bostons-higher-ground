@@ -322,7 +322,7 @@ export default function LogIn() {
                         <button
                             type="submit"
                             // onClick={handleClick}
-                            className={`${manrope.className} mt-1 w-full text-center text-white transition`}
+                            className={`${manrope.className} mt-1 w-full text-center text-white transition cursor-pointer`}
                             style={{
                                 backgroundColor: "#E59AA8",
                                 height: "48px",
