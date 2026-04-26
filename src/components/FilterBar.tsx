@@ -24,7 +24,7 @@ import {
 
 import { Funnel, ChevronDown, Calendar } from "lucide-react";
 
-const SCHOOL_LIST = [
+export const SCHOOL_LIST = [
     "Brighton High School",
     "Burke High School",
     "Charlestown High School",
@@ -62,7 +62,7 @@ const SCHOOL_LIST = [
     "Lyon Pilot High School",
 ];
 
-const LOCATION_LIST = [
+export const LOCATION_LIST = [
     "Allston",
     "Back Bay",
     "Beacon Hill",
@@ -119,7 +119,7 @@ export function LocationFilter() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-max">
-                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
+                <button className="cursor-pointer bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
                     <span className={` text-[#555555] ${manrope.className}`}>
                         {label}
                     </span>
@@ -142,7 +142,7 @@ export function LocationFilter() {
 
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <div
-                        className={`flex items-center gap-3 text-[#555555] ${manrope.className}`}
+                        className={`flex items-center cursor-pointer gap-3 text-[#555555] ${manrope.className}`}
                     >
                         <Checkbox
                             checked={allSelected}
@@ -195,7 +195,7 @@ export function SchoolFilter() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-max">
-                <button className="bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
+                <button className="cursor-pointer bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
                     <span className={` text-[#555555] ${manrope.className}`}>
                         {label}
                     </span>
@@ -218,7 +218,7 @@ export function SchoolFilter() {
 
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <div
-                        className={`flex items-center gap-3 text-[#555555] ${manrope.className}`}
+                        className={`flex items-center gap-3 cursor-pointer text-[#555555] ${manrope.className}`}
                     >
                         <Checkbox
                             checked={allSelected}
@@ -325,15 +325,15 @@ export function DateFilter() {
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <button
-                    className={`flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
+                    className={`cursor-pointer flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
                 >
                     <Calendar className="w-[18px] h-[18px]" />
-                    {formattedRange}
+                    <span className="truncate">{formattedRange}</span>
                 </button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-                className="w-[520px] flex-row px-[15px] py-[15px] rounded-xl"
+                className="w-[calc(100vw-2rem)] sm:w-[520px] flex-row px-[15px] py-[15px] rounded-xl max-h-[80vh] overflow-y-auto"
                 align="start"
                 sideOffset={10}
             >
@@ -361,10 +361,10 @@ export function DateFilter() {
                 </div>
 
                 <div className="mt-4">
-                    <div className="flex mb-[14px] gap-2 h-[30px]">
+                    <div className="flex mb-[14px] gap-2 h-[30px] cursor-pointer">
                         <button
                             onClick={() => handleQuickTimeframe("thisMonth")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "thisMonth"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -374,7 +374,7 @@ export function DateFilter() {
                         </button>
                         <button
                             onClick={() => handleQuickTimeframe("lastMonth")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "lastMonth"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -384,7 +384,7 @@ export function DateFilter() {
                         </button>
                         <button
                             onClick={() => handleQuickTimeframe("thisFY")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "thisFY"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -394,7 +394,7 @@ export function DateFilter() {
                         </button>
                         <button
                             onClick={() => handleQuickTimeframe("allTime")}
-                            className={`w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`w-1/4 rounded-full cursor-pointer justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "allTime"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -433,12 +433,12 @@ export function FiscalYearContent({
         <div className="flex-row">
             <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
                 Select Fiscal Year
-                <div className="flex mt-[8px] mb-[14px] gap-2 h-[30px]">
+                <div className="grid grid-cols-2 sm:grid-cols-4 mt-[8px] mb-[14px] gap-2 min-h-[30px]">
                     {(["2022", "2023", "2024", "2025"] as const).map((fy) => (
                         <button
                             key={fy}
                             onClick={() => setFiscalYearValue(fy)}
-                            className={`w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
                                 fiscalYear === fy
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -451,7 +451,7 @@ export function FiscalYearContent({
             </div>
             <button
                 onClick={applyFiscal}
-                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+                className={`cursor-pointer w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
             >
                 Apply Filter
             </button>
@@ -464,6 +464,20 @@ export function CustomRangeContent({
     setDateRange,
     applyRange,
 }: CustomRangeProps) {
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 768px)");
+        const update = () => setIsDesktop(mediaQuery.matches);
+
+        update();
+        mediaQuery.addEventListener("change", update);
+
+        return () => {
+            mediaQuery.removeEventListener("change", update);
+        };
+    }, []);
+
     return (
         <div className="w-full flex-row">
             <UiCalendar
@@ -471,7 +485,7 @@ export function CustomRangeContent({
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
+                numberOfMonths={isDesktop ? 2 : 1}
                 className="rounded-lg border shadow-sm w-full mb-[13px]"
             />
             {/* range confirmation */}
@@ -487,7 +501,7 @@ export function CustomRangeContent({
             {/* apply range button */}
             <button
                 onClick={applyRange}
-                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+                className={`cursor-pointer w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
             >
                 Apply Custom Range
             </button>
@@ -499,28 +513,28 @@ export default function FilterBar() {
     const { clearAll } = useFilters();
 
     return (
-        <div className="flex flex-row items-center w-full h-full">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full h-full px-4 py-3 sm:px-0 sm:py-0">
             <div
-                className={`flex items-center ${manrope.className} text-[#4A5565]`}
+                className={`flex items-center w-full sm:w-auto ${manrope.className} text-[#4A5565]`}
             >
-                <Funnel className="ml-[25px] mr-[10px] w-[20px] h-[20px] text-[#6A7282]" />
+                <Funnel className="sm:ml-[25px] mr-[10px] w-[20px] h-[20px] text-[#6A7282]" />
                 Filters:
             </div>
             {/* The three actual filters */}
-            <div className="ml-4">
+            <div className="cursor-pointer ml-4">
                 <DateFilter />
             </div>
-            <div className="ml-4">
+            <div className="cursor-pointer ml-4">
                 <SchoolFilter />
             </div>
-            <div className="ml-4">
+            <div className="cursor-pointer ml-4">
                 <LocationFilter />
             </div>
 
             {/* Clear Button */}
             <button
                 onClick={clearAll}
-                className={`flex justify-center items-center ${manrope.className} bg-[#E76C82] text-[#EBEDEF] rounded-2xl ml-auto h-[30px] px-[20px] py-[20px] mr-[25px]`}
+                className={`cursor-pointer flex justify-center items-center ${manrope.className} bg-[#E76C82] text-[#EBEDEF] rounded-2xl ml-auto h-[30px] px-[20px] py-[20px] mr-[25px]`}
             >
                 Clear
             </button>

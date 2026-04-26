@@ -37,10 +37,6 @@ export default function OnboardingLayout({
       {children}
 
       <footer className="absolute bottom-0 w-full py-4">
-        <hr className="my-4 h-0.5 border-t-0 bg-neutral-200" />
-        <p className="text-center text-[#555555] font-extralight">
-          &copy; 2025 Boston Higher Ground. For authorized staff use only.
-        </p>
       </footer>
     </div>
   );

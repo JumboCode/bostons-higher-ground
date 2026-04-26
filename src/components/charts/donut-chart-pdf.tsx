@@ -6,6 +6,8 @@ import {
   Rect,
 } from "@react-pdf/renderer";
 import type { DonutDatum } from "./donut-chart";
+import { DEFAULT_COLORS } from "./chart-base";
+
 
 export type DonutChartPdfProps = {
   data: DonutDatum[];
@@ -14,15 +16,6 @@ export type DonutChartPdfProps = {
   colors?: string[];
   centerLabel?: string;
 };
-
-const DEFAULT_COLORS = [
-  "#2563EB",
-  "#10B981",
-  "#F59E0B",
-  "#EF4444",
-  "#8B5CF6",
-  "#EC4899",
-];
 
 const DEFAULT_FONT = "Helvetica";
 
