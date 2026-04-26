@@ -19,10 +19,11 @@ import type { FilterState } from "@/lib/filterStore";
 // Represents the shape stored in in_progress_reports.charts
 export type StoredChart = {
     title: string;
+    chartType: string;
     filters: string | null;
 };
 
-const chartRegistry = {
+export const chartRegistry = {
     "Family Intake Over Time": "family-intake-bar",
     "Families Housed Over Time": "families-housed-line",
     "Days to House Distribution": "days-to-house-bar",
@@ -400,19 +401,13 @@ function buildChartModel(
     }
 }
 
-function resolveChartKey(title: string): ChartKey | null {
-    const mapped = (chartRegistry as Record<string, ChartKey | undefined>)[
-        title
-    ];
-    return mapped ?? null;
-}
-
 import React from "react";
 
 export async function generateChartModel(
     stored: StoredChart
 ): Promise<GeneratedChartModel | null> {
-    const chartKey = resolveChartKey(stored.title);
+    const chartKey = stored.chartType as ChartKey;
+    console.log("chartKey:", chartKey);
     if (!chartKey) return null;
 
     const data = (await getAllData()) as HousingRecord[];

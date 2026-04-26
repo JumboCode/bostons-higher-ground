@@ -21,15 +21,25 @@ export function VerticalBarChartPdf({
     xLabel?: string;
     yLabel?: string;
 }) {
-    const margin = { top: 20, right: 20, bottom: 60, left: 50 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    const preliminaryMargin = { top: 20, right: 20, bottom: 100, left: 50 };
+    const preliminaryInnerWidth = width - preliminaryMargin.left - preliminaryMargin.right;
 
     const x = d3
         .scaleBand()
         .domain(data.map((d) => d.label))
-        .range([0, innerWidth])
+        .range([0, preliminaryInnerWidth])
         .padding(0.25);
+
+    const maxLabelChars = Math.max(Math.floor(x.bandwidth() / 3), 10); // min 10 chars
+
+    const margin = { top: 20, right: 20, bottom: 80, left: 50 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const longestTruncatedLabel = Math.max(...data.map((d) => truncateLabel(d.label, maxLabelChars).length));
+    const labelHeight = longestTruncatedLabel * 5; // ~5px per char at 12px font, rotated 45°
+
+    x.range([0, innerWidth]);
 
     const maxY = d3.max(data, (d) => d.value) ?? 0;
     const y = d3
@@ -89,15 +99,17 @@ export function VerticalBarChartPdf({
                 />
 
                 {data.map((d) => (
-                    <Text
+                    <G
                         key={`xlabel-${d.label}`}
-                        x={x(d.label)! + x.bandwidth() / 2}
-                        y={innerHeight + 15}
-                        style={{ fontSize: 12 }}
-                        textAnchor="middle"
+                        transform={`translate(${x(d.label)! + x.bandwidth() / 2}, ${innerHeight + 10}) rotate(-45)`}
                     >
-                        {truncateLabel(d.label, Math.floor(x.bandwidth() / 5.5))}
-                    </Text>
+                        <Text
+                            style={{ fontSize: 12 }}
+                            textAnchor="end"
+                        >
+                            {truncateLabel(d.label, maxLabelChars)}
+                        </Text>
+                    </G>
                 ))}
 
                 {yTicks.map((tick) => (
@@ -116,7 +128,7 @@ export function VerticalBarChartPdf({
                 {xLabel && (
                     <Text
                         x={innerWidth / 2}
-                        y={innerHeight + 40}
+                        y={innerHeight + labelHeight + 20}
                         style={{ fontSize: 14 }}
                         textAnchor="middle"
                     >

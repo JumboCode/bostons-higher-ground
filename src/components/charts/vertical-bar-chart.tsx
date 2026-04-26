@@ -41,19 +41,36 @@ export function VerticalBarChart({
 
         if (!data.length) return;
 
-        const targetHeight = height ?? 420;
+        const preliminaryInnerWidth = (width ?? svgEl.clientWidth) - (yLabel ? 65 : 55) - 10;
+
+        const x = d3
+            .scaleBand()
+            .domain(data.map((d) => d.label))
+            .range([0, preliminaryInnerWidth])
+            .padding(0.25);
+
+        const maxLabelChars = Math.max(Math.floor(x.bandwidth() / 6), 15);
+        const truncateLabel = (label: string) =>
+            label.length > maxLabelChars ? label.slice(0, maxLabelChars - 1) + "…" : label;
+
+        const longestTruncatedLabel = Math.max(...data.map((d) => truncateLabel(d.label).length));
+        const estimatedLabelHeight = Math.min(longestTruncatedLabel * 6, 50);
+
         const margin: Margin = {
             top: 10,
             right: 10,
-            bottom: xLabel ? 60 : 40,
+            bottom: (xLabel ? 60 : 40) + estimatedLabelHeight,
             left: yLabel ? 65 : 55,
         };
+
+        const targetHeight = height ?? 420;
         const {
             width: innerWidth,
             height: innerHeight,
             outerWidth,
             outerHeight,
         } = computeInnerDimensions(svgEl, width, targetHeight, margin);
+        x.range([0, innerWidth]);
 
         const chart = svg
             .attr("width", outerWidth)
@@ -61,12 +78,6 @@ export function VerticalBarChart({
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        const x = d3
-            .scaleBand()
-            .domain(data.map((d) => d.label))
-            .range([0, innerWidth])
-            .padding(0.25);
-        
         const maxY = d3.max(data, (d) => d.value) ?? 0; // setting 0 to be the min, not accepting negative values
         const y = d3
             .scaleLinear()
@@ -87,7 +98,6 @@ export function VerticalBarChart({
             .attr("stroke-dasharray", "4 4")
             .attr("stroke-width", 1);
         yGrid.select("line:last-of-type").remove();
-        
 
         const xGrid = chart
             .append("g")
@@ -124,12 +134,14 @@ export function VerticalBarChart({
         const xAxis = chart
             .append("g")
             .attr("transform", `translate(0, ${innerHeight})`)
-            .call(d3.axisBottom(x));
+            .call(d3.axisBottom(x).tickFormat((d) => truncateLabel(d)));
         xAxis
             .selectAll("text")
             .style("font-size", "12px")
             .style("font-family", DEFAULT_FONT)
-            .style("fill", DEFAULT_TEXT);
+            .style("fill", DEFAULT_TEXT)
+            .style("text-anchor", "end")
+            .attr("transform", "rotate(-45)");
         xAxis.select(".domain").attr("stroke", "black").attr("stroke-width", 1);
 
         const yAxis = chart.append("g").call(d3.axisLeft(y));
@@ -165,7 +177,7 @@ export function VerticalBarChart({
                 .append("text")
                 .attr(
                     "transform",
-                    `translate(${innerWidth / 2}, ${innerHeight + (xLabel ? 48 : 32)})`
+                    `translate(${innerWidth / 2}, ${innerHeight + (estimatedLabelHeight == 60 ? 0 : estimatedLabelHeight) + (xLabel ? 48 : 32)})`
                 )
                 .style("text-anchor", "middle")
                 .style("font-family", DEFAULT_FONT)
@@ -202,7 +214,7 @@ export function VerticalBarChart({
     return (
         <svg
             ref={svgRef}
-            className={className ?? "w-full max-w-[900px] h-[420px]"}
+            className={className ?? "w-full max-w-[900px]"}
             role="img"
         />
     );

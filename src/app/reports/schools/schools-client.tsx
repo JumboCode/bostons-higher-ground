@@ -10,6 +10,7 @@ import HousingSourceChart from "./housingsource";
 import StudentsByCityChart from "./studentsbycity";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
+import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 import { StoredChart } from "@/lib/generateChart";
 
 export type SchoolRecord = {
@@ -112,7 +113,8 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
             </div>
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
-                    title="Partner Schools & Homeless Student Counts"
+                    title = {formatTitle(filterState, "Partner Schools & Homeless Student Counts")}
+                    chartType="partner-schools-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                 >
@@ -121,7 +123,8 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     </div>
                 </Chart>
                 <Chart
-                    title="Schools by City"
+                    title = {formatTitle(filterState, "Schools by City")}
+                    chartType="schools-by-city-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                 >
@@ -130,7 +133,8 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     </div>
                 </Chart>
                 <Chart
-                    title="Housing Sources"
+                    title = {formatTitle(filterState, "Housing Sources")}
+                    chartType="housing-sources-donut"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                 >
@@ -139,7 +143,8 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     </div>
                 </Chart>
                 <Chart
-                    title="Students by City"
+                    title = {formatTitle(filterState, "Students by City")}
+                    chartType="students-by-city-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                 >
@@ -150,26 +155,4 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
             </div>
         </>
     );
-}
-
-function formattedFilters(filters: FilterSummary) {
-    const parts: string[] = [];
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        parts.push(
-            `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-        );
-    } else {
-        parts.push(filters.timeframe);
-    }
-    if (filters.selectedSchools.length) {
-        parts.push(`${filters.selectedSchools.length} schools`);
-    }
-    if (filters.selectedLocations.length) {
-        parts.push(`${filters.selectedLocations.length} locations`);
-    }
-    return parts.join(" • ");
 }

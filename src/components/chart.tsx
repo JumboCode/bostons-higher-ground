@@ -4,11 +4,14 @@ import React, { useRef } from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
+import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar"
+import { chartRegistry } from "@/lib/generateChart";
 import { useId } from "react";
 import { StoredChart } from "@/lib/generateChart";
 
 interface ChartProps {
     title: string;
+    chartType: string;
     children: React.ReactNode;
     reportCharts: StoredChart[];
     appliedFilters?: string; // human-readable display string
@@ -18,6 +21,7 @@ interface ChartProps {
 
 export default function Chart({
     title,
+    chartType,
     children,
     reportCharts,
     appliedFilters,
@@ -50,33 +54,29 @@ export default function Chart({
             });
     };
 
-    const handleAdd = async () => {
-        if (isAdding.current || reportCharts.find(c => c.title == title)) return;
-        isAdding.current = true;
-        try {
-            if (onAddToReport) {
-                await onAddToReport();
-            } else {
-                await fetch("/api/reports/in-progress", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title,
-                        filters: filterState
-                            ? JSON.stringify(filterState)
-                            : (appliedFilters ?? null),
-                    }),
-                });
-                window.dispatchEvent(new Event("report-updated"));
-            }
-        } catch (error) {
-            console.error("Failed to add chart to report", error);
-            isAdding.current = false;
-        }
-    };
+    const handleAdd = onAddToReport
+        ? () => onAddToReport()
+        : async () => {
+              try {
+                  await fetch("/api/reports/in-progress", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                          title,
+                          chartType,
+                          filters: filterState
+                              ? JSON.stringify(filterState)
+                              : (appliedFilters ?? null),
+                      }),
+                  });
+                  window.dispatchEvent(new Event("report-updated"));
+              } catch (error) {
+                  console.error("Failed to add chart to report", error);
+              }
+          };
 
     return (
-        <div className="relative w-full max-w-[900px] overflow-hidden rounded-3xl bg-white shadow-sm">
+        <div className="relative w-full max-w-225 overflow-hidden rounded-3xl bg-white shadow-sm">
             {/* Chart */}
             <div
                 id={id}
@@ -89,12 +89,28 @@ export default function Chart({
                 {/* Chart Content */}
                 <div className="w-full min-w-0">{children}</div>
 
-                {/* Applied Filters */}
-                {appliedFilters && (
+                {filterState && (
                     <div className="pt-1 text-sm text-gray-600">
-                        <span className="font-medium">Applied filters: </span>
-                        <span>{appliedFilters}</span>
+                        {(filterState.selectedLocations || []).length > 0 &&  (filterState.selectedLocations || []).length < LOCATION_LIST.length && (
+                            <div>
+                                <span className="font-medium">Cities: </span>
+                                <span>{(filterState.selectedLocations || []).join(", ")}</span>
+                                
+                            </div>
+                        )}
+
+                        {(filterState.selectedSchools || []).length > 0 && (filterState.selectedSchools || []).length < SCHOOL_LIST.length && (
+                            <div>
+                                <span className="font-medium">Schools: </span>
+                                <span>{(filterState.selectedSchools || []).join(", ")}</span>
+                                
+                            </div>
+                        )}
+
+                    
+                    
                     </div>
+
                 )}
             </div>
 

@@ -9,11 +9,12 @@ import DaysHousedBarChart from "../housing/barchart2";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
 import { type HousingRecord } from "../housing/housing-client";
+import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 import { StoredChart } from "@/lib/generateChart";
 
 export type OverviewRecord = HousingRecord;
 
-type FilterSummary = Pick<
+export type FilterSummary = Pick<
     FilterState,
     | "selectedLocations"
     | "selectedSchools"
@@ -95,7 +96,8 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             />
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
-                    title="Family Intake Over Time"
+                    title = {formatTitle(filterState, "Family Intake")}
+                    chartType="family-intake-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
@@ -104,7 +106,8 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title="Families Housed Over Time"
+                    title={formatTitle(filterState, "Family Housed")}
+                    chartType="families-housed-line"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
@@ -113,7 +116,8 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title="Days to House Distribution"
+                    title={formatTitle(filterState, "Days to House Distribution")}
+                    chartType="days-to-house-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
@@ -123,26 +127,4 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             </div>
         </div>
     );
-}
-
-function formattedFilters(filters: FilterSummary) {
-    const parts: string[] = [];
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        parts.push(
-            `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-        );
-    } else {
-        parts.push(filters.timeframe);
-    }
-    if (filters.selectedSchools.length) {
-        parts.push(`${filters.selectedSchools.length} schools`);
-    }
-    if (filters.selectedLocations.length) {
-        parts.push(`${filters.selectedLocations.length} locations`);
-    }
-    return parts.join(" • ");
 }

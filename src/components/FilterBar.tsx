@@ -24,7 +24,7 @@ import {
 
 import { Funnel, ChevronDown, Calendar } from "lucide-react";
 
-const SCHOOL_LIST = [
+export const SCHOOL_LIST = [
     "Brighton High School",
     "Burke High School",
     "Charlestown High School",
@@ -62,7 +62,7 @@ const SCHOOL_LIST = [
     "Lyon Pilot High School",
 ];
 
-const LOCATION_LIST = [
+export const LOCATION_LIST = [
     "Allston",
     "Back Bay",
     "Beacon Hill",
