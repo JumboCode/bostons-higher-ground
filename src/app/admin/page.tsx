@@ -116,9 +116,9 @@ export default function Admin() {
     );
 
     return (
-        <main className="flex flex-col md:flex-row min-h-screen bg-[#F5F5F5] overflow-x-hidden">
+        <main className="flex flex-col md:flex-row min-h-screen max-h-screen bg-[#F5F5F5] overflow-x-hidden">
             <NavBar userName="admin" />
-            <div className="relative flex-1 overflow-x-hidden">
+            <div className="relative flex-1 overflow-x-hidden h-full">
                 {/*Top bar*/}
                 {/* <div className="w-full h-16 border-b border-[#E5E7EB] bg-[#ffffff]"></div> */}
 
@@ -142,7 +142,7 @@ export default function Admin() {
                 </div>
 
                 {/*Table*/}
-                <div className="mt-[25px] mx-[45px] h-[538px] border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col min-w-[800px]">
+                <div className="mt-[25px] mx-[45px] h-full overflow-scroll border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col min-w-[800px]">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-[45px] h-[45px] rounded-2xl bg-[#F0E7ED] flex items-center justify-center">
