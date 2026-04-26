@@ -143,7 +143,7 @@ export default function Navbar({ userName }: { userName: string }) {
                             onClick={handleLogout}
                             className="cursor-pointer"
                         >
-                            {isSigningOut ? "Logging out..." : "Logout"}
+                        Sign Out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
