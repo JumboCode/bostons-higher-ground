@@ -9,6 +9,8 @@ import {
     DonutChart,
 } from "@/components/charts";
 import { type GeneratedChartModel } from "@/lib/generateChart";
+import { Manrope } from "next/font/google";
+const manrope = Manrope({ subsets: ["latin"] });
 
 interface ChartPreviewModalProps {
     src?: string | null;
@@ -24,9 +26,9 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
                 data={chart.data}
                 xLabel={chart.xLabel}
                 yLabel={chart.yLabel}
-                width={640}
-                height={320}
-                className="w-full h-[320px]"
+                width={700}
+                height={400}
+                className="w-full"
             />
         );
     }
@@ -40,9 +42,9 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
                 data={chart.data}
                 xLabel={chart.xLabel}
                 yLabel={chart.yLabel}
-                width={640}
-                height={320}
-                className="w-full h-[320px]"
+                width={600}
+                height={380}
+                className="w-full"
             />
         );
     }
@@ -52,9 +54,10 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
             <DonutChart
                 data={chart.data}
                 centerLabel={chart.centerLabel}
-                width={640}
+                width={600}
                 height={320}
-                className="w-full h-[380px]"
+                
+                className="w-full h-95"
             />
         );
     }
@@ -64,8 +67,8 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
             data={chart.data}
             xLabel={chart.xLabel}
             yLabel={chart.yLabel}
-            width={640}
-            height={320}
+            width={700}
+            height={550}
             className="w-full"
         />
     );
@@ -101,7 +104,7 @@ export default function ChartPreviewModal({
                 </div>
                 <h2 className="text-lg font-semibold mb-4 mx-5">{title}</h2>
                 {chart ? (
-                    <div className="w-full rounded-lg border border-gray-200 bg-white p-5">
+                    <div className="w-full h-[520px] rounded-lg border border-gray-200 bg-white p-5 pt-5">
                         <PreviewChart chart={chart} />
                     </div>
                 ) : (
@@ -109,7 +112,7 @@ export default function ChartPreviewModal({
                         <img
                             src={src}
                             alt="Chart Preview"
-                            className="w-full rounded-lg aspect-[3/2] object-contain"
+                            className="w-full rounded-lg object-contain"
                         />
                     )
                 )}

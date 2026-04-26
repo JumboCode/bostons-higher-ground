@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { d3, DEFAULT_COLORS, DEFAULT_FONT } from "./chart-base";
-
 export type DonutDatum = { label: string; value: number; color?: string };
+import { Manrope } from "next/font/google";
+
+const manrope = Manrope({ subsets: ["latin"] });
 
 export type DonutChartProps = {
     data: DonutDatum[];
@@ -35,7 +37,7 @@ export function DonutChart({
         const contentHeight = height ?? (svgEl.clientHeight || 420);
         const maxLegendLabelLength =
             d3.max(data, (entry) => Math.min(entry.label.length, 18)) ?? 0;
-        const legendItemWidth = Math.max(120, maxLegendLabelLength * 7 + 36);
+        const legendItemWidth = Math.max(120, maxLegendLabelLength * 10 + 36);
         const legendColumns = Math.max(
             1,
             Math.min(
@@ -95,7 +97,7 @@ export function DonutChart({
                 return `translate(${pos[0]}, ${pos[1]})`;
             })
             .attr("text-anchor", "middle")
-            .style("font-family", DEFAULT_FONT)
+            .style("font-family", manrope.style.fontFamily)
             .style("font-size", "14px")
             .style("font-weight", "600")
             .style("fill", "white")
@@ -109,7 +111,7 @@ export function DonutChart({
             .append("text")
             .attr("text-anchor", "middle")
             .attr("dy", "-0.5em")
-            .style("font-family", "Poppins")
+            .style("font-family", manrope.style.fontFamily)
             .style("font-size", "28px")
             .style("font-weight", "700")
             .style("fill", "#374151")
@@ -119,7 +121,7 @@ export function DonutChart({
             .append("text")
             .attr("text-anchor", "middle")
             .attr("dy", "1.2em")
-            .style("font-family", DEFAULT_FONT)
+            .style("font-family", manrope.style.fontFamily)
             .style("font-size", "14px")
             .style("fill", "#767676")
             .text(centerLabel);

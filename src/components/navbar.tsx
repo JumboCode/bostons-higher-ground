@@ -10,7 +10,7 @@ import {
     Menu,
     X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -49,6 +49,29 @@ export default function Navbar({ userName }: { userName: string }) {
         router.replace("/");
     };
 
+    //checking if the user is an admin
+    const [permissions, setPermissions] = useState<string | null>(null);
+    useEffect(() => {
+        async function loadPermissions() {
+            try {
+                const res = await fetch("/api/users/permissions");
+                if (!res.ok) return;
+
+                const data = await res.json();
+                setPermissions(data?.permissions ?? null);
+            } catch (e) {
+                console.error("Failed to load permissions", e);
+            }
+        }
+
+        loadPermissions();
+    }, []);
+
+    const isAdmin = permissions?.toLowerCase() === "admin";
+
+    const visibleTabs = TAB_CONFIG.filter(
+        (tab) => tab.name !== "Admin" || isAdmin
+    );
     return (
         <nav
             className={`w-full md:w-[250px] md:flex-shrink-0 md:h-screen md:sticky md:top-0 md:left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
@@ -83,7 +106,7 @@ export default function Navbar({ userName }: { userName: string }) {
                     isMobileMenuOpen ? "flex" : "hidden"
                 } md:flex flex-col gap-3 md:gap-4 p-4 md:p-5`}
             >
-                {TAB_CONFIG.map(({ name, Icon, href }) => {
+                {visibleTabs.map(({ name, Icon, href }) => {
                     const isSelected =
                         pathname === href ||
                         (href !== "/reports" &&

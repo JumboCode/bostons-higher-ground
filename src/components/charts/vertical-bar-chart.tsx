@@ -59,7 +59,7 @@ export function VerticalBarChart({
         const margin: Margin = {
             top: 10,
             right: 10,
-            bottom: (xLabel ? 60 : 40) + estimatedLabelHeight,
+            bottom: xLabel ? 100 : 50,
             left: yLabel ? 65 : 55,
         };
 

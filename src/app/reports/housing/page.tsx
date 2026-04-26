@@ -20,10 +20,13 @@ const final_Data = filtered_Data.map((d) => ({
 export default function Housing() {
     return (
         <div>
-            <div className="sticky top-0 min-h-10 bg-white flex justify-between py-3 drop-shadow-sm z-50">
+            <div className="fixed top-0 left-62.5 w-full bg-white min-h-10 flex justify-between py-3 drop-shadow-sm z-50">
                         <FilterBar />
                         {/* {userName || "John Doe"} */}
             </div>
-            <HousingClient data={final_Data}/>
+            <div className="pt-14">
+                <HousingClient data={final_Data}/>
+            </div>
+            
         </div> );
 }

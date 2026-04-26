@@ -8,11 +8,14 @@ const data = await getAllData();
 export default function Schools() {
     return (
         <div>
-            <div className="sticky top-0 min-h-[40px] bg-white top-0 flex justify-between py-3 drop-shadow-sm z-50">
+            <div className="fixed top-0 left-62.5 w-full bg-white min-h-10 flex justify-between py-3 drop-shadow-sm z-50">
                         <FilterBar />
                         {/* {userName || "John Doe"} */}
             </div>
-            <SchoolsClient data={data} />
+            <div className="pt-14">
+                <SchoolsClient data={data} />
+            </div>
+            
         </div>
     
     );
