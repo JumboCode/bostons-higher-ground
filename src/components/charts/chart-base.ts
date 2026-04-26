@@ -10,9 +10,11 @@ export type Margin = {
 export const DEFAULT_COLORS = [
     "#F4A6B0",
     "#20B2AA",
-    "#3B82F6",
-    "#8B5CF6",
-    "#F59E0B",
+    "#CfA2B9",
+    "#82A3E1",
+    "#9ED0D1",
+    "#CfA2b9",
+    "#82c5e5",
 ];
 export const DEFAULT_GRID = "#E5E7EB";
 export const DEFAULT_TEXT = "#6B6B6B";

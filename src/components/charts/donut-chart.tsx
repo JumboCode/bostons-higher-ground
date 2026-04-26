@@ -10,7 +10,6 @@ export type DonutChartProps = {
     width?: number;
     height?: number;
     colors?: string[];
-    centerLabel?: string;
     className?: string;
 };
 
@@ -19,7 +18,6 @@ export function DonutChart({
     width,
     height,
     colors = DEFAULT_COLORS,
-    centerLabel = "Total",
     className,
 }: DonutChartProps) {
     const svgRef = useRef<SVGSVGElement | null>(null);
@@ -35,7 +33,7 @@ export function DonutChart({
         const contentHeight = height ?? (svgEl.clientHeight || 420);
         const maxLegendLabelLength =
             d3.max(data, (entry) => Math.min(entry.label.length, 18)) ?? 0;
-        const legendItemWidth = Math.max(120, maxLegendLabelLength * 7 + 36);
+        const legendItemWidth = Math.max(140, maxLegendLabelLength * 8 + 40);
         const legendColumns = Math.max(
             1,
             Math.min(
@@ -50,7 +48,7 @@ export function DonutChart({
         const outerHeight = contentHeight + legendSpace;
         const margin = 40;
         const radius = Math.min(outerWidth, contentHeight) / 2 - margin;
-        const innerRadius = radius * 0.6;
+        const innerRadius = 0;
 
         const chart = svg
             .attr("width", outerWidth)
@@ -89,40 +87,50 @@ export function DonutChart({
             .attr("stroke", "white")
             .attr("stroke-width", 2);
 
-        arcs.append("text")
+        // Replace the labelGroup block with this:
+
+        const labelArc = d3
+            .arc<d3.PieArcDatum<DonutDatum>>()
+            .innerRadius(radius * 0.58) // push labels toward the outer half
+            .outerRadius(radius * 0.58); // same value = labels sit on this ring
+
+        const labelGroup = arcs
+            .append("text")
             .attr("transform", (d) => {
-                const pos = arc.centroid(d);
+                const pos = labelArc.centroid(d);
                 return `translate(${pos[0]}, ${pos[1]})`;
             })
             .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle") // vertical centering
             .style("font-family", DEFAULT_FONT)
-            .style("font-size", "14px")
-            .style("font-weight", "600")
+            .style("font-size", "15px")
+            .style("font-weight", "500")
             .style("fill", "white")
-            .text((d) => {
-                const pct = total === 0 ? 0 : (d.data.value / total) * 100;
-                return pct >= 5 ? `${Math.round(pct)}%` : "";
+            // Hide labels on slices too small to fit text
+            .style("display", (d) => {
+                const sliceAngle = d.endAngle - d.startAngle;
+                return sliceAngle < 0.3 ? "none" : "inline";
             });
 
-        const centerText = chart.append("g");
-        centerText
-            .append("text")
-            .attr("text-anchor", "middle")
-            .attr("dy", "-0.5em")
-            .style("font-family", "Poppins")
-            .style("font-size", "28px")
-            .style("font-weight", "700")
-            .style("fill", "#374151")
-            .text(total);
+        labelGroup
+            .append("tspan")
+            .attr("x", 0)
+            .attr("dy", "-0.1em")
+            .text((d) => {
+                const label = d.data.label;
+                return label.length > 15
+                    ? `${label.substring(0, 12)}...`
+                    : label;
+            });
 
-        centerText
-            .append("text")
-            .attr("text-anchor", "middle")
+        labelGroup
+            .append("tspan")
+            .attr("x", 0)
             .attr("dy", "1.2em")
-            .style("font-family", DEFAULT_FONT)
-            .style("font-size", "14px")
-            .style("fill", "#767676")
-            .text(centerLabel);
+            .text((d) => {
+                const pct = total === 0 ? 0 : (d.data.value / total) * 100;
+                return `${Math.round(pct)}%`;
+            });
 
         const legend = svg
             .append("g")
@@ -159,10 +167,8 @@ export function DonutChart({
             .style("font-family", DEFAULT_FONT)
             .style("font-size", "11px")
             .style("fill", "#4A5565")
-            .text((d) =>
-                d.label.length > 15 ? `${d.label.substring(0, 15)}...` : d.label
-            );
-    }, [data, width, height, colors, centerLabel]);
+            .text((d) => d.label);
+    }, [data, width, height, colors]);
 
     useEffect(() => {
         render();

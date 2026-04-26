@@ -15,6 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
 //logout functionality
 import {
     DropdownMenu,
@@ -30,7 +31,7 @@ const LIGHT_GRAY = "bg-[#414141]";
 const TAB_CONFIG = [
     { name: "Overview", Icon: LayoutDashboard, href: "/reports/overview" },
     { name: "Housing", Icon: House, href: "/reports/housing" },
-    // { name: "Education", Icon: GraduationCap, href: "/reports/education" },
+    { name: "Education", Icon: GraduationCap, href: "/reports/education" },
     { name: "Schools", Icon: School, href: "/reports/schools" },
     { name: "Reports", Icon: FileText, href: "/reports" },
     { name: "Admin", Icon: Settings, href: "/admin" },
@@ -117,11 +118,15 @@ export default function Navbar({ userName }: { userName: string }) {
                 })}
             </ul>
 
-            {/* <button onClick={async () => {
-                await authClient.signOut();
-                redirect("/");
-            }}
-            className="cursor-pointer underline">{userName}</button> */}
+            <button
+                onClick={async () => {
+                    await authClient.signOut();
+                    redirect("/");
+                }}
+                className="cursor-pointer underline"
+            >
+                {userName}
+            </button>
 
             {/* This is the bottom left button */}
             <div

@@ -1,5 +1,6 @@
 import { filterRecords, type FilterableRecord } from "@/lib/applyFilters";
 import { getAllData } from "@/lib/getAllData";
+import { getEducationData, type EducationRecord } from "@/lib/getEducationData";
 import {
     LineChart,
     LineChartPdf,
@@ -31,6 +32,9 @@ const chartRegistry = {
     "Schools by City": "schools-by-city-bar",
     "Housing Sources": "housing-sources-donut",
     "Students by City": "students-by-city-bar",
+    "Grade Distribution": "grade-distribution-bar",
+    "Students by Subject": "students-by-subject-donut",
+    "Average Grade by School": "average-grade-by-school-bar",
 } as const;
 
 type ChartKey = (typeof chartRegistry)[keyof typeof chartRegistry];
@@ -95,6 +99,22 @@ export type GeneratedChartModel =
           chartKey: "housing-sources-donut";
           data: DonutDatum[];
           centerLabel: "Total Housed";
+      }
+    | {
+          chartKey: "grade-distribution-bar";
+          data: VerticalBarDatum[];
+          xLabel: "Grade Range";
+          yLabel: "Students";
+      }
+    | {
+          chartKey: "students-by-subject-donut";
+          data: DonutDatum[];
+      }
+    | {
+          chartKey: "average-grade-by-school-bar";
+          data: VerticalBarDatum[];
+          xLabel: "School";
+          yLabel: "Average Grade";
       };
 
 // Parse a filters string back into a filter state subset
@@ -323,10 +343,73 @@ function housingSourcesSeries(records: HousingRecord[]): DonutDatum[] {
         .sort((a, b) => b.value - a.value);
 }
 
-function getFilteredRecords(
-    data: HousingRecord[],
+function buildGradeDistributionSeries(
+    records: EducationRecord[]
+): VerticalBarDatum[] {
+    const bins = Array.from({ length: 5 }, (_, index) => ({
+        label: `${index}`,
+        value: 0,
+    }));
+
+    records.forEach((record) => {
+        if (typeof record.grade !== "number" || Number.isNaN(record.grade)) {
+            return;
+        }
+
+        let bucket = Math.floor(record.grade);
+        if (bucket < 0) bucket = 0;
+        if (bucket > 4) bucket = 4;
+        bins[bucket].value += 1;
+    });
+
+    return bins;
+}
+
+function buildSubjectDistributionSeries(
+    records: EducationRecord[]
+): DonutDatum[] {
+    const subjectMap = new Map<string, number>();
+
+    records.forEach((record) => {
+        const subject = record.courseSubject?.trim() || "Unknown";
+        subjectMap.set(subject, (subjectMap.get(subject) ?? 0) + 1);
+    });
+
+    return Array.from(subjectMap.entries())
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+}
+
+function buildAverageGradeBySchoolSeries(
+    records: EducationRecord[]
+): VerticalBarDatum[] {
+    const schoolMap = new Map<string, { total: number; count: number }>();
+
+    records.forEach((record) => {
+        if (typeof record.grade !== "number" || Number.isNaN(record.grade)) {
+            return;
+        }
+
+        const school = record.school?.trim() || "Unknown";
+        const summary = schoolMap.get(school) ?? { total: 0, count: 0 };
+        summary.total += record.grade;
+        summary.count += 1;
+        schoolMap.set(school, summary);
+    });
+
+    return Array.from(schoolMap.entries())
+        .map(([label, summary]) => ({
+            label,
+            value: summary.count > 0 ? summary.total / summary.count : 0,
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 12);
+}
+
+function getFilteredRecords<T extends FilterableRecord>(
+    data: T[],
     stored: StoredChart
-): HousingRecord[] {
+): T[] {
     const filters = parseFilters(stored.filters);
     return filterRecords(data, {
         selectedLocations: filters.selectedLocations ?? [],
@@ -334,68 +417,93 @@ function getFilteredRecords(
         timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
         fiscalYear: filters.fiscalYear,
         customRange: filters.customRange,
-    }) as HousingRecord[];
+    });
 }
 
 function buildChartModel(
     chartKey: ChartKey,
-    records: HousingRecord[]
+    records: Array<HousingRecord | EducationRecord>
 ): GeneratedChartModel {
     switch (chartKey) {
         case "family-intake-bar":
             return {
                 chartKey,
-                data: familyIntakeSeries(records),
+                data: familyIntakeSeries(records as HousingRecord[]),
                 xLabel: "Month",
                 yLabel: "Families",
             };
         case "families-housed-line":
             return {
                 chartKey,
-                data: familiesHousedSeries(records),
+                data: familiesHousedSeries(records as HousingRecord[]),
                 xLabel: "Month",
                 yLabel: "Families Housed",
             };
         case "days-to-house-bar":
             return {
                 chartKey,
-                data: daysToHouseSeries(records),
+                data: daysToHouseSeries(records as HousingRecord[]),
                 xLabel: "School",
                 yLabel: "Avg. days to house",
             };
         case "location-bar":
             return {
                 chartKey,
-                data: locationSeries(records),
+                data: locationSeries(records as HousingRecord[]),
                 xLabel: "# of Families",
                 yLabel: "Location",
             };
         case "partner-schools-bar":
             return {
                 chartKey,
-                data: partnerSchoolsSeries(records),
+                data: partnerSchoolsSeries(records as HousingRecord[]),
                 xLabel: "# of Students",
                 yLabel: "School",
             };
         case "schools-by-city-bar":
             return {
                 chartKey,
-                data: schoolsByCitySeries(records),
+                data: schoolsByCitySeries(records as HousingRecord[]),
                 xLabel: "# of Schools",
                 yLabel: "City",
             };
         case "students-by-city-bar":
             return {
                 chartKey,
-                data: studentsByCitySeries(records),
+                data: studentsByCitySeries(records as HousingRecord[]),
                 xLabel: "# of Students",
                 yLabel: "City",
             };
         case "housing-sources-donut":
             return {
                 chartKey,
-                data: housingSourcesSeries(records),
+                data: housingSourcesSeries(records as HousingRecord[]),
                 centerLabel: "Total Housed",
+            };
+        case "grade-distribution-bar":
+            return {
+                chartKey,
+                data: buildGradeDistributionSeries(
+                    records as EducationRecord[]
+                ),
+                xLabel: "Grade Range",
+                yLabel: "Students",
+            };
+        case "students-by-subject-donut":
+            return {
+                chartKey,
+                data: buildSubjectDistributionSeries(
+                    records as EducationRecord[]
+                ),
+            };
+        case "average-grade-by-school-bar":
+            return {
+                chartKey,
+                data: buildAverageGradeBySchoolSeries(
+                    records as EducationRecord[]
+                ),
+                xLabel: "School",
+                yLabel: "Average Grade",
             };
     }
 }
@@ -415,7 +523,18 @@ export async function generateChartModel(
     const chartKey = resolveChartKey(stored.title);
     if (!chartKey) return null;
 
-    const data = (await getAllData()) as HousingRecord[];
+    const isEducationChart =
+        chartKey === "grade-distribution-bar" ||
+        chartKey === "students-by-subject-donut" ||
+        chartKey === "average-grade-by-school-bar";
+
+    if (isEducationChart) {
+        const data = await getEducationData();
+        const filteredRecords = getFilteredRecords(data, stored);
+        return buildChartModel(chartKey, filteredRecords);
+    }
+
+    const data = await getAllData();
     const filteredRecords = getFilteredRecords(data, stored);
     return buildChartModel(chartKey, filteredRecords);
 }
@@ -463,6 +582,22 @@ export async function generateChart(stored: StoredChart, isForPdf = false) {
                 centerLabel: model.centerLabel,
             });
         }
+        if (model.chartKey === "students-by-subject-donut") {
+            return React.createElement(DonutChartPdf, {
+                data: model.data,
+                centerLabel: "Students",
+            });
+        }
+        if (
+            model.chartKey === "grade-distribution-bar" ||
+            model.chartKey === "average-grade-by-school-bar"
+        ) {
+            return React.createElement(VerticalBarChartPdf, {
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        }
         return React.createElement(HorizontalBarChartPdf, {
             data: model.data,
             xLabel: model.xLabel,
@@ -505,7 +640,21 @@ export async function generateChart(stored: StoredChart, isForPdf = false) {
     if (model.chartKey === "housing-sources-donut") {
         return React.createElement(DonutChart, {
             data: model.data,
-            centerLabel: model.centerLabel,
+        });
+    }
+    if (model.chartKey === "students-by-subject-donut") {
+        return React.createElement(DonutChart, {
+            data: model.data,
+        });
+    }
+    if (
+        model.chartKey === "grade-distribution-bar" ||
+        model.chartKey === "average-grade-by-school-bar"
+    ) {
+        return React.createElement(VerticalBarChart, {
+            data: model.data,
+            xLabel: model.xLabel,
+            yLabel: model.yLabel,
         });
     }
     return React.createElement(HorizontalBarChart, {

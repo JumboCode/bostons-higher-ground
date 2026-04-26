@@ -47,14 +47,32 @@ function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
         );
     }
 
-    if (chart.chartKey === "housing-sources-donut") {
+    if (
+        chart.chartKey === "housing-sources-donut" ||
+        chart.chartKey === "students-by-subject-donut"
+    ) {
         return (
             <DonutChart
                 data={chart.data}
-                centerLabel={chart.centerLabel}
                 width={640}
                 height={320}
                 className="w-full h-[380px]"
+            />
+        );
+    }
+
+    if (
+        chart.chartKey === "grade-distribution-bar" ||
+        chart.chartKey === "average-grade-by-school-bar"
+    ) {
+        return (
+            <VerticalBarChart
+                data={chart.data}
+                xLabel={chart.xLabel}
+                yLabel={chart.yLabel}
+                width={640}
+                height={320}
+                className="w-full h-[320px]"
             />
         );
     }

@@ -9,6 +9,7 @@ import {
     uuid,
     jsonb,
     uniqueIndex,
+    doublePrecision,
 } from "drizzle-orm/pg-core";
 
 /* Schema for our tables */
@@ -33,6 +34,15 @@ export const housingRecords = pgTable("housing_records", {
     school: text("school"),
     schoolId: text("school_id"),
     studentCount: integer("student_count"),
+});
+
+export const educationRecords = pgTable("education_records", {
+    id: serial("id").primaryKey(),
+    school: text("school_name"),
+    schoolCode: text("school_code"),
+    courseSubject: text("course_subject"),
+    grade: doublePrecision("grade"),
+    student_id: integer("student_id"),
 });
 
 export const inProgressReports = pgTable(
