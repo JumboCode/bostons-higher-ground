@@ -98,7 +98,6 @@ export type GeneratedChartModel =
     | {
           chartKey: "housing-sources-donut";
           data: DonutDatum[];
-          centerLabel: "Total Housed";
       }
     | {
           chartKey: "grade-distribution-bar";
@@ -478,7 +477,6 @@ function buildChartModel(
             return {
                 chartKey,
                 data: housingSourcesSeries(records as HousingRecord[]),
-                centerLabel: "Total Housed",
             };
         case "grade-distribution-bar":
             return {
@@ -579,13 +577,11 @@ export async function generateChart(stored: StoredChart, isForPdf = false) {
         if (model.chartKey === "housing-sources-donut") {
             return React.createElement(DonutChartPdf, {
                 data: model.data,
-                centerLabel: model.centerLabel,
             });
         }
         if (model.chartKey === "students-by-subject-donut") {
             return React.createElement(DonutChartPdf, {
                 data: model.data,
-                centerLabel: "Students",
             });
         }
         if (
