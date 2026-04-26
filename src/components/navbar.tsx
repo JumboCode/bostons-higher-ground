@@ -1,16 +1,15 @@
 "use client";
 
-console.log("Rendering current NavBar version");
-
 import {
     House,
     FileText,
     Settings,
-    GraduationCap,
     School,
     LayoutDashboard,
+    Menu,
+    X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -41,24 +40,48 @@ export default function Navbar({ userName }: { userName: string }) {
     //for logout functionality
     const router = useRouter();
     const [hovered, setHovered] = useState("");
-    const [isSigningOut, setIsSigningOut] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const handleLogout = async () => {
+        await authClient.signOut();
+        router.refresh();
+        router.replace("/");
+    };
 
     return (
         <nav
-            className={`w-[250px] flex-shrink-0 h-screen sticky top-0 left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
+            className={`w-full md:w-[250px] md:flex-shrink-0 md:h-screen md:sticky md:top-0 md:left-0 bg-bhg-gray-300 text-white flex flex-col drop-shadow-sm`}
         >
             {/* Logo Area */}
-            <div className="flex flex-col items-start px-6 py-6 border-bhg-gray-200/30 border-b">
+            <div className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 border-bhg-gray-200/30 border-b">
                 <Image
                     src="/Logo.svg"
                     alt="Boston Higher Ground logo"
-                    className="w-52 h-10 mb-2"
+                    className="w-40 h-8 md:w-52 md:h-10"
                     width={52}
                     height={10}
                 />
+                <button
+                    type="button"
+                    className="md:hidden rounded-md p-2 hover:bg-[#414141] transition-colors"
+                    aria-label={
+                        isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+                    }
+                    onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+                >
+                    {isMobileMenuOpen ? (
+                        <X className="w-5 h-5" />
+                    ) : (
+                        <Menu className="w-5 h-5" />
+                    )}
+                </button>
             </div>
 
-            <ul className="flex flex-col gap-4 p-5">
+            <ul
+                className={`${
+                    isMobileMenuOpen ? "flex" : "hidden"
+                } md:flex flex-col gap-3 md:gap-4 p-4 md:p-5`}
+            >
                 {TAB_CONFIG.map(({ name, Icon, href }) => {
                     const isSelected =
                         pathname === href ||
@@ -69,6 +92,8 @@ export default function Navbar({ userName }: { userName: string }) {
                         <Link
                             href={href}
                             key={name}
+                            prefetch={false}
+                            onClick={() => setIsMobileMenuOpen(false)}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
                             className="px-0"
@@ -98,7 +123,11 @@ export default function Navbar({ userName }: { userName: string }) {
             className="cursor-pointer underline">{userName}</button> */}
 
             {/* This is the bottom left button */}
-            <div className="mt-auto pb-6 px-4">
+            <div
+                className={`${
+                    isMobileMenuOpen ? "flex" : "hidden"
+                } md:flex mt-1 md:mt-auto pb-4 md:pb-6 px-4`}
+            >
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
@@ -111,20 +140,10 @@ export default function Navbar({ userName }: { userName: string }) {
 
                     <DropdownMenuContent align="start">
                         <DropdownMenuItem
-                            disabled={isSigningOut}
-                            onClick={async () => {
-                                if (isSigningOut) return;
-                                setIsSigningOut(true);
-                                try {
-                                    await authClient.signOut();
-                                    router.replace("/"); // redirect after logout
-                                } finally {
-                                    setIsSigningOut(false);
-                                }
-                            }}
+                            onClick={handleLogout}
                             className="cursor-pointer"
                         >
-                            {isSigningOut ? "Logging out..." : "Logout"}
+                        Sign Out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
