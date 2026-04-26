@@ -43,15 +43,27 @@ const DashboardTop: React.FC<DashboardTopProps> = ({
                     <h1 className="text-2xl font-extrabold text-[#555555] sm:text-3xl lg:text-4xl">
                         {pageTitle}
                     </h1>
-                    <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#E76C82] px-4 py-2 text-sm font-medium text-[#E76C82] transition-colors hover:bg-pink-50 sm:w-auto sm:text-base">
-                        <RefreshCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                        <span>Update Data</span>
+                    <button className="cursor-pointer flex items-center border border-[#E76C82] text-[#E76C82] py-2 px-4 rounded-lg transition-colors hover:bg-pink-50">
+                        <div className="w-[16px]">
+                            <RefreshCcw />
+                        </div>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            ...
+                        </svg>
+                        <span className="text-lg">Update Data</span>
                     </button>
                 </div>
             </div>
 
-            <div className={`w-full px-4 sm:px-6 lg:px-10 ${mt}`}>
-                <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-items-center gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">
+            {/* <div>{children}</div> */}
+
+            <div className="flex">
+                <div className="flex flex-col sm:flex-row w-full justify-center items-center sm:gap-20 gap-4 mx-10">
                     <FastFactCard
                         title={title}
                         body={body}

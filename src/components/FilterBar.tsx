@@ -118,11 +118,9 @@ export function LocationFilter() {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild className="w-full sm:w-max">
-                <button className="w-full sm:w-auto bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
-                    <span
-                        className={`text-[#555555] truncate ${manrope.className}`}
-                    >
+            <DropdownMenuTrigger asChild className="w-max">
+                <button className="cursor-pointer bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
+                    <span className={` text-[#555555] ${manrope.className}`}>
                         {label}
                     </span>
                     <ChevronDown
@@ -144,7 +142,7 @@ export function LocationFilter() {
 
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <div
-                        className={`flex items-center gap-3 text-[#555555] ${manrope.className}`}
+                        className={`flex items-center cursor-pointer gap-3 text-[#555555] ${manrope.className}`}
                     >
                         <Checkbox
                             checked={allSelected}
@@ -196,11 +194,9 @@ export function SchoolFilter() {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild className="w-full sm:w-max">
-                <button className="w-full sm:w-auto bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
-                    <span
-                        className={`text-[#555555] truncate ${manrope.className}`}
-                    >
+            <DropdownMenuTrigger asChild className="w-max">
+                <button className="cursor-pointer bg-[#F3F3F5] hover:bg rounded-2xl px-4 py-1 flex items-center justify-between gap-1">
+                    <span className={` text-[#555555] ${manrope.className}`}>
                         {label}
                     </span>
                     <ChevronDown
@@ -222,7 +218,7 @@ export function SchoolFilter() {
 
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <div
-                        className={`flex items-center gap-3 text-[#555555] ${manrope.className}`}
+                        className={`flex items-center gap-3 cursor-pointer text-[#555555] ${manrope.className}`}
                     >
                         <Checkbox
                             checked={allSelected}
@@ -329,7 +325,7 @@ export function DateFilter() {
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <button
-                    className={`w-full sm:w-auto flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
+                    className={`cursor-pointer flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
                 >
                     <Calendar className="w-[18px] h-[18px]" />
                     <span className="truncate">{formattedRange}</span>
@@ -365,10 +361,10 @@ export function DateFilter() {
                 </div>
 
                 <div className="mt-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 mb-[14px] gap-2 min-h-[30px]">
+                    <div className="flex mb-[14px] gap-2 h-[30px] cursor-pointer">
                         <button
                             onClick={() => handleQuickTimeframe("thisMonth")}
-                            className={`rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "thisMonth"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -378,7 +374,7 @@ export function DateFilter() {
                         </button>
                         <button
                             onClick={() => handleQuickTimeframe("lastMonth")}
-                            className={`rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "lastMonth"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -388,7 +384,7 @@ export function DateFilter() {
                         </button>
                         <button
                             onClick={() => handleQuickTimeframe("thisFY")}
-                            className={`rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "thisFY"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -398,7 +394,7 @@ export function DateFilter() {
                         </button>
                         <button
                             onClick={() => handleQuickTimeframe("allTime")}
-                            className={`rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
+                            className={`w-1/4 rounded-full cursor-pointer justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${
                                 timeframe === "allTime"
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -442,7 +438,7 @@ export function FiscalYearContent({
                         <button
                             key={fy}
                             onClick={() => setFiscalYearValue(fy)}
-                            className={`rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
+                            className={`cursor-pointer w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
                                 fiscalYear === fy
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
@@ -455,7 +451,7 @@ export function FiscalYearContent({
             </div>
             <button
                 onClick={applyFiscal}
-                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+                className={`cursor-pointer w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
             >
                 Apply Filter
             </button>
@@ -505,7 +501,7 @@ export function CustomRangeContent({
             {/* apply range button */}
             <button
                 onClick={applyRange}
-                className={`w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
+                className={`cursor-pointer w-full rounded-full py-[8px] bg-[#E76C82] text-[#FFFFFF] justify-center items-center hover:bg-[#d85c70] ${manrope.className}`}
             >
                 Apply Custom Range
             </button>
@@ -525,20 +521,20 @@ export default function FilterBar() {
                 Filters:
             </div>
             {/* The three actual filters */}
-            <div className="w-full sm:w-auto sm:ml-4">
+            <div className="cursor-pointer ml-4">
                 <DateFilter />
             </div>
-            <div className="w-full sm:w-auto sm:ml-4">
+            <div className="cursor-pointer ml-4">
                 <SchoolFilter />
             </div>
-            <div className="w-full sm:w-auto sm:ml-4">
+            <div className="cursor-pointer ml-4">
                 <LocationFilter />
             </div>
 
             {/* Clear Button */}
             <button
                 onClick={clearAll}
-                className={`w-full sm:w-auto flex justify-center items-center ${manrope.className} bg-[#E76C82] text-[#EBEDEF] rounded-2xl sm:ml-auto h-[30px] px-[20px] py-[20px] sm:mr-[25px]`}
+                className={`cursor-pointer flex justify-center items-center ${manrope.className} bg-[#E76C82] text-[#EBEDEF] rounded-2xl ml-auto h-[30px] px-[20px] py-[20px] mr-[25px]`}
             >
                 Clear
             </button>
