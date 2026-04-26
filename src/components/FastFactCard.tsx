@@ -25,7 +25,7 @@ export default function FastFactCard({
             <p className="text-[#6B7280] text-[13px] font-medium tracking-wide uppercase mb-2">
                 {title}
             </p>
-            <p className="text-[#1B1B1B] text-[38px] font-bold leading-none mb-2 tracking-tight">
+            <p className="mb-2 text-[32px] font-bold leading-none tracking-tight text-[#1B1B1B] sm:text-[38px]">
                 {body}
             </p>
             <p className="text-[#9CA3AF] text-[12px] font-medium">{subtext}</p>

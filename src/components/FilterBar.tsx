@@ -328,12 +328,12 @@ export function DateFilter() {
                     className={`cursor-pointer flex justify-center items-center px-4 py-1 ${manrope.className} text-[#555555] rounded-2xl border border-grey-200 gap-2`}
                 >
                     <Calendar className="w-[18px] h-[18px]" />
-                    {formattedRange}
+                    <span className="truncate">{formattedRange}</span>
                 </button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-                className="w-[520px] flex-row px-[15px] py-[15px] rounded-xl"
+                className="w-[calc(100vw-2rem)] sm:w-[520px] flex-row px-[15px] py-[15px] rounded-xl max-h-[80vh] overflow-y-auto"
                 align="start"
                 sideOffset={10}
             >
@@ -433,7 +433,7 @@ export function FiscalYearContent({
         <div className="flex-row">
             <div className={`text-[#555555] text-[15px] ${manrope.className}`}>
                 Select Fiscal Year
-                <div className="flex mt-[8px] mb-[14px] gap-2 h-[30px]">
+                <div className="grid grid-cols-2 sm:grid-cols-4 mt-[8px] mb-[14px] gap-2 min-h-[30px]">
                     {(["2022", "2023", "2024", "2025"] as const).map((fy) => (
                         <button
                             key={fy}
@@ -464,6 +464,20 @@ export function CustomRangeContent({
     setDateRange,
     applyRange,
 }: CustomRangeProps) {
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 768px)");
+        const update = () => setIsDesktop(mediaQuery.matches);
+
+        update();
+        mediaQuery.addEventListener("change", update);
+
+        return () => {
+            mediaQuery.removeEventListener("change", update);
+        };
+    }, []);
+
     return (
         <div className="w-full flex-row">
             <UiCalendar
@@ -471,7 +485,7 @@ export function CustomRangeContent({
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
+                numberOfMonths={isDesktop ? 2 : 1}
                 className="rounded-lg border shadow-sm w-full mb-[13px]"
             />
             {/* range confirmation */}
@@ -499,11 +513,11 @@ export default function FilterBar() {
     const { clearAll } = useFilters();
 
     return (
-        <div className="flex flex-row items-center w-full h-full">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full h-full px-4 py-3 sm:px-0 sm:py-0">
             <div
-                className={`flex items-center ${manrope.className} text-[#4A5565]`}
+                className={`flex items-center w-full sm:w-auto ${manrope.className} text-[#4A5565]`}
             >
-                <Funnel className="ml-[25px] mr-[10px] w-[20px] h-[20px] text-[#6A7282]" />
+                <Funnel className="sm:ml-[25px] mr-[10px] w-[20px] h-[20px] text-[#6A7282]" />
                 Filters:
             </div>
             {/* The three actual filters */}

@@ -35,13 +35,12 @@ const DashboardTop: React.FC<DashboardTopProps> = ({
     subtext1,
     subtext2,
     mt,
-    children,
 }) => {
     return (
         <>
-            <div className="w-full px-10">
-                <div className="w-full flex justify-between items-center">
-                    <h1 className="text-4xl font-extrabold text-[#555555] gap-8 my-10">
+            <div className="w-full px-4 sm:px-6 lg:px-10">
+                <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:py-8 lg:py-10">
+                    <h1 className="text-2xl font-extrabold text-[#555555] sm:text-3xl lg:text-4xl">
                         {pageTitle}
                     </h1>
                     <button className="cursor-pointer flex items-center border border-[#E76C82] text-[#E76C82] py-2 px-4 rounded-lg transition-colors hover:bg-pink-50">

@@ -116,7 +116,7 @@ export default function Admin() {
     );
 
     return (
-        <main className="flex min-h-screen bg-[#F5F5F5] overflow-x-hidden">
+        <main className="flex flex-col md:flex-row min-h-screen bg-[#F5F5F5] overflow-x-hidden">
             <NavBar userName="admin" />
             <div className="relative flex-1 overflow-x-hidden">
                 {/*Top bar*/}
@@ -228,8 +228,6 @@ export default function Admin() {
                     </div>
                 </div>
             </div>
-
-            
 
             {isInviteOpen && (
                 <ModalOverlay onClose={() => setIsInviteOpen(false)}>
