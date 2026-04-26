@@ -96,23 +96,25 @@ export default function LogIn() {
     const [passwordError, setPasswordError] = useState("");
     const [isPasswordBlur, setIsPasswordBlur] = useState(false);
     const [isPasswordValid, setIsPasswordValid] = useState(true);
+    const [isSigningIn, setIsSigningIn] = useState(false);
 
     const router = useRouter();
 
     async function handleFormSubmit(e: React.FormEvent) {
         e.preventDefault();
+        setIsSigningIn(true);
         try {
             const result = await authClient.signIn.email({
                 email: email,
                 password: password,
             });
 
-// Ask for actual error messages
+            // Ask for actual error messages
 
             if (result.error) {
                 setError(true);
 
-                if (email == "" || password == ""){
+                if (email == "" || password == "") {
                     if (email == "") {
                         setIsEmailValid(false);
                         setEmailError("Email is required.");
@@ -121,9 +123,11 @@ export default function LogIn() {
                         setPasswordError("Password is required");
                     }
                 } else {
-                    setEmailError("Invalid email or password. Please try again.")
+                    setEmailError(
+                        "Invalid email or password. Please try again."
+                    );
                 }
-            
+
                 console.log(error);
             } else {
                 setError(false);
@@ -132,6 +136,7 @@ export default function LogIn() {
                 console.log("Successfully logged in!");
                 router.refresh();
                 router.replace("/reports/overview");
+                return;
             }
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -139,8 +144,10 @@ export default function LogIn() {
                 setEmailError(err.message || "Something went wrong");
                 setPasswordError(err.message || "Something went wrong");
             }
+        } finally {
+            setIsSigningIn(false);
         }
-    };
+    }
 
     const blurEmail = () => {
         setIsEmailBlur(true);
@@ -160,7 +167,7 @@ export default function LogIn() {
         setIsPasswordBlur(true);
 
         if (password == "") {
-            setPasswordError("Password is required")
+            setPasswordError("Password is required");
             setIsPasswordBlur(true);
             setIsPasswordValid(false);
         } else {
@@ -191,7 +198,14 @@ export default function LogIn() {
                 <div
                     style={{
                         width: "450px",
-                        height: error && isEmailValid && isPasswordValid ? "740px" : !isPasswordValid && !isEmailValid ? "710px" : !isPasswordValid || !isEmailValid ? "690px" : "672px",
+                        height:
+                            error && isEmailValid && isPasswordValid
+                                ? "740px"
+                                : !isPasswordValid && !isEmailValid
+                                  ? "710px"
+                                  : !isPasswordValid || !isEmailValid
+                                    ? "690px"
+                                    : "672px",
                         borderRadius: "24px",
                         backgroundColor: "#FFFFFF",
                         border: "1px solid #F3F4F6",
@@ -251,9 +265,7 @@ export default function LogIn() {
                         onSubmit={handleFormSubmit}
                     >
                         {error && isEmailValid && isPasswordValid && (
-                            <div
-                                className="w-full rounded-xl border border-rose-300 bg-[#d84e4e]/10 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400"
-                                >
+                            <div className="w-full rounded-xl border border-rose-300 bg-[#d84e4e]/10 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400">
                                 <span className="flex items-center text-[#D9534F]">
                                     {" "}
                                     <Icon.AlertCircle className="w-4 h-4 mr-1 stroke-2" />{" "}
@@ -277,7 +289,7 @@ export default function LogIn() {
                                 placeholder="you@highergroundboston.org"
                                 onChange={(e) => setEmail(e.target.value)}
                                 onBlur={blurEmail}
-                                className={`w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 ${error || isEmailBlur ? "border-red-500" : "border-neutral-200 focus:border-rose-300" } `}
+                                className={`w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 ${error || isEmailBlur ? "border-red-500" : "border-neutral-200 focus:border-rose-300"} `}
                             />
 
                             {(error || isEmailBlur) && !isEmailValid && (
@@ -287,7 +299,6 @@ export default function LogIn() {
                                     {emailError}
                                 </span>
                             )}
-
                         </div>
 
                         {/* PASSWORD FIELD */}
@@ -315,31 +326,38 @@ export default function LogIn() {
                                     {passwordError}
                                 </span>
                             )}
-
                         </div>
 
                         {/* PRIMARY BUTTON */}
                         <button
                             type="submit"
                             // onClick={handleClick}
-                            className={`${manrope.className} mt-1 w-full text-center text-white transition cursor-pointer`}
+                            className={`${manrope.className} mt-1 w-full text-center text-white transition`}
                             style={{
-                                backgroundColor: "#E59AA8",
+                                backgroundColor: isSigningIn
+                                    ? "#F2BCC2"
+                                    : "#E76C82",
                                 height: "48px",
                                 borderRadius: "14px",
                                 transform: "rotate(0deg)",
                                 opacity: 1,
                             }}
-                            onMouseEnter={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                    "#E76C82")
+                            onMouseEnter={
+                                isSigningIn
+                                    ? undefined
+                                    : (e) =>
+                                          (e.currentTarget.style.backgroundColor =
+                                              "#D96D78")
                             }
-                            onMouseLeave={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                    "#E59AA8")
+                            onMouseLeave={
+                                isSigningIn
+                                    ? undefined
+                                    : (e) =>
+                                          (e.currentTarget.style.backgroundColor =
+                                              "#E76C82")
                             }
                         >
-                            Sign In
+                            {isSigningIn ? "Signing in..." : "Sign In"}
                         </button>
 
                         {/* FORGOT PASSWORD LINK (wire this to open the modal later) */}
