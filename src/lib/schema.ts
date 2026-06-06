@@ -35,6 +35,24 @@ export const housingRecords = pgTable("housing_records", {
     studentCount: integer("student_count"),
 });
 
+/**
+ * Append-only log of Salesforce sync attempts. The most recent row with
+ * status === "success" is what the admin page displays as "Last sync".
+ * Rows with status === "running" represent an in-flight sync.
+ */
+export const syncLog = pgTable("sync_log", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    source: text("source").notNull().default("salesforce"),
+    status: text("status").notNull(), // "running" | "success" | "error"
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    finishedAt: timestamp("finished_at"),
+    rowsSynced: integer("rows_synced"),
+    // Fields configured but missing from the SF object at sync time.
+    missingFields: jsonb("missing_fields").$type<string[]>(),
+    errorMessage: text("error_message"),
+    triggeredBy: text("triggered_by"), // user.id
+});
+
 export const inProgressReports = pgTable(
     "in_progress_reports",
     {
