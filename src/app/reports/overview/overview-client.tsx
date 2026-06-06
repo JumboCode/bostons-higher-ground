@@ -58,6 +58,43 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
         customRange,
     };
 
+    const fastFacts = useMemo(() => {
+        const totalFamilies = filteredData.length;
+        const housedFamilies = filteredData.filter(
+            (record) => record.dateHoused !== null && record.dateHoused !== undefined
+        ).length;
+        const waitTimes = filteredData
+            .map((record) => {
+                if (!record.intakeDate || !record.dateHoused) return null;
+
+                const start = new Date(record.intakeDate).getTime();
+                const end = new Date(record.dateHoused).getTime();
+                const days = (end - start) / (1000 * 60 * 60 * 24);
+
+                return Number.isFinite(days) ? days : null;
+            })
+            .filter((days): days is number => days !== null);
+        const averageWaitTime =
+            waitTimes.length > 0
+                ? Math.round(
+                      waitTimes.reduce((sum, days) => sum + days, 0) /
+                          waitTimes.length
+                  )
+                : null;
+        const successRate =
+            totalFamilies > 0
+                ? `${((housedFamilies / totalFamilies) * 100).toFixed(1)}% success rate`
+                : "No families enrolled";
+
+        return {
+            totalFamilies: totalFamilies.toLocaleString(),
+            housedFamilies: housedFamilies.toLocaleString(),
+            averageWaitTime:
+                averageWaitTime === null ? "N/A" : `${averageWaitTime} days`,
+            successRate,
+        };
+    }, [filteredData]);
+
     useEffect(() => {
         const fetchCharts = async () => {
             try {
@@ -81,16 +118,16 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             <DashboardTop
                 pageTitle="Overview"
                 title="Total Families Enrolled"
-                body="224"
+                body={fastFacts.totalFamilies}
                 subtext="All-time enrollment"
                 bgColor="bg-[#E0F7F4]"
                 title1="Families Housed to Date"
                 title2="Average Wait Time"
                 bgColor1="bg-[#F0E7ED]"
                 bgColor2="bg-[#FFF8E9]"
-                body1="158"
-                body2="48 days"
-                subtext1="70.5% success rate"
+                body1={fastFacts.housedFamilies}
+                body2={fastFacts.averageWaitTime}
+                subtext1={fastFacts.successRate}
                 subtext2="Intake to housed"
                 mt="-mt-[10px]"
             />
