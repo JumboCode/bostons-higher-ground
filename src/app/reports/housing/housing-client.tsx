@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Chart from "@/components/chart";
-import DashboardTop from "@/components/DashboardTop";
 import FamilyIntakeBarChart from "./barchart";
 import LineChart from "./linechart";
 import DaysHousedBarChart from "./barchart2";
@@ -93,23 +92,12 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
 
     return (
         <div className="w-full">
-            <DashboardTop
-                pageTitle="Housing Dashboard"
-                title="Total Families Enrolled"
-                body="224"
-                subtext="All-time enrollment"
-                bgColor="bg-[#E0F7F4]"
-                title1="Families Housed to Date"
-                title2="Average Wait Time"
-                bgColor1="bg-[#F0E7ED]"
-                bgColor2="bg-[#FFF8E9]"
-                body1="158"
-                body2="48 days"
-                subtext1="70.5% success rate"
-                subtext2="Intake to housed"
-                mt="-mt-[10px]"
-            />
-            <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
+            <div className="w-full px-4 sm:px-6 lg:px-10 pt-10 pb-5">
+                <h1 className="text-2xl font-extrabold text-[#555555] sm:text-3xl lg:text-4xl">
+                    Housing Dashboard
+                </h1>
+            </div>
+            <div className="grid grid-cols-1 items-start gap-8 p-10 py-5 lg:grid-cols-2">
                 <Chart
                     title = {formatTitle(filterState, "Family Intake")}
                     chartType="family-intake-bar"

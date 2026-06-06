@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import DashboardTop from "@/components/DashboardTop";
-import SchoolFilterBar from "@/components/SchoolFilterBar";
 import Chart from "@/components/chart";
 import PartnerAndHomeless from "./partnerandhomeless";
 import SchoolsByCityChart from "./schoolsbycity";
@@ -92,26 +90,13 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
     return (
         <>
             <div className="w-full">
-                <DashboardTop
-                    pageTitle="Schools Dashboard"
-                    title="Homeless Students"
-                    body="45"
-                    subtext=""
-                    bgColor="bg-[#FFE5EA99]"
-                    title1="Families Housed to Date"
-                    title2="Average Wait Time"
-                    bgColor1="bg-[#E0F7F4]"
-                    bgColor2="bg-[#FDF6EC]"
-                    body1="82%"
-                    body2="92%"
-                    subtext1=""
-                    subtext2=""
-                    mt=""
-                >
-                    {/* <SchoolFilterBar /> */}
-                </DashboardTop>
+                <div className="w-full px-4 sm:px-6 lg:px-10 pt-10 pb-5">
+                    <h1 className="text-2xl font-extrabold text-[#555555] sm:text-3xl lg:text-4xl">
+                        Schools Dashboard
+                    </h1>
+                </div>
             </div>
-            <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
+            <div className="grid grid-cols-1 items-start gap-8 p-10 py-5 lg:grid-cols-2">
                 <Chart
                     title = {formatTitle(filterState, "Partner Schools & Homeless Student Counts")}
                     chartType="partner-schools-bar"
