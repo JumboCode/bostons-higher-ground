@@ -1,6 +1,7 @@
 import { Svg, Path, Circle, Line, Text, G } from "@react-pdf/renderer";
 import * as d3 from "d3";
 import type { LineDatum } from "./line-chart";
+import { chartTheme } from "@/lib/chart-theme";
 
 export type LineChartPdfProps = {
     data: LineDatum[];
@@ -15,7 +16,7 @@ export function LineChartPdf({
     data,
     width = 420,
     height = 420,
-    lineColor = "#D28A93",
+    lineColor = chartTheme.primaryColor,
     xLabel,
     yLabel,
 }: LineChartPdfProps) {
@@ -68,7 +69,7 @@ export function LineChartPdf({
                         x2={innerWidth}
                         y1={y(tick)}
                         y2={y(tick)}
-                        stroke="#E6E7EB"
+                        stroke={chartTheme.gridColor}
                         strokeWidth={1}
                         strokeDasharray="4 4"
                     />
@@ -82,7 +83,7 @@ export function LineChartPdf({
                         x2={x(d.label) ?? 0}
                         y1={0}
                         y2={innerHeight}
-                        stroke="#E6E7EB"
+                        stroke={chartTheme.gridColor}
                         strokeWidth={1}
                         strokeDasharray="4 4"
                     />
@@ -94,7 +95,7 @@ export function LineChartPdf({
                     x2={innerWidth}
                     y1={0}
                     y2={0}
-                    stroke="#E6E7EB"
+                    stroke={chartTheme.gridColor}
                     strokeDasharray="4 4"
                 />
 
@@ -104,7 +105,7 @@ export function LineChartPdf({
                     x2={innerWidth}
                     y1={0}
                     y2={innerHeight}
-                    stroke="#E6E7EB"
+                    stroke={chartTheme.gridColor}
                     strokeDasharray="4 4"
                 />
 
@@ -133,11 +134,11 @@ export function LineChartPdf({
                     x2={innerWidth}
                     y1={innerHeight}
                     y2={innerHeight}
-                    stroke="black"
+                    stroke={chartTheme.axisColor}
                 />
 
                 {/* Y Axis Line */}
-                <Line x1={0} x2={0} y1={0} y2={innerHeight} stroke="black" />
+                <Line x1={0} x2={0} y1={0} y2={innerHeight} stroke={chartTheme.axisColor} />
 
                 {/* X Tick Labels */}
                 {data.map((d) => (

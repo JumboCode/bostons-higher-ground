@@ -1,11 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
-import { d3, DEFAULT_COLORS, DEFAULT_FONT } from "./chart-base";
-export type DonutDatum = { label: string; value: number; color?: string };
-import { Manrope } from "next/font/google";
+import { Cell, Label, Pie, PieChart } from "recharts";
 
-const manrope = Manrope({ subsets: ["latin"] });
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
+import { CHART_COLORS } from "@/lib/chart-theme";
+import type { DonutDatum } from "@/lib/chart-types";
+import { cn } from "@/lib/utils";
+
+export type { DonutDatum } from "@/lib/chart-types";
 
 export type DonutChartProps = {
     data: DonutDatum[];
@@ -16,171 +23,115 @@ export type DonutChartProps = {
     className?: string;
 };
 
+type PieLabelProps = {
+    percent?: number;
+};
+
+type PieCenterViewBox = {
+    cx?: number;
+    cy?: number;
+};
+
+function toSliceKey(label: string, index: number) {
+    return `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "slice"}-${index}`;
+}
+
 export function DonutChart({
     data,
     width,
-    height,
-    colors = DEFAULT_COLORS,
+    height = 420,
+    colors = CHART_COLORS,
     centerLabel = "Total",
     className,
 }: DonutChartProps) {
-    const svgRef = useRef<SVGSVGElement | null>(null);
-
-    const render = useCallback(() => {
-        if (!svgRef.current) return;
-        const svgEl = svgRef.current;
-        const svg = d3.select(svgEl);
-        svg.selectAll("*").remove();
-        if (!data.length) return;
-
-        const outerWidth = width ?? (svgEl.clientWidth || 640);
-        const contentHeight = height ?? (svgEl.clientHeight || 420);
-        const maxLegendLabelLength =
-            d3.max(data, (entry) => Math.min(entry.label.length, 18)) ?? 0;
-        const legendItemWidth = Math.max(120, maxLegendLabelLength * 10 + 36);
-        const legendColumns = Math.max(
-            1,
-            Math.min(
-                data.length,
-                Math.floor((outerWidth - 40) / legendItemWidth)
-            )
-        );
-        const legendRows = Math.ceil(data.length / legendColumns);
-        const legendRowHeight = 25;
-        const legendHeight = legendRows * legendRowHeight;
-        const legendSpace = legendHeight + 30;
-        const outerHeight = contentHeight + legendSpace;
-        const margin = 40;
-        const radius = Math.min(outerWidth, contentHeight) / 2 - margin;
-        const innerRadius = radius * 0.6;
-
-        const chart = svg
-            .attr("width", outerWidth)
-            .attr("height", outerHeight)
-            .append("g")
-            .attr(
-                "transform",
-                `translate(${outerWidth / 2},${outerHeight / 2 - 20})`
-            );
-
-        const total = data.reduce((sum, d) => sum + d.value, 0);
-
-        const palette = colors.length ? colors : DEFAULT_COLORS;
-
-        const pie = d3
-            .pie<DonutDatum>()
-            .value((d) => d.value)
-            .sort(null);
-        const arc = d3
-            .arc<d3.PieArcDatum<DonutDatum>>()
-            .innerRadius(innerRadius)
-            .outerRadius(radius);
-
-        const arcs = chart
-            .selectAll(".arc")
-            .data(pie(data))
-            .join("g")
-            .attr("class", "arc");
-
-        arcs.append("path")
-            .attr("d", arc)
-            .attr(
-                "fill",
-                (d, index) => d.data.color ?? palette[index % palette.length]
-            )
-            .attr("stroke", "white")
-            .attr("stroke-width", 2);
-
-        arcs.append("text")
-            .attr("transform", (d) => {
-                const pos = arc.centroid(d);
-                return `translate(${pos[0]}, ${pos[1]})`;
-            })
-            .attr("text-anchor", "middle")
-            .style("font-family", manrope.style.fontFamily)
-            .style("font-size", "14px")
-            .style("font-weight", "600")
-            .style("fill", "white")
-            .text((d) => {
-                const pct = total === 0 ? 0 : (d.data.value / total) * 100;
-                return pct >= 5 ? `${Math.round(pct)}%` : "";
-            });
-
-        const centerText = chart.append("g");
-        centerText
-            .append("text")
-            .attr("text-anchor", "middle")
-            .attr("dy", "-0.5em")
-            .style("font-family", manrope.style.fontFamily)
-            .style("font-size", "28px")
-            .style("font-weight", "700")
-            .style("fill", "#374151")
-            .text(total);
-
-        centerText
-            .append("text")
-            .attr("text-anchor", "middle")
-            .attr("dy", "1.2em")
-            .style("font-family", manrope.style.fontFamily)
-            .style("font-size", "14px")
-            .style("fill", "#767676")
-            .text(centerLabel);
-
-        const legend = svg
-            .append("g")
-            .attr(
-                "transform",
-                `translate(${(outerWidth - legendColumns * legendItemWidth) / 2}, ${outerHeight - legendSpace + 10})`
-            );
-
-        const legendItems = legend
-            .selectAll(".legend-item")
-            .data(data)
-            .join("g")
-            .attr("class", "legend-item")
-            .attr(
-                "transform",
-                (d, i) =>
-                    `translate(${(i % legendColumns) * legendItemWidth}, ${Math.floor(i / legendColumns) * legendRowHeight})`
-            );
-
-        legendItems
-            .append("rect")
-            .attr("width", 14)
-            .attr("height", 14)
-            .attr("rx", 3)
-            .attr(
-                "fill",
-                (d, index) => d.color ?? palette[index % palette.length]
-            );
-
-        legendItems
-            .append("text")
-            .attr("x", 20)
-            .attr("y", 11)
-            .style("font-family", DEFAULT_FONT)
-            .style("font-size", "11px")
-            .style("fill", "#4A5565")
-            .text((d) =>
-                d.label.length > 15 ? `${d.label.substring(0, 15)}...` : d.label
-            );
-    }, [data, width, height, colors, centerLabel]);
-
-    useEffect(() => {
-        render();
-    }, [render]);
-
-    useEffect(() => {
-        const handleResize = () => render();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, [render]);
+    const chartData = data.map((datum, index) => ({
+        ...datum,
+        chartKey: toSliceKey(datum.label, index),
+    }));
+    const total = chartData.reduce((sum, datum) => sum + datum.value, 0);
+    const config = chartData.reduce<ChartConfig>((acc, datum, index) => {
+        acc[datum.chartKey] = {
+            label: datum.label,
+            color: datum.color ?? colors[index % colors.length],
+        };
+        return acc;
+    }, {});
 
     return (
-        <svg
-            ref={svgRef}
-            className={className ?? "min-h-[520px] w-full max-w-[900px]"}
-            role="img"
-        />
+        <div className={cn("w-full max-w-[900px]", className)} style={{ maxWidth: width }}>
+            <ChartContainer
+                config={config}
+                className="mx-auto w-full"
+                style={{ height }}
+            >
+                <PieChart accessibilityLayer>
+                    <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="chartKey" />} />
+                    <Pie
+                        data={chartData}
+                        dataKey="value"
+                        nameKey="label"
+                        innerRadius="58%"
+                        outerRadius="82%"
+                        strokeWidth={2}
+                        labelLine={false}
+                        label={({ percent }: PieLabelProps) => {
+                            const pct = (percent ?? 0) * 100;
+                            return pct >= 5 ? `${Math.round(pct)}%` : "";
+                        }}
+                    >
+                        {chartData.map((datum, index) => (
+                            <Cell
+                                key={datum.chartKey}
+                                fill={datum.color ?? colors[index % colors.length]}
+                            />
+                        ))}
+                        <Label
+                            content={({ viewBox }) => {
+                                const box = viewBox as PieCenterViewBox | undefined;
+                                if (!box?.cx || !box.cy) return null;
+
+                                return (
+                                    <text
+                                        x={box.cx}
+                                        y={box.cy}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                    >
+                                        <tspan
+                                            x={box.cx}
+                                            y={box.cy - 8}
+                                            className="fill-foreground text-3xl font-bold"
+                                        >
+                                            {total}
+                                        </tspan>
+                                        <tspan
+                                            x={box.cx}
+                                            y={box.cy + 18}
+                                            className="fill-muted-foreground text-sm"
+                                        >
+                                            {centerLabel}
+                                        </tspan>
+                                    </text>
+                                );
+                            }}
+                        />
+                    </Pie>
+                </PieChart>
+            </ChartContainer>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4">
+                {data.map((datum, index) => (
+                    <div
+                        key={datum.label}
+                        className="flex items-center gap-2 text-xs text-[#4A5565]"
+                    >
+                        <span
+                            className="h-3.5 w-3.5 rounded-[3px]"
+                            style={{ backgroundColor: datum.color ?? colors[index % colors.length] }}
+                        />
+                        <span>{datum.label.length > 18 ? `${datum.label.slice(0, 17)}...` : datum.label}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }

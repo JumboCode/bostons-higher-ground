@@ -6,7 +6,7 @@ import {
   Rect,
 } from "@react-pdf/renderer";
 import type { DonutDatum } from "./donut-chart";
-import { DEFAULT_COLORS } from "./chart-base";
+import { CHART_COLORS, chartTheme } from "@/lib/chart-theme";
 
 
 export type DonutChartPdfProps = {
@@ -23,7 +23,7 @@ export function DonutChartPdf({
   data,
   width = 500,
   height = 420,
-  colors = DEFAULT_COLORS,
+  colors = CHART_COLORS,
   centerLabel = "Total",
 }: DonutChartPdfProps) {
   if (!data.length) return null;
@@ -40,7 +40,7 @@ export function DonutChartPdf({
 
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
-  const palette = colors.length ? colors : DEFAULT_COLORS;
+  const palette = colors.length ? colors : CHART_COLORS;
 
   // ---- Helpers ----
 
@@ -184,7 +184,7 @@ export function DonutChartPdf({
                 style={{
                   fontSize: 11,
                   fontFamily: DEFAULT_FONT,
-                  fill: "#4A5565",
+                  fill: chartTheme.labelColor,
                 }}
               >
                 {d.label.length > 15

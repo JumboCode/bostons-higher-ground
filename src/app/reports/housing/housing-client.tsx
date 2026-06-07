@@ -2,12 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Chart from "@/components/chart";
-import FamilyIntakeBarChart from "./barchart";
-import LineChart from "./linechart";
-import DaysHousedBarChart from "./barchart2";
-import LocationBarChart from "./locationchart";
+import DashboardChart from "@/components/DashboardChart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
+import { filterRecords } from "@/lib/applyFilters";
+import type { StoredChart } from "@/lib/generateChart";
 
 export type FilterSummary = Pick<
     FilterState,
@@ -17,9 +16,6 @@ export type FilterSummary = Pick<
     | "fiscalYear"
     | "customRange"
 >;
-
-import { filterRecords } from "@/lib/applyFilters";
-import { StoredChart } from "@/lib/generateChart";
 
 export type HousingRecord = {
     id: number;
@@ -105,7 +101,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <FamilyIntakeBarChart data={filteredData} />
+                    <DashboardChart chartKey="family-intake-bar" records={filteredData} />
                 </Chart>
 
                 <Chart
@@ -115,7 +111,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <LineChart data={filteredData} />
+                    <DashboardChart chartKey="families-housed-line" records={filteredData} />
                 </Chart>
 
                 <Chart
@@ -125,7 +121,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DaysHousedBarChart data={filteredData} />
+                    <DashboardChart chartKey="days-to-house-bar" records={filteredData} />
                 </Chart>
 
                 <Chart
@@ -136,7 +132,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150">
-                        <LocationBarChart data={filteredData} />
+                        <DashboardChart chartKey="location-bar" records={filteredData} />
                     </div>
                 </Chart>
             </div>

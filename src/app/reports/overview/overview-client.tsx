@@ -3,14 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardTop from "@/components/DashboardTop";
 import Chart from "@/components/chart";
-import FamilyIntakeBarChart from "../housing/barchart";
-import LineChart from "../housing/linechart";
-import DaysHousedBarChart from "../housing/barchart2";
+import DashboardChart from "@/components/DashboardChart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
 import { type HousingRecord } from "../housing/housing-client";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
-import { StoredChart } from "@/lib/generateChart";
+import type { StoredChart } from "@/lib/generateChart";
 
 export type OverviewRecord = HousingRecord;
 
@@ -139,7 +137,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <FamilyIntakeBarChart data={filteredData} />
+                    <DashboardChart chartKey="family-intake-bar" records={filteredData} />
                 </Chart>
 
                 <Chart
@@ -149,7 +147,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <LineChart data={filteredData} />
+                    <DashboardChart chartKey="families-housed-line" records={filteredData} />
                 </Chart>
 
                 <Chart
@@ -159,7 +157,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DaysHousedBarChart data={filteredData} />
+                    <DashboardChart chartKey="days-to-house-bar" records={filteredData} />
                 </Chart>
             </div>
         </div>

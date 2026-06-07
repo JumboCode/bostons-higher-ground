@@ -2,14 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Chart from "@/components/chart";
-import PartnerAndHomeless from "./partnerandhomeless";
-import SchoolsByCityChart from "./schoolsbycity";
-import HousingSourceChart from "./housingsource";
-import StudentsByCityChart from "./studentsbycity";
+import DashboardChart from "@/components/DashboardChart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
-import { StoredChart } from "@/lib/generateChart";
+import type { StoredChart } from "@/lib/generateChart";
 
 export type SchoolRecord = {
     id: number;
@@ -104,7 +101,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <PartnerAndHomeless data={filteredData} />
+                        <DashboardChart chartKey="partner-schools-bar" records={filteredData} />
                     </div>
                 </Chart>
                 <Chart
@@ -114,7 +111,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <SchoolsByCityChart data={filteredData} />
+                        <DashboardChart chartKey="schools-by-city-bar" records={filteredData} />
                     </div>
                 </Chart>
                 <Chart
@@ -124,7 +121,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                    <HousingSourceChart data={filteredData} />
+                        <DashboardChart chartKey="housing-sources-donut" records={filteredData} />
                     </div>
                 </Chart>
                 <Chart
@@ -134,7 +131,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <StudentsByCityChart data={filteredData} />
+                        <DashboardChart chartKey="students-by-city-bar" records={filteredData} />
                     </div>
                 </Chart>
             </div>

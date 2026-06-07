@@ -1,24 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useMemo } from "react";
 import {
-    d3,
-    computeInnerDimensions,
-    DEFAULT_COLORS,
-    DEFAULT_FONT,
-    DEFAULT_GRID,
-    type Margin,
-} from "./chart-base";
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Label,
+    XAxis,
+    YAxis,
+} from "recharts";
 
-export type HorizontalSeriesDatum = {
-    label: string;
-    value: number;
-    color?: string;
-};
-export type HorizontalBarDatum = {
-    category: string;
-    series: HorizontalSeriesDatum[];
-};
+import {
+    ChartContainer,
+    ChartLegend,
+    ChartLegendContent,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
+import { CHART_COLORS, chartTheme } from "@/lib/chart-theme";
+import type { HorizontalBarDatum } from "@/lib/chart-types";
+import { cn } from "@/lib/utils";
+
+export type { HorizontalBarDatum, HorizontalSeriesDatum } from "@/lib/chart-types";
 
 export type HorizontalBarChartProps = {
     data: HorizontalBarDatum[];
@@ -30,220 +34,145 @@ export type HorizontalBarChartProps = {
     className?: string;
 };
 
+type RechartsHorizontalDatum = {
+    category: string;
+} & Record<string, string | number>;
+
+function toSeriesKey(label: string, index: number) {
+    return `${label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "series"}-${index}`;
+}
+
+function truncateLabel(label: string) {
+    return label.length > 22 ? `${label.slice(0, 21)}...` : label;
+}
+
 export function HorizontalBarChart({
     data,
     width,
     height,
-    colors = DEFAULT_COLORS,
+    colors = CHART_COLORS,
     xLabel,
     yLabel,
     className,
 }: HorizontalBarChartProps) {
-    const svgRef = useRef<SVGSVGElement | null>(null);
-
-    const render = useCallback(() => {
-        if (!svgRef.current) return;
-        const svgEl = svgRef.current;
-        const svg = d3.select(svgEl);
-        svg.selectAll("*").remove();
-        if (!data.length) return;
-
-        const seriesKeys = Array.from(
-            new Set(data.flatMap((d) => d.series.map((s) => s.label)))
+    const { chartData, seriesEntries, config } = useMemo(() => {
+        const labels = Array.from(
+            new Set(data.flatMap((datum) => datum.series.map((series) => series.label)))
         );
-        const seriesCount = Math.max(seriesKeys.length, 1);
-        const legendSpace = seriesKeys.length > 1 ? 76 : 0;
-        const maxCategoryLength = d3.max(data, (d) => d.category.length) ?? 0;
+        const entries = labels.map((label, index) => ({
+            key: toSeriesKey(label, index),
+            label,
+        }));
 
-        const targetHeight =
-            height ?? Math.max(300, data.length * 36 + 140 + legendSpace);
-        const margin: Margin = {
-            top: 20,
-            right: 30,
-            bottom: (xLabel ? 150 : 50) + legendSpace,
-            left: Math.min(
-                yLabel ? 240 : 200,
-                Math.max(
-                    yLabel ? 200 : 180,
-                    maxCategoryLength * 5 + (yLabel ? 35 : 20)
-                )
-            ),
-        };
-        const {
-            width: innerWidth,
-            height: innerHeight,
-            outerWidth,
-            outerHeight,
-        } = computeInnerDimensions(svgEl, width, targetHeight, margin);
-
-        const chart = svg
-            .attr("width", outerWidth)
-            .attr("height", outerHeight)
-            .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        const y = d3
-            .scaleBand()
-            .domain(data.map((d) => d.category))
-            .range([0, innerHeight])
-            .padding(0.35);
-
-        const maxValue =
-            d3.max(data, (d) => d3.max(d.series, (s) => s.value) || 0) || 0;
-        const x = d3
-            .scaleLinear()
-            .domain([0, Math.max(maxValue, 1)])
-            .nice()
-            .range([0, innerWidth]);
-
-        chart
-            .append("g")
-            .attr("transform", `translate(0,${innerHeight})`)
-            .call(
-                d3
-                    .axisBottom(x)
-                    .ticks(5)
-                    .tickSize(-innerHeight)
-                    .tickFormat(() => "")
-            )
-            .selectAll("line")
-            .attr("stroke", DEFAULT_GRID)
-            .attr("stroke-dasharray", "4 4");
-
-        const barHeight =
-            (y.bandwidth() || innerHeight / data.length) / seriesCount;
-
-        seriesKeys.forEach((seriesKey, seriesIndex) => {
-            chart
-                .selectAll(`.bar-${seriesKey}`)
-                .data(data)
-                .join("rect")
-                .attr("class", `bar-${seriesKey}`)
-                .attr(
-                    "y",
-                    (d) => (y(d.category) ?? 0) + seriesIndex * barHeight
-                )
-                .attr("x", 0)
-                .attr("height", barHeight - 3)
-                .attr("width", (d) => {
-                    const value =
-                        d.series.find((s) => s.label === seriesKey)?.value ?? 0;
-                    return x(value);
-                })
-                .attr(
-                    "fill",
-                    (d) =>
-                        d.series.find((s) => s.label === seriesKey)?.color ||
-                        colors[seriesIndex % colors.length]
-                )
-                .attr("rx", 3);
+        const flattenedData = data.map((datum) => {
+            const row: RechartsHorizontalDatum = { category: datum.category };
+            datum.series.forEach((series) => {
+                const entry = entries.find((item) => item.label === series.label);
+                if (entry) row[entry.key] = series.value;
+            });
+            return row;
         });
 
-        chart
-            .append("g")
-            .call(d3.axisLeft(y).tickSize(0))
-            .selectAll("text")
-            .style("font-family", DEFAULT_FONT)
-            .style("font-size", "12px")
-            .style("fill", "#767676");
+        const chartConfig = entries.reduce<ChartConfig>((acc, entry, index) => {
+            acc[entry.key] = {
+                label: entry.label,
+                color:
+                    data
+                        .flatMap((datum) => datum.series)
+                        .find((series) => series.label === entry.label)?.color ||
+                    colors[index % colors.length],
+            };
+            return acc;
+        }, {});
 
-        chart
-            .append("g")
-            .attr("transform", `translate(0,${innerHeight})`)
-            .call(d3.axisBottom(x).ticks(5).tickSize(0))
-            .selectAll("text")
-            .style("font-family", DEFAULT_FONT)
-            .style("font-size", "12px")
-            .style("fill", "#767676");
+        return {
+            chartData: flattenedData,
+            seriesEntries: entries,
+            config: chartConfig,
+        };
+    }, [colors, data]);
 
-        if (xLabel) {
-            chart
-                .append("text")
-                .attr(
-                    "transform",
-                    `translate(${innerWidth / 2}, ${innerHeight + (xLabel ? 52 : 36)})`
-                )
-                .style("text-anchor", "middle")
-                .style("font-family", DEFAULT_FONT)
-                .style("font-size", "14px")
-                .style("fill", "#4A5565")
-                .text(xLabel);
-        }
-
-        if (yLabel) {
-            chart
-                .append("text")
-                .attr(
-                    "transform",
-                    `translate(${-margin.left + 20}, ${innerHeight / 2}) rotate(-90)`
-                )
-                .style("text-anchor", "middle")
-                .style("font-family", DEFAULT_FONT)
-                .style("font-size", "14px")
-                .style("fill", "#4A5565")
-                .text(yLabel);
-        }
-
-        if (seriesKeys.length > 1) {
-            const legendGap = 20;
-            const legendItemWidths = seriesKeys.map((key) =>
-                Math.max(84, key.length * 7 + 36)
-            );
-            const legendWidth = legendItemWidths.reduce(
-                (sum, itemWidth, index) =>
-                    sum + itemWidth + (index > 0 ? legendGap : 0),
-                0
-            );
-            const legend = chart
-                .append("g")
-                .attr(
-                    "transform",
-                    `translate(${(innerWidth - legendWidth) / 2}, ${innerHeight + 58})`
-                )
-                .attr("class", "legend");
-
-            let offset = 0;
-            seriesKeys.forEach((key, index) => {
-                const item = legend
-                    .append("g")
-                    .attr("transform", `translate(${offset}, 0)`);
-
-                item.append("rect")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", 14)
-                    .attr("height", 14)
-                    .attr("fill", colors[index % colors.length])
-                    .attr("rx", 3);
-
-                item.append("text")
-                    .attr("x", 20)
-                    .attr("y", 11)
-                    .text(key)
-                    .style("font-family", DEFAULT_FONT)
-                    .style("font-size", "12px")
-                    .style("fill", "#4A5565");
-
-                offset += legendItemWidths[index] + legendGap;
-            });
-        }
-    }, [data, width, height, colors, xLabel, yLabel]);
-
-    useEffect(() => {
-        render();
-    }, [render]);
-
-    useEffect(() => {
-        const handleResize = () => render();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, [render]);
+    const computedHeight =
+        height ?? Math.max(300, data.length * 38 + 118 + (seriesEntries.length > 1 ? 24 : 0));
+    const yAxisWidth = Math.min(
+        yLabel ? 210 : 180,
+        Math.max(yLabel ? 132 : 104, Math.max(...data.map((datum) => datum.category.length), 0) * 6)
+    );
 
     return (
-        <svg
-            ref={svgRef}
-            className={className ?? "h-auto w-full max-w-[900px]"}
-            role="img"
-        />
+        <ChartContainer
+            config={config}
+            className={cn("h-auto w-full max-w-[900px]", className)}
+            style={{
+                height: computedHeight,
+                maxWidth: width,
+            }}
+        >
+            <BarChart
+                accessibilityLayer
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 20, right: 30, bottom: xLabel ? 56 : 30, left: yLabel ? 24 : 0 }}
+                barGap={3}
+            >
+                <CartesianGrid
+                    stroke={chartTheme.gridColor}
+                    strokeDasharray="4 4"
+                    horizontal={false}
+                />
+                <XAxis
+                    type="number"
+                    tickLine={false}
+                    axisLine={{ stroke: chartTheme.axisColor }}
+                    tickMargin={8}
+                    allowDecimals={false}
+                >
+                    {xLabel && (
+                        <Label
+                            value={xLabel}
+                            position="insideBottom"
+                            offset={-34}
+                            fill={chartTheme.labelColor}
+                            fontSize={chartTheme.labelFontSize}
+                        />
+                    )}
+                </XAxis>
+                <YAxis
+                    type="category"
+                    dataKey="category"
+                    width={yAxisWidth}
+                    tickLine={false}
+                    axisLine={{ stroke: chartTheme.axisColor }}
+                    tickMargin={8}
+                    tickFormatter={truncateLabel}
+                >
+                    {yLabel && (
+                        <Label
+                            value={yLabel}
+                            angle={-90}
+                            position="insideLeft"
+                            fill={chartTheme.labelColor}
+                            fontSize={chartTheme.labelFontSize}
+                            style={{ textAnchor: "middle" }}
+                        />
+                    )}
+                </YAxis>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {seriesEntries.map((entry) => (
+                    <Bar
+                        key={entry.key}
+                        dataKey={entry.key}
+                        fill={`var(--color-${entry.key})`}
+                        radius={[0, chartTheme.barRadius, chartTheme.barRadius, 0]}
+                    />
+                ))}
+                {seriesEntries.length > 1 && (
+                    <ChartLegend
+                        verticalAlign="bottom"
+                        content={<ChartLegendContent />}
+                    />
+                )}
+            </BarChart>
+        </ChartContainer>
     );
 }
