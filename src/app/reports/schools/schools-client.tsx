@@ -99,6 +99,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     chartType="partner-schools-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <DashboardChart chartKey="partner-schools-bar" records={filteredData} />
@@ -109,6 +110,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     chartType="schools-by-city-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <DashboardChart chartKey="schools-by-city-bar" records={filteredData} />
@@ -119,6 +121,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     chartType="housing-sources-donut"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <DashboardChart chartKey="housing-sources-donut" records={filteredData} />
@@ -129,6 +132,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     chartType="students-by-city-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
+                    filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
                         <DashboardChart chartKey="students-by-city-bar" records={filteredData} />

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateChart, type StoredChart } from "@/lib/generateChart";
+import { formatChartFilterLines } from "@/lib/chart-filter-labels";
 import { uploadFile } from "@/lib/upload-file";
 import { list, del } from "@vercel/blob";
 import React from "react";
@@ -86,6 +87,20 @@ const styles = StyleSheet.create({
         color: "#555555",
         marginBottom: 4,
     },
+    filterHeading: {
+        fontSize: 7,
+        fontFamily: "Poppins",
+        fontWeight: 700,
+        color: "#555555",
+        marginTop: 6,
+        marginBottom: 2,
+    },
+    filterText: {
+        fontSize: 7,
+        fontFamily: "Manrope",
+        color: "#6A7282",
+        lineHeight: 1.25,
+    },
     footer: {
         display: "flex",
         flexDirection: "row",
@@ -133,6 +148,7 @@ export async function POST(request: Request) {
         charts.map(async (chart, idx) => ({
             key: `${chart.title}-${idx}`,
             node: await generateChart(chart, true),
+            filterLines: formatChartFilterLines(chart.filters),
         }))
     );
 
@@ -198,6 +214,21 @@ export async function POST(request: Request) {
                                     View,
                                     { style: { aspectRatio: "1/1" } },
                                     chart.node
+                                ),
+                                React.createElement(
+                                    Text,
+                                    { style: styles.filterHeading },
+                                    "Applied filters"
+                                ),
+                                ...chart.filterLines.map((line, lineIndex) =>
+                                    React.createElement(
+                                        Text,
+                                        {
+                                            key: lineIndex,
+                                            style: styles.filterText,
+                                        },
+                                        line
+                                    )
                                 )
                             )
                         )
