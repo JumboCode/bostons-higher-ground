@@ -137,7 +137,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="family-intake-bar" records={filteredData} />
+                    <DashboardChart chartKey="family-intake-bar" records={data} filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -147,7 +147,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="families-housed-line" records={filteredData} />
+                    <DashboardChart chartKey="families-housed-line" records={data} filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -157,7 +157,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="days-to-house-bar" records={filteredData} />
+                    <DashboardChart chartKey="days-to-house-bar" records={data} filters={filterState} />
                 </Chart>
             </div>
         </div>

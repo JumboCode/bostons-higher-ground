@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Chart from "@/components/chart";
 import DashboardChart from "@/components/DashboardChart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
-import { filterRecords } from "@/lib/applyFilters";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 import type { StoredChart } from "@/lib/generateChart";
 
@@ -38,25 +37,6 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
     const timeframe = useFilters((s) => s.timeframe);
     const fiscalYear = useFilters((s) => s.fiscalYear);
     const customRange = useFilters((s) => s.customRange);
-
-    const filteredData = useMemo(
-        () =>
-            filterRecords(data, {
-                selectedLocations,
-                selectedSchools,
-                timeframe,
-                fiscalYear,
-                customRange,
-            }),
-        [
-            data,
-            selectedLocations,
-            selectedSchools,
-            timeframe,
-            fiscalYear,
-            customRange,
-        ]
-    );
 
     const filterState: FilterSummary = {
         selectedLocations,
@@ -102,7 +82,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <DashboardChart chartKey="partner-schools-bar" records={filteredData} />
+                        <DashboardChart chartKey="partner-schools-bar" records={data} filters={filterState} />
                     </div>
                 </Chart>
                 <Chart
@@ -113,7 +93,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <DashboardChart chartKey="schools-by-city-bar" records={filteredData} />
+                        <DashboardChart chartKey="schools-by-city-bar" records={data} filters={filterState} />
                     </div>
                 </Chart>
                 <Chart
@@ -124,7 +104,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <DashboardChart chartKey="housing-sources-donut" records={filteredData} />
+                        <DashboardChart chartKey="housing-sources-donut" records={data} filters={filterState} />
                     </div>
                 </Chart>
                 <Chart
@@ -135,7 +115,7 @@ export default function SchoolsClient({ data }: { data: SchoolRecord[] }) {
                     filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150 w-full min-w-0">
-                        <DashboardChart chartKey="students-by-city-bar" records={filteredData} />
+                        <DashboardChart chartKey="students-by-city-bar" records={data} filters={filterState} />
                     </div>
                 </Chart>
             </div>

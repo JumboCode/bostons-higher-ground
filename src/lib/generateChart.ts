@@ -1,12 +1,11 @@
 import React from "react";
 
-import { filterRecords } from "@/lib/applyFilters";
 import { getAllData } from "@/lib/getAllData";
-import type { FilterState } from "@/lib/filterStore";
 import {
     buildChartModel,
     chartRegistry,
     isChartKey,
+    type ChartFilters,
     type ChartKey,
     type GeneratedChartModel,
     type HousingChartRecord,
@@ -28,7 +27,7 @@ export type StoredChart = {
     filters: string | null;
 };
 
-function parseFilters(filters: string | null): Partial<FilterState> {
+function parseFilters(filters: string | null): Partial<ChartFilters> {
     if (!filters) return {};
 
     try {
@@ -61,24 +60,10 @@ function parseFilters(filters: string | null): Partial<FilterState> {
                           to: new Date(customRange.to),
                       }
                     : undefined,
-        } as Partial<FilterState>;
+        } as Partial<ChartFilters>;
     } catch {
         return {};
     }
-}
-
-function getFilteredRecords(
-    data: HousingChartRecord[],
-    stored: StoredChart
-): HousingChartRecord[] {
-    const filters = parseFilters(stored.filters);
-    return filterRecords(data, {
-        selectedLocations: filters.selectedLocations ?? [],
-        selectedSchools: filters.selectedSchools ?? [],
-        timeframe: (filters.timeframe as FilterState["timeframe"]) ?? "allTime",
-        fiscalYear: filters.fiscalYear,
-        customRange: filters.customRange,
-    }) as HousingChartRecord[];
 }
 
 export async function generateChartModel(
@@ -88,8 +73,8 @@ export async function generateChartModel(
 
     const chartKey = stored.chartType as ChartKey;
     const data = (await getAllData()) as HousingChartRecord[];
-    const filteredRecords = getFilteredRecords(data, stored);
-    return buildChartModel(chartKey, filteredRecords);
+    const filters = parseFilters(stored.filters);
+    return buildChartModel(chartKey, data, filters);
 }
 
 export async function generateChart(stored: StoredChart, isForPdf = false) {
