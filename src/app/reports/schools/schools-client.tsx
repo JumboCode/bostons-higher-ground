@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import Chart from "@/components/chart";
 import DashboardChart from "@/components/DashboardChart";
-import DashboardTop from "@/components/DashboardTop";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import type { StoredChart } from "@/lib/generateChart";
@@ -22,30 +21,6 @@ type FilterSummary = Pick<
     | "fiscalYear"
     | "customRange"
 >;
-
-function filterStudents(
-    records: StudentRecord[],
-    schools: string[],
-    cities: string[]
-) {
-    return records.filter((record) => {
-        if (schools.length && !schools.includes(record.schoolName)) return false;
-        if (cities.length && !cities.includes(record.city)) return false;
-        return true;
-    });
-}
-
-function filterAttendance(
-    records: AttendanceRecord[],
-    schools: string[],
-    studentIds?: Set<number>
-) {
-    return records.filter((record) => {
-        if (schools.length && !schools.includes(record.schoolName)) return false;
-        if (studentIds && !studentIds.has(record.studentId)) return false;
-        return true;
-    });
-}
 
 export default function SchoolsClient({
     students,
@@ -72,22 +47,6 @@ export default function SchoolsClient({
         () => ({ housing: [], students, attendance }),
         [attendance, students]
     );
-    const filteredStudents = useMemo(
-        () => filterStudents(students, selectedSchools, selectedLocations),
-        [selectedLocations, selectedSchools, students]
-    );
-    const filteredStudentIds = useMemo(
-        () =>
-            selectedLocations.length
-                ? new Set(filteredStudents.map((student) => student.studentId))
-                : undefined,
-        [filteredStudents, selectedLocations.length]
-    );
-    const filteredAttendance = useMemo(
-        () => filterAttendance(attendance, selectedSchools, filteredStudentIds),
-        [attendance, filteredStudentIds, selectedSchools]
-    );
-
     useEffect(() => {
         const fetchCharts = async () => {
             try {
@@ -105,37 +64,13 @@ export default function SchoolsClient({
         return () => window.removeEventListener("report-updated", fetchCharts);
     }, []);
 
-    const totalStudents = filteredStudents.length;
-    const uniqueSchools = new Set(filteredStudents.map((student) => student.schoolName)).size;
-    const avgAda = filteredAttendance.length
-        ? `${(
-              (filteredAttendance.reduce(
-                  (sum, record) => sum + Number.parseFloat(record.ada),
-                  0
-              ) /
-                  filteredAttendance.length) *
-              100
-          ).toFixed(1)}%`
-        : "-";
-
     return (
         <div className="w-full">
-            <DashboardTop
-                pageTitle="Schools Dashboard"
-                title="Total Students"
-                body={String(totalStudents)}
-                subtext="Enrolled"
-                bgColor="bg-[#FFE5EA99]"
-                title1="Partner Schools"
-                title2="Avg Attendance"
-                bgColor1="bg-[#E0F7F4]"
-                bgColor2="bg-[#FDF6EC]"
-                body1={String(uniqueSchools)}
-                body2={avgAda}
-                subtext1="Active schools"
-                subtext2="Across selected schools"
-                mt="-mt-[10px]"
-            />
+            <div className="w-full px-4 pt-10 pb-5 sm:px-6 lg:px-10">
+                <h1 className="text-2xl font-extrabold text-[#555555] sm:text-3xl lg:text-4xl">
+                    Schools Dashboard
+                </h1>
+            </div>
             <div className="grid grid-cols-1 items-start gap-8 p-10 py-5 lg:grid-cols-2">
                 <Chart
                     title={formatTitle(filterState, "Students per Partner School")}

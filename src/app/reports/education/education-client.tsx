@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import Chart from "@/components/chart";
 import DashboardChart from "@/components/DashboardChart";
-import DashboardTop from "@/components/DashboardTop";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import type { StoredChart } from "@/lib/generateChart";
@@ -23,35 +22,6 @@ type FilterSummary = Pick<
     | "fiscalYear"
     | "customRange"
 >;
-
-function filterStudents(
-    records: StudentRecord[],
-    schools: string[],
-    cities: string[]
-) {
-    return records.filter((record) => {
-        if (schools.length && !schools.includes(record.schoolName)) return false;
-        if (cities.length && !cities.includes(record.city)) return false;
-        return true;
-    });
-}
-
-function filterGrades(records: GradeRecord[], schools: string[]) {
-    if (!schools.length) return records;
-    return records.filter((record) => schools.includes(record.schoolName));
-}
-
-function filterAttendance(
-    records: AttendanceRecord[],
-    schools: string[],
-    studentIds?: Set<number>
-) {
-    return records.filter((record) => {
-        if (schools.length && !schools.includes(record.schoolName)) return false;
-        if (studentIds && !studentIds.has(record.studentId)) return false;
-        return true;
-    });
-}
 
 export default function EducationClient({
     grades,
@@ -81,26 +51,6 @@ export default function EducationClient({
         [attendance, grades, students]
     );
 
-    const filteredStudents = useMemo(
-        () => filterStudents(students, selectedSchools, selectedLocations),
-        [selectedLocations, selectedSchools, students]
-    );
-    const filteredStudentIds = useMemo(
-        () =>
-            selectedLocations.length
-                ? new Set(filteredStudents.map((student) => student.studentId))
-                : undefined,
-        [filteredStudents, selectedLocations.length]
-    );
-    const filteredGrades = useMemo(
-        () => filterGrades(grades, selectedSchools),
-        [grades, selectedSchools]
-    );
-    const filteredAttendance = useMemo(
-        () => filterAttendance(attendance, selectedSchools, filteredStudentIds),
-        [attendance, filteredStudentIds, selectedSchools]
-    );
-
     useEffect(() => {
         const fetchCharts = async () => {
             try {
@@ -118,44 +68,13 @@ export default function EducationClient({
         return () => window.removeEventListener("report-updated", fetchCharts);
     }, []);
 
-    const totalStudents = filteredStudents.length;
-    const avgAda = filteredAttendance.length
-        ? `${(
-              (filteredAttendance.reduce(
-                  (sum, record) => sum + Number.parseFloat(record.ada),
-                  0
-              ) /
-                  filteredAttendance.length) *
-              100
-          ).toFixed(1)}%`
-        : "-";
-    const avgFinal = filteredGrades.length
-        ? (
-              filteredGrades.reduce(
-                  (sum, record) => sum + Number.parseFloat(record.finalMark),
-                  0
-              ) / filteredGrades.length
-          ).toFixed(2)
-        : "-";
-
     return (
         <div className="w-full">
-            <DashboardTop
-                pageTitle="Education Dashboard"
-                title="Total Students"
-                body={String(totalStudents)}
-                subtext="Enrolled"
-                bgColor="bg-[#E0F7F4]"
-                title1="Avg Daily Attendance"
-                title2="Avg Final Grade"
-                bgColor1="bg-[#F0E7ED]"
-                bgColor2="bg-[#FFF8E9]"
-                body1={avgAda}
-                body2={avgFinal}
-                subtext1="Across selected schools"
-                subtext2="0-4 scale"
-                mt="-mt-[10px]"
-            />
+            <div className="w-full px-4 pt-10 pb-5 sm:px-6 lg:px-10">
+                <h1 className="text-2xl font-extrabold text-[#555555] sm:text-3xl lg:text-4xl">
+                    Education Dashboard
+                </h1>
+            </div>
             <div className="grid grid-cols-1 items-start gap-8 p-10 py-5 lg:grid-cols-2">
                 <Chart
                     title={formatTitle(filterState, "Fall vs. Winter Grade Improvement by Subject")}
