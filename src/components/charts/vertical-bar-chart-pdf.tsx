@@ -1,5 +1,6 @@
 import { Svg, Rect, Line, Text, G } from "@react-pdf/renderer";
 import * as d3 from "d3";
+import { chartTheme } from "@/lib/chart-theme";
 
 type Datum = {
     label: string;
@@ -10,7 +11,7 @@ export function VerticalBarChartPdf({
     data,
     width = 420,
     height = 420,
-    barColor = "#D28A93",
+    barColor = chartTheme.primaryColor,
     xLabel,
     yLabel,
 }: {
@@ -64,7 +65,7 @@ export function VerticalBarChartPdf({
                         x2={innerWidth}
                         y1={y(tick)}
                         y2={y(tick)}
-                        stroke="#E6E7EB"
+                        stroke={chartTheme.gridColor}
                         strokeWidth={1}
                     />
                 ))}
@@ -86,7 +87,7 @@ export function VerticalBarChartPdf({
                     x2={innerWidth}
                     y1={innerHeight}
                     y2={innerHeight}
-                    stroke="#555555"
+                    stroke={chartTheme.axisColor}
                     strokeWidth={1}
                 />
                 <Line
@@ -94,7 +95,7 @@ export function VerticalBarChartPdf({
                     x2={0}
                     y1={0}
                     y2={innerHeight}
-                    stroke="#555555"
+                    stroke={chartTheme.axisColor}
                     strokeWidth={1}
                 />
 

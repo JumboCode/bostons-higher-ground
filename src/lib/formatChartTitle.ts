@@ -2,54 +2,53 @@
 
 import { type FilterSummary } from "@/app/reports/housing/housing-client";
 
-export default function formatTitle(filters: FilterSummary, title: string) {
+function formatMonthYear(date: Date) {
+    return date.toLocaleString("en-US", {
+        month: "short",
+        year: "numeric",
+    });
+}
+
+function getFiscalYear(filters: FilterSummary) {
+    if (filters.fiscalYear) return filters.fiscalYear;
+
     const today = new Date();
+    return today.getMonth() >= 6 ? today.getFullYear() + 1 : today.getFullYear();
+}
+
+function getDateFilterLabel(filters: FilterSummary) {
+    const today = new Date();
+
     if (
         filters.timeframe === "custom" &&
         filters.customRange?.from &&
         filters.customRange?.to
     ) {
-        return title + " Between " + `${filters.customRange.from.toLocaleDateString()} and ${filters.customRange.to.toLocaleDateString()}`;
+        return `${formatMonthYear(filters.customRange.from)} - ${formatMonthYear(filters.customRange.to)}`;
     }
-    else if (filters.fiscalYear) {
-        return title + " in " + `${filters.fiscalYear}`;
+
+    if (filters.timeframe === "thisFY" || filters.fiscalYear) {
+        return `FY${getFiscalYear(filters)}`;
     }
-    else if (filters.timeframe == "allTime") {
-        return title + " Over Time";
+
+    if (filters.timeframe === "thisMonth") {
+        return formatMonthYear(today);
     }
-    else if (filters.timeframe == "thisMonth") {
-        return title + " in " + `${today.toLocaleString('en-US', {month: 'long'})}`;
+
+    if (filters.timeframe === "lastMonth") {
+        return formatMonthYear(new Date(today.getFullYear(), today.getMonth() - 1, 1));
     }
-    else if (filters.timeframe == "lastMonth") {
-        const last_month = new Date(today.setDate(0))
-        return title + " in " + `${last_month.toLocaleString('en-US', {month: 'long'})}`;
-    }
-    else if (filters.timeframe == "thisFY") {
-        if (today.getMonth() >= 9) {
-            return title + " in " + `${today.getFullYear() + 1 }`;
-        }
-        else {
-            return title + " in " + `${today.getFullYear()}`;
-        }
-    }
-    else {
-        return title;
-    }
+
+    return null;
+}
+
+export default function formatTitle(filters: FilterSummary, title: string) {
+    const dateLabel = getDateFilterLabel(filters);
+    return dateLabel ? `${title}: ${dateLabel}` : title;
 }
 
 export function formattedFilters(filters: FilterSummary) {
     const parts: string[] = [];
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        parts.push(
-            `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-        );
-    } else {
-        parts.push(filters.timeframe);
-    }
     if (filters.selectedSchools.length) {
         parts.push(`${filters.selectedSchools.length} schools`);
     }
@@ -58,5 +57,3 @@ export function formattedFilters(filters: FilterSummary) {
     }
     return parts.join(" • ");
 }
-
-

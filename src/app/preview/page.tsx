@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { generateChart, type StoredChart } from "@/lib/generateChart";
+import { formatChartFilterLines } from "@/lib/chart-filter-labels";
 import { headers } from "next/headers";
 import ReportDoc from "./report-doc";
 
@@ -38,6 +39,7 @@ export default async function PreviewPage() {
         charts.map(async (chart, idx) => ({
             key: `${chart.title}-${idx}`,
             node: await generateChart(chart, true),
+            filterLines: formatChartFilterLines(chart.filters),
         }))
     );
 

@@ -53,14 +53,15 @@ const styles = StyleSheet.create({
     },
     chartSection: {
         display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
+        flexDirection: "column",
         rowGap: 12,
     },
     chart: {
-        width: "48%",
+        width: "100%",
         marginTop: 12,
+    },
+    chartViewport: {
+        height: 220,
     },
     chartTitle: {
         fontSize: 10,
@@ -68,6 +69,20 @@ const styles = StyleSheet.create({
         fontWeight: 700,
         color: "#555555",
         marginBottom: 4,
+    },
+    filterHeading: {
+        fontSize: 7,
+        fontFamily: "Poppins",
+        fontWeight: 700,
+        color: "#555555",
+        marginTop: 6,
+        marginBottom: 2,
+    },
+    filterText: {
+        fontSize: 7,
+        fontFamily: "Manrope",
+        color: "#6A7282",
+        lineHeight: 1.25,
     },
     footer: {
       display: "flex",
@@ -102,7 +117,7 @@ function ReportDoc({
     charts,
 }: {
     reportTitle: string;
-    charts: { key: string; node: ReactElement | null }[];
+    charts: { key: string; node: ReactElement | null; filterLines: string[] }[];
 }) {
     const [isLoading, setIsLoading] = useState(true);
     const [date, setDate] = useState<string>("");
@@ -140,9 +155,15 @@ function ReportDoc({
                                   <View style={styles.chartSection}>
                                       {charts.length > 0 ? (charts.map((chart, i) => (
                                           <View key={i} style={styles.chart} wrap={false}>
-                                              <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
-                                              <View style={{ aspectRatio: "1/1" }}>{chart.node}</View>
-                                          </View>
+                                               <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
+                                                <View style={styles.chartViewport}>{chart.node}</View>
+                                               <Text style={styles.filterHeading}>Applied filters</Text>
+                                               {chart.filterLines.map((line, lineIndex) => (
+                                                   <Text key={lineIndex} style={styles.filterText}>
+                                                       {line}
+                                                   </Text>
+                                               ))}
+                                           </View>
                                       ))) : (
                                           <Text style={{ fontSize: 12, color: "#364152", }}>
                                               No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.

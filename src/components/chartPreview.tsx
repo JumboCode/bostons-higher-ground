@@ -2,15 +2,8 @@
 
 import React from "react";
 import { X } from "lucide-react";
-import {
-    HorizontalBarChart,
-    LineChart,
-    VerticalBarChart,
-    DonutChart,
-} from "@/components/charts";
+import { ChartRenderer } from "@/components/charts";
 import { type GeneratedChartModel } from "@/lib/generateChart";
-import { Manrope } from "next/font/google";
-const manrope = Manrope({ subsets: ["latin"] });
 
 interface ChartPreviewModalProps {
     src?: string | null;
@@ -20,58 +13,10 @@ interface ChartPreviewModalProps {
 }
 
 function PreviewChart({ chart }: { chart: GeneratedChartModel }) {
-    if (chart.chartKey === "families-housed-line") {
-        return (
-            <LineChart
-                data={chart.data}
-                xLabel={chart.xLabel}
-                yLabel={chart.yLabel}
-                width={700}
-                height={400}
-                className="w-full"
-            />
-        );
-    }
+    const height = chart.type === "donut" ? 320 : chart.type === "horizontal-bar" ? 550 : 400;
+    const width = chart.type === "vertical-bar" || chart.type === "donut" ? 600 : 700;
 
-    if (
-        chart.chartKey === "family-intake-bar" ||
-        chart.chartKey === "days-to-house-bar"
-    ) {
-        return (
-            <VerticalBarChart
-                data={chart.data}
-                xLabel={chart.xLabel}
-                yLabel={chart.yLabel}
-                width={600}
-                height={380}
-                className="w-full"
-            />
-        );
-    }
-
-    if (chart.chartKey === "housing-sources-donut") {
-        return (
-            <DonutChart
-                data={chart.data}
-                centerLabel={chart.centerLabel}
-                width={600}
-                height={320}
-                
-                className="w-full h-95"
-            />
-        );
-    }
-
-    return (
-        <HorizontalBarChart
-            data={chart.data}
-            xLabel={chart.xLabel}
-            yLabel={chart.yLabel}
-            width={700}
-            height={550}
-            className="w-full"
-        />
-    );
+    return <ChartRenderer model={chart} width={width} height={height} className="w-full" />;
 }
 
 export default function ChartPreviewModal({

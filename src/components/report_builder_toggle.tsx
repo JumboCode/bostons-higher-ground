@@ -79,7 +79,7 @@ export default function ReportBuilderToggle() {
                         onClick={() => setShowRB(true)}
                         className="relative w-14 h-14 rounded-full text-white
                         bg-[#D86A7A] flex items-center shadow-xl transition-all 
-                        duration-300 ease-in-out group-hover:w-44 overflow-hidden">
+                        duration-300 ease-in-out group-hover:w-44 overflow-hidden cursor-pointer">
                         {/* Icon */}
                         <div className="flex items-center justify-center 
                         w-14 h-14 shrink-0">

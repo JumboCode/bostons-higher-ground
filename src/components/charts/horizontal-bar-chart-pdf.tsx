@@ -1,6 +1,7 @@
 import { Svg, Rect, Line, Text, G } from "@react-pdf/renderer";
 import * as d3 from "d3";
 import type { HorizontalBarDatum } from "./horizontal-bar-chart";
+import { CHART_COLORS, chartTheme } from "@/lib/chart-theme";
 
 export type HorizontalBarChartPdfProps = {
     data: HorizontalBarDatum[];
@@ -11,7 +12,7 @@ export type HorizontalBarChartPdfProps = {
     yLabel?: string;
 };
 
-const DEFAULT_COLORS = ["#D28A93", "#7DA3A1", "#A68BC2", "#E0A458", "#5E8B7E"];
+const DEFAULT_COLORS = CHART_COLORS;
 
 function truncateLabel(label: string, maxChars: number): string {
     return label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
@@ -81,7 +82,7 @@ export function HorizontalBarChartPdf({
                         x2={x(tick)}
                         y1={0}
                         y2={innerHeight}
-                        stroke="#E6E7EB"
+                        stroke={chartTheme.gridColor}
                         strokeDasharray="4 4"
                         strokeWidth={1}
                     />
@@ -116,7 +117,7 @@ export function HorizontalBarChartPdf({
                     x2={0}
                     y1={0}
                     y2={innerHeight}
-                    stroke="black"
+                    stroke={chartTheme.axisColor}
                     strokeWidth={1}
                 />
 
@@ -126,7 +127,7 @@ export function HorizontalBarChartPdf({
                     x2={innerWidth}
                     y1={innerHeight}
                     y2={innerHeight}
-                    stroke="black"
+                    stroke={chartTheme.axisColor}
                     strokeWidth={1}
                 />
 

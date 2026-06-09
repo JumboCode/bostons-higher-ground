@@ -1,6 +1,7 @@
 import { Svg, Path, Circle, Line, Text, G } from "@react-pdf/renderer";
 import * as d3 from "d3";
 import type { LineDatum } from "./line-chart";
+import { chartTheme } from "@/lib/chart-theme";
 
 export type LineChartPdfProps = {
     data: LineDatum[];
@@ -15,7 +16,7 @@ export function LineChartPdf({
     data,
     width = 420,
     height = 420,
-    lineColor = "#D28A93",
+    lineColor = chartTheme.primaryColor,
     xLabel,
     yLabel,
 }: LineChartPdfProps) {
@@ -24,7 +25,7 @@ export function LineChartPdf({
     const margin = {
         top: 10,
         right: 10,
-        bottom: xLabel ? 60 : 50,
+        bottom: xLabel ? 80 : 70,
         left: yLabel ? 50 : 40,
     };
 
@@ -68,7 +69,7 @@ export function LineChartPdf({
                         x2={innerWidth}
                         y1={y(tick)}
                         y2={y(tick)}
-                        stroke="#E6E7EB"
+                        stroke={chartTheme.gridColor}
                         strokeWidth={1}
                         strokeDasharray="4 4"
                     />
@@ -82,7 +83,7 @@ export function LineChartPdf({
                         x2={x(d.label) ?? 0}
                         y1={0}
                         y2={innerHeight}
-                        stroke="#E6E7EB"
+                        stroke={chartTheme.gridColor}
                         strokeWidth={1}
                         strokeDasharray="4 4"
                     />
@@ -94,7 +95,7 @@ export function LineChartPdf({
                     x2={innerWidth}
                     y1={0}
                     y2={0}
-                    stroke="#E6E7EB"
+                    stroke={chartTheme.gridColor}
                     strokeDasharray="4 4"
                 />
 
@@ -104,7 +105,7 @@ export function LineChartPdf({
                     x2={innerWidth}
                     y1={0}
                     y2={innerHeight}
-                    stroke="#E6E7EB"
+                    stroke={chartTheme.gridColor}
                     strokeDasharray="4 4"
                 />
 
@@ -133,23 +134,25 @@ export function LineChartPdf({
                     x2={innerWidth}
                     y1={innerHeight}
                     y2={innerHeight}
-                    stroke="black"
+                    stroke={chartTheme.axisColor}
                 />
 
                 {/* Y Axis Line */}
-                <Line x1={0} x2={0} y1={0} y2={innerHeight} stroke="black" />
+                <Line x1={0} x2={0} y1={0} y2={innerHeight} stroke={chartTheme.axisColor} />
 
                 {/* X Tick Labels */}
                 {data.map((d) => (
-                    <Text
+                    <G
                         key={`xlabel-${d.label}`}
-                        x={x(d.label) ?? 0}
-                        y={innerHeight + 15}
-                        style={{ fontSize: 12 }}
-                        textAnchor="middle"
+                        transform={`translate(${x(d.label) ?? 0}, ${innerHeight + 10}) rotate(-45)`}
                     >
-                        {truncateLabel(d.label, Math.floor(x.step() / 5.5))}
-                    </Text>
+                        <Text
+                            style={{ fontSize: 12 }}
+                            textAnchor="end"
+                        >
+                            {truncateLabel(d.label, Math.max(Math.floor(x.step() / 3), 10))}
+                        </Text>
+                    </G>
                 ))}
 
                 {/* Y Tick Labels */}
@@ -169,7 +172,7 @@ export function LineChartPdf({
                 {xLabel && (
                     <Text
                         x={innerWidth / 2}
-                        y={innerHeight + 45}
+                        y={innerHeight + 65}
                         style={{ fontSize: 14 }}
                         textAnchor="middle"
                     >

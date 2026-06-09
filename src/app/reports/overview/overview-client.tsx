@@ -3,16 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardTop from "@/components/DashboardTop";
 import Chart from "@/components/chart";
-import FamilyIntakeBarChart from "../housing/barchart";
-import LineChart from "../housing/linechart";
-import DaysHousedBarChart from "../housing/barchart2";
+import DashboardChart from "@/components/DashboardChart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
-import { type HousingRecord } from "../housing/housing-client";
+import type { ChartDataSource, HousingChartRecord } from "@/lib/chart-definitions";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
-import { StoredChart } from "@/lib/generateChart";
+import type { StoredChart } from "@/lib/generateChart";
 
-export type OverviewRecord = HousingRecord;
+export type OverviewRecord = HousingChartRecord;
 
 export type FilterSummary = Pick<
     FilterState,
@@ -30,6 +28,10 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
     const timeframe = useFilters((s) => s.timeframe);
     const fiscalYear = useFilters((s) => s.fiscalYear);
     const customRange = useFilters((s) => s.customRange);
+    const chartSource = useMemo<ChartDataSource>(
+        () => ({ housing: data }),
+        [data]
+    );
 
     const filteredData = useMemo(
         () =>
@@ -58,6 +60,43 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
         customRange,
     };
 
+    const fastFacts = useMemo(() => {
+        const totalFamilies = filteredData.length;
+        const housedFamilies = filteredData.filter(
+            (record) => record.dateHoused !== null && record.dateHoused !== undefined
+        ).length;
+        const waitTimes = filteredData
+            .map((record) => {
+                if (!record.intakeDate || !record.dateHoused) return null;
+
+                const start = new Date(record.intakeDate).getTime();
+                const end = new Date(record.dateHoused).getTime();
+                const days = (end - start) / (1000 * 60 * 60 * 24);
+
+                return Number.isFinite(days) ? days : null;
+            })
+            .filter((days): days is number => days !== null);
+        const averageWaitTime =
+            waitTimes.length > 0
+                ? Math.round(
+                      waitTimes.reduce((sum, days) => sum + days, 0) /
+                          waitTimes.length
+                  )
+                : null;
+        const successRate =
+            totalFamilies > 0
+                ? `${((housedFamilies / totalFamilies) * 100).toFixed(1)}% success rate`
+                : "No families enrolled";
+
+        return {
+            totalFamilies: totalFamilies.toLocaleString(),
+            housedFamilies: housedFamilies.toLocaleString(),
+            averageWaitTime:
+                averageWaitTime === null ? "N/A" : `${averageWaitTime} days`,
+            successRate,
+        };
+    }, [filteredData]);
+
     useEffect(() => {
         const fetchCharts = async () => {
             try {
@@ -81,38 +120,38 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             <DashboardTop
                 pageTitle="Overview"
                 title="Total Families Enrolled"
-                body="224"
+                body={fastFacts.totalFamilies}
                 subtext="All-time enrollment"
                 bgColor="bg-[#E0F7F4]"
                 title1="Families Housed to Date"
                 title2="Average Wait Time"
                 bgColor1="bg-[#F0E7ED]"
                 bgColor2="bg-[#FFF8E9]"
-                body1="158"
-                body2="48 days"
-                subtext1="70.5% success rate"
+                body1={fastFacts.housedFamilies}
+                body2={fastFacts.averageWaitTime}
+                subtext1={fastFacts.successRate}
                 subtext2="Intake to housed"
                 mt="-mt-[10px]"
             />
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
-                    title = {formatTitle(filterState, "Family Intake")}
+                    title = {formatTitle(filterState, "Family Intake Over Time")}
                     chartType="family-intake-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <FamilyIntakeBarChart data={filteredData} />
+                    <DashboardChart chartKey="family-intake-bar" source={chartSource} filters={filterState} />
                 </Chart>
 
                 <Chart
-                    title={formatTitle(filterState, "Family Housed")}
+                    title={formatTitle(filterState, "Families Housed Over Time")}
                     chartType="families-housed-line"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <LineChart data={filteredData} />
+                    <DashboardChart chartKey="families-housed-line" source={chartSource} filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -122,7 +161,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DaysHousedBarChart data={filteredData} />
+                    <DashboardChart chartKey="days-to-house-bar" source={chartSource} filters={filterState} />
                 </Chart>
             </div>
         </div>

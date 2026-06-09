@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useId, useRef } from "react";
 import { Download, Plus } from "lucide-react";
 import type { FilterState } from "@/lib/filterStore";
 import html2canvas from "html2canvas-pro";
-import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar"
-import { chartRegistry } from "@/lib/generateChart";
-import { useId } from "react";
-import { StoredChart } from "@/lib/generateChart";
+import { LOCATION_LIST, SCHOOL_LIST } from "./FilterBar";
+import type { StoredChart } from "@/lib/generateChart";
 
 interface ChartProps {
     title: string;

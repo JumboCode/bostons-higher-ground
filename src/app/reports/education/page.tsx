@@ -1,21 +1,23 @@
-import DashboardTop from '@/components/DashboardTop';
 import FilterBar from "@/components/FilterBar";
+import { getEducationData } from "@/lib/getEducationData";
 
-export default function Education(){
-    return(
-        
-        <div className="w-full">
-           
-           <div className="sticky top-0 min-h-10 bg-white flex justify-between py-3 drop-shadow-sm z-50">
-                        <FilterBar />
-                        {/* {userName || "John Doe"} */}
+import EducationClient from "./education-client";
+
+const { grades, students, attendance } = await getEducationData();
+
+export default function Education() {
+    return (
+        <div>
+            <div className="fixed top-0 left-62.5 z-50 flex min-h-10 w-full justify-between bg-white py-3 drop-shadow-sm">
+                <FilterBar />
             </div>
-            <DashboardTop pageTitle="Education Dashboard" title= "Total Families Enrolled" body="224" subtext="All-time enrollment" bgColor="bg-[#E0F7F4]" title1="Families Housed to Date" title2="Average Wait Time" bgColor1="bg-[#F0E7ED]" bgColor2="bg-[#FFF8E9]" body1="158" body2="48 days" subtext1="70.5% success rate" subtext2="Intake to housed" mt="-mt-[10px]" />
+            <div className="pt-14">
+                <EducationClient
+                    grades={grades}
+                    students={students}
+                    attendance={attendance}
+                />
+            </div>
         </div>
-        
-        
-        
-        
-        
     );
 }
