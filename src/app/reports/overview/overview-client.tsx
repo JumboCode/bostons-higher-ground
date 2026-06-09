@@ -6,11 +6,11 @@ import Chart from "@/components/chart";
 import DashboardChart from "@/components/DashboardChart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
-import { type HousingRecord } from "../housing/housing-client";
+import type { ChartDataSource, HousingChartRecord } from "@/lib/chart-definitions";
 import formatTitle, { formattedFilters } from "@/lib/formatChartTitle";
 import type { StoredChart } from "@/lib/generateChart";
 
-export type OverviewRecord = HousingRecord;
+export type OverviewRecord = HousingChartRecord;
 
 export type FilterSummary = Pick<
     FilterState,
@@ -28,6 +28,10 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
     const timeframe = useFilters((s) => s.timeframe);
     const fiscalYear = useFilters((s) => s.fiscalYear);
     const customRange = useFilters((s) => s.customRange);
+    const chartSource = useMemo<ChartDataSource>(
+        () => ({ housing: data }),
+        [data]
+    );
 
     const filteredData = useMemo(
         () =>
@@ -137,7 +141,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="family-intake-bar" records={data} filters={filterState} />
+                    <DashboardChart chartKey="family-intake-bar" source={chartSource} filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -147,7 +151,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="families-housed-line" records={data} filters={filterState} />
+                    <DashboardChart chartKey="families-housed-line" source={chartSource} filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -157,7 +161,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="days-to-house-bar" records={data} filters={filterState} />
+                    <DashboardChart chartKey="days-to-house-bar" source={chartSource} filters={filterState} />
                 </Chart>
             </div>
         </div>
