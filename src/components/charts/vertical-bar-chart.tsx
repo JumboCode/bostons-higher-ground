@@ -42,10 +42,11 @@ export function VerticalBarChart({
         if (!data.length) return;
 
         const targetHeight = height ?? 420;
+        const shouldRotate = data.some((d) => d.label.length > 6);
         const margin: Margin = {
             top: 10,
             right: 10,
-            bottom: xLabel ? 60 : 40,
+            bottom: shouldRotate ? (xLabel ? 100 : 80) : (xLabel ? 60 : 40),
             left: yLabel ? 65 : 55,
         };
         const {
@@ -126,10 +127,18 @@ export function VerticalBarChart({
             .attr("transform", `translate(0, ${innerHeight})`)
             .call(d3.axisBottom(x));
         xAxis
-            .selectAll("text")
+            .selectAll<SVGTextElement, string>("text")
             .style("font-size", "12px")
             .style("font-family", DEFAULT_FONT)
-            .style("fill", DEFAULT_TEXT);
+            .style("fill", DEFAULT_TEXT)
+            .call((sel) => {
+                if (shouldRotate) {
+                    sel.attr("transform", "rotate(-45)")
+                        .style("text-anchor", "end")
+                        .attr("dx", "-0.5em")
+                        .attr("dy", "0.15em");
+                }
+            });
         xAxis.select(".domain").attr("stroke", "black").attr("stroke-width", 1);
 
         const yAxis = chart.append("g").call(d3.axisLeft(y));

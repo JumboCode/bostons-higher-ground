@@ -1,9 +1,8 @@
-import { getAllData } from "@/lib/getAllData";
+import { getEducationData } from "@/lib/getEducationData";
 import SchoolsClient from "./schools-client";
 
-// Grabbing all data from the database
-const data = await getAllData();
+const { students, attendance } = await getEducationData();
 
 export default function Schools() {
-    return <SchoolsClient data={data} />;
+    return <SchoolsClient students={students} attendance={attendance} />;
 }

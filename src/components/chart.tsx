@@ -8,15 +8,17 @@ import html2canvas from 'html2canvas-pro';
 interface ChartProps {
     title: string;
     children: React.ReactNode;
-    appliedFilters?: string; // human-readable display string
-    filterState?: Partial<FilterState>; // raw filter state to persist
+    appliedCities?: string;
+    appliedSchools?: string;
+    filterState?: Partial<FilterState>;
     onAddToReport?: () => Promise<void> | void;
 }
 
 export default function Chart({
     title,
     children,
-    appliedFilters,
+    appliedCities,
+    appliedSchools,
     filterState,
     onAddToReport,
 }: ChartProps) {
@@ -52,7 +54,7 @@ export default function Chart({
                           title,
                           filters: filterState
                               ? JSON.stringify(filterState)
-                              : (appliedFilters ?? null),
+                              : null,
                       }),
                   });
                   window.dispatchEvent(new Event("report-updated"));
@@ -90,10 +92,20 @@ export default function Chart({
             <div>{children}</div>
 
             {/* Applied Filters */}
-            {appliedFilters && (
-                <div className="text-sm text-gray-600">
-                    <span className="font-medium">Applied filters: </span>
-                    <span>{appliedFilters}</span>
+            {(appliedCities || appliedSchools) && (
+                <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                    {appliedCities && (
+                        <span>
+                            <span className="font-medium">Cities: </span>
+                            {appliedCities}
+                        </span>
+                    )}
+                    {appliedSchools && (
+                        <span>
+                            <span className="font-medium">Schools: </span>
+                            {appliedSchools}
+                        </span>
+                    )}
                 </div>
             )}
         </div>

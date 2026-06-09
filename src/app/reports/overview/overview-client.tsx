@@ -8,6 +8,7 @@ import LineChart from "../housing/linechart";
 import DaysHousedBarChart from "../housing/barchart2";
 import useFilters, { type FilterState } from "@/lib/filterStore";
 import { filterRecords } from "@/lib/applyFilters";
+import { buildChartTitle } from "@/lib/chartTitle";
 import { type HousingRecord } from "../housing/housing-client";
 
 export type OverviewRecord = HousingRecord;
@@ -55,6 +56,10 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
         customRange,
     };
 
+    const appliedCities = selectedLocations.length > 0 ? selectedLocations.join(", ") : undefined;
+    const appliedSchools = selectedSchools.length > 0 ? selectedSchools.join(", ") : undefined;
+    const t = (base: string) => buildChartTitle(base, timeframe, fiscalYear, customRange);
+
     return (
         <div className="w-full">
             <DashboardTop
@@ -75,24 +80,27 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             />
             <div className="p-20">
                 <Chart
-                    title="Family Intake Over Time"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Family Intake Over Time")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <FamilyIntakeBarChart data={filteredData} />
                 </Chart>
 
                 <Chart
-                    title="Families Housed Over Time"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Families Housed Over Time")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <LineChart data={filteredData} />
                 </Chart>
 
                 <Chart
-                    title="Days to House Distribution"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Days to House Distribution")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <DaysHousedBarChart data={filteredData} />
@@ -102,24 +110,3 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
     );
 }
 
-function formattedFilters(filters: FilterSummary) {
-    const parts: string[] = [];
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        parts.push(
-            `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-        );
-    } else {
-        parts.push(filters.timeframe);
-    }
-    if (filters.selectedSchools.length) {
-        parts.push(`${filters.selectedSchools.length} schools`);
-    }
-    if (filters.selectedLocations.length) {
-        parts.push(`${filters.selectedLocations.length} locations`);
-    }
-    return parts.join(" • ");
-}

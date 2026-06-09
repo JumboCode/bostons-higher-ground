@@ -8,6 +8,8 @@ import LineChart from "./linechart";
 import DaysHousedBarChart from "./barchart2";
 import LocationBarChart from "./locationchart";
 import useFilters, { type FilterState } from "@/lib/filterStore";
+import { filterRecords } from "@/lib/applyFilters";
+import { buildChartTitle } from "@/lib/chartTitle";
 
 export type FilterSummary = Pick<
     FilterState,
@@ -17,8 +19,6 @@ export type FilterSummary = Pick<
     | "fiscalYear"
     | "customRange"
 >;
-
-import { filterRecords } from "@/lib/applyFilters";
 
 export type HousingRecord = {
     id: number;
@@ -52,14 +52,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 fiscalYear,
                 customRange,
             }),
-        [
-            data,
-            selectedLocations,
-            selectedSchools,
-            timeframe,
-            fiscalYear,
-            customRange,
-        ]
+        [data, selectedLocations, selectedSchools, timeframe, fiscalYear, customRange]
     );
 
     const filterState: FilterSummary = {
@@ -69,6 +62,12 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
         fiscalYear,
         customRange,
     };
+
+    // Only show filter tags for partial (not all, not none) selections
+    const appliedCities = selectedLocations.length > 0 ? selectedLocations.join(", ") : undefined;
+    const appliedSchools = selectedSchools.length > 0 ? selectedSchools.join(", ") : undefined;
+
+    const t = (base: string) => buildChartTitle(base, timeframe, fiscalYear, customRange);
 
     return (
         <div className="w-full">
@@ -90,32 +89,36 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
             />
             <div className="p-20">
                 <Chart
-                    title="Family Intake Over Time"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Family Intake Over Time")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <FamilyIntakeBarChart data={filteredData} />
                 </Chart>
 
                 <Chart
-                    title="Families Housed Over Time"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Families Housed Over Time")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <LineChart data={filteredData} />
                 </Chart>
 
                 <Chart
-                    title="Days to House Distribution"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Days to House Distribution")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <DaysHousedBarChart data={filteredData} />
                 </Chart>
 
                 <Chart
-                    title="Active vs Housed Families by Location"
-                    appliedFilters={formattedFilters(filterState)}
+                    title={t("Active vs Housed Families by Location")}
+                    appliedCities={appliedCities}
+                    appliedSchools={appliedSchools}
                     filterState={filterState}
                 >
                     <LocationBarChart data={filteredData} />
@@ -123,26 +126,4 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
             </div>
         </div>
     );
-}
-
-function formattedFilters(filters: FilterSummary) {
-    const parts: string[] = [];
-    if (
-        filters.timeframe === "custom" &&
-        filters.customRange?.from &&
-        filters.customRange?.to
-    ) {
-        parts.push(
-            `${filters.customRange.from.toLocaleDateString()} - ${filters.customRange.to.toLocaleDateString()}`
-        );
-    } else {
-        parts.push(filters.timeframe);
-    }
-    if (filters.selectedSchools.length) {
-        parts.push(`${filters.selectedSchools.length} schools`);
-    }
-    if (filters.selectedLocations.length) {
-        parts.push(`${filters.selectedLocations.length} locations`);
-    }
-    return parts.join(" • ");
 }
