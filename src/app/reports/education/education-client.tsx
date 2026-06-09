@@ -11,6 +11,7 @@ import type { StoredChart } from "@/lib/generateChart";
 import type {
     AttendanceRecord,
     ChartDataSource,
+    GradeRecord,
     StudentRecord,
 } from "@/lib/chart-definitions";
 
@@ -35,6 +36,11 @@ function filterStudents(
     });
 }
 
+function filterGrades(records: GradeRecord[], schools: string[]) {
+    if (!schools.length) return records;
+    return records.filter((record) => schools.includes(record.schoolName));
+}
+
 function filterAttendance(
     records: AttendanceRecord[],
     schools: string[],
@@ -47,10 +53,12 @@ function filterAttendance(
     });
 }
 
-export default function SchoolsClient({
+export default function EducationClient({
+    grades,
     students,
     attendance,
 }: {
+    grades: GradeRecord[];
     students: StudentRecord[];
     attendance: AttendanceRecord[];
 }) {
@@ -69,9 +77,10 @@ export default function SchoolsClient({
         customRange,
     };
     const source = useMemo<ChartDataSource>(
-        () => ({ housing: [], students, attendance }),
-        [attendance, students]
+        () => ({ housing: [], grades, students, attendance }),
+        [attendance, grades, students]
     );
+
     const filteredStudents = useMemo(
         () => filterStudents(students, selectedSchools, selectedLocations),
         [selectedLocations, selectedSchools, students]
@@ -82,6 +91,10 @@ export default function SchoolsClient({
                 ? new Set(filteredStudents.map((student) => student.studentId))
                 : undefined,
         [filteredStudents, selectedLocations.length]
+    );
+    const filteredGrades = useMemo(
+        () => filterGrades(grades, selectedSchools),
+        [grades, selectedSchools]
     );
     const filteredAttendance = useMemo(
         () => filterAttendance(attendance, selectedSchools, filteredStudentIds),
@@ -106,7 +119,6 @@ export default function SchoolsClient({
     }, []);
 
     const totalStudents = filteredStudents.length;
-    const uniqueSchools = new Set(filteredStudents.map((student) => student.schoolName)).size;
     const avgAda = filteredAttendance.length
         ? `${(
               (filteredAttendance.reduce(
@@ -117,82 +129,76 @@ export default function SchoolsClient({
               100
           ).toFixed(1)}%`
         : "-";
+    const avgFinal = filteredGrades.length
+        ? (
+              filteredGrades.reduce(
+                  (sum, record) => sum + Number.parseFloat(record.finalMark),
+                  0
+              ) / filteredGrades.length
+          ).toFixed(2)
+        : "-";
 
     return (
         <div className="w-full">
             <DashboardTop
-                pageTitle="Schools Dashboard"
+                pageTitle="Education Dashboard"
                 title="Total Students"
                 body={String(totalStudents)}
                 subtext="Enrolled"
-                bgColor="bg-[#FFE5EA99]"
-                title1="Partner Schools"
-                title2="Avg Attendance"
-                bgColor1="bg-[#E0F7F4]"
-                bgColor2="bg-[#FDF6EC]"
-                body1={String(uniqueSchools)}
-                body2={avgAda}
-                subtext1="Active schools"
-                subtext2="Across selected schools"
+                bgColor="bg-[#E0F7F4]"
+                title1="Avg Daily Attendance"
+                title2="Avg Final Grade"
+                bgColor1="bg-[#F0E7ED]"
+                bgColor2="bg-[#FFF8E9]"
+                body1={avgAda}
+                body2={avgFinal}
+                subtext1="Across selected schools"
+                subtext2="0-4 scale"
                 mt="-mt-[10px]"
             />
             <div className="grid grid-cols-1 items-start gap-8 p-10 py-5 lg:grid-cols-2">
                 <Chart
-                    title={formatTitle(filterState, "Students per Partner School")}
-                    chartType="students-per-school-bar"
+                    title={formatTitle(filterState, "Fall vs. Winter Grade Improvement by Subject")}
+                    chartType="grade-improvement-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
                     <div className="max-h-150 w-full min-w-0 overflow-y-auto">
-                        <DashboardChart chartKey="students-per-school-bar" source={source} filters={filterState} />
+                        <DashboardChart chartKey="grade-improvement-bar" source={source} filters={filterState} />
                     </div>
                 </Chart>
 
                 <Chart
-                    title={formatTitle(filterState, "Students by City")}
-                    chartType="education-students-by-city-bar"
+                    title={formatTitle(filterState, "Average Final Grade by Subject")}
+                    chartType="grade-distribution-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
                     <div className="max-h-150 w-full min-w-0 overflow-y-auto">
-                        <DashboardChart chartKey="education-students-by-city-bar" source={source} filters={filterState} />
+                        <DashboardChart chartKey="grade-distribution-bar" source={source} filters={filterState} />
                     </div>
                 </Chart>
 
                 <Chart
-                    title={formatTitle(filterState, "Students by ZIP Code")}
-                    chartType="students-by-zip-bar"
+                    title={formatTitle(filterState, "Attendance Rate Breakdown")}
+                    chartType="attendance-breakdown-donut"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <div className="max-h-150 w-full min-w-0 overflow-y-auto">
-                        <DashboardChart chartKey="students-by-zip-bar" source={source} filters={filterState} />
-                    </div>
+                    <DashboardChart chartKey="attendance-breakdown-donut" source={source} filters={filterState} />
                 </Chart>
 
                 <Chart
-                    title={formatTitle(filterState, "Grade Level Distribution")}
-                    chartType="grade-level-distribution-bar"
+                    title={formatTitle(filterState, "Average Daily Attendance by Grade Level")}
+                    chartType="attendance-by-grade-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="grade-level-distribution-bar" source={source} filters={filterState} />
-                </Chart>
-
-                <Chart
-                    title={formatTitle(filterState, "Average Attendance Rate by School")}
-                    chartType="attendance-by-school-bar"
-                    reportCharts={charts}
-                    appliedFilters={formattedFilters(filterState)}
-                    filterState={filterState}
-                >
-                    <div className="max-h-150 w-full min-w-0 overflow-y-auto">
-                        <DashboardChart chartKey="attendance-by-school-bar" source={source} filters={filterState} />
-                    </div>
+                    <DashboardChart chartKey="attendance-by-grade-bar" source={source} filters={filterState} />
                 </Chart>
             </div>
         </div>

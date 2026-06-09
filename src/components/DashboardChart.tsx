@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { ChartRenderer } from "@/components/charts";
 import {
     buildChartModel,
+    type ChartDataSource,
     type ChartFilters,
     type ChartKey,
     type GeneratedChartModel,
@@ -28,15 +29,17 @@ function hasChartData(model: GeneratedChartModel) {
 export default function DashboardChart({
     chartKey,
     records,
+    source,
     filters,
 }: {
     chartKey: ChartKey;
-    records: HousingChartRecord[];
+    records?: HousingChartRecord[];
+    source?: ChartDataSource;
     filters?: Partial<ChartFilters>;
 }) {
     const model = useMemo(
-        () => buildChartModel(chartKey, records, filters),
-        [chartKey, records, filters]
+        () => buildChartModel(chartKey, source ?? records ?? [], filters),
+        [chartKey, records, source, filters]
     );
     const hasData = hasChartData(model);
 

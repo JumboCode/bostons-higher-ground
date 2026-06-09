@@ -1,12 +1,14 @@
 import React from "react";
 
 import { getAllData } from "@/lib/getAllData";
+import { getEducationData } from "@/lib/getEducationData";
 import {
     buildChartModel,
     chartRegistry,
     isChartKey,
     type ChartFilters,
     type ChartKey,
+    type ChartDataSource,
     type GeneratedChartModel,
     type HousingChartRecord,
 } from "@/lib/chart-definitions";
@@ -72,7 +74,16 @@ export async function generateChartModel(
     if (!isChartKey(stored.chartType)) return null;
 
     const chartKey = stored.chartType as ChartKey;
-    const data = (await getAllData()) as HousingChartRecord[];
+    const [housing, education] = await Promise.all([
+        getAllData() as Promise<HousingChartRecord[]>,
+        getEducationData(),
+    ]);
+    const data: ChartDataSource = {
+        housing,
+        grades: education.grades,
+        students: education.students,
+        attendance: education.attendance,
+    };
     const filters = parseFilters(stored.filters);
     return buildChartModel(chartKey, data, filters);
 }

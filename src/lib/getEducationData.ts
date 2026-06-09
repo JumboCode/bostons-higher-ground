@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "@/lib/db";
 
 export async function getEducationData() {
     const [students, grades, attendance] = await Promise.all([
@@ -6,5 +6,6 @@ export async function getEducationData() {
         db.query.grades.findMany(),
         db.query.attendance.findMany(),
     ]);
+
     return { students, grades, attendance };
 }

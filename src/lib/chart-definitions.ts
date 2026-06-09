@@ -16,6 +16,15 @@ export const chartRegistry = {
     "Schools by City": "schools-by-city-bar",
     "Housing Sources": "housing-sources-donut",
     "Students by City": "students-by-city-bar",
+    "Education Students by City": "education-students-by-city-bar",
+    "Fall vs. Winter Grade Improvement by Subject": "grade-improvement-bar",
+    "Average Final Grade by Subject": "grade-distribution-bar",
+    "Attendance Rate Breakdown": "attendance-breakdown-donut",
+    "Average Daily Attendance by Grade Level": "attendance-by-grade-bar",
+    "Students per Partner School": "students-per-school-bar",
+    "Students by ZIP Code": "students-by-zip-bar",
+    "Grade Level Distribution": "grade-level-distribution-bar",
+    "Average Attendance Rate by School": "attendance-by-school-bar",
 } as const;
 
 export type ChartKey = (typeof chartRegistry)[keyof typeof chartRegistry];
@@ -32,6 +41,51 @@ export type HousingChartRecord = FilterableRecord & {
     studentCount: number | null;
     intakeMonth?: number | null;
     housedMonth?: number | null;
+};
+
+export type GradeRecord = {
+    id: number;
+    schoolCode: number;
+    schoolName: string;
+    studentId: number;
+    rubricCode: string;
+    rubricName: string;
+    fMark: string | null;
+    wMark: string | null;
+    finalMark: string;
+};
+
+export type StudentRecord = {
+    id: number;
+    schoolCode: number;
+    schoolName: string;
+    studentId: number;
+    gradeLevel: string;
+    firstName: string;
+    middleName: string | null;
+    lastName: string;
+    address: string;
+    city: string;
+    zip: number;
+};
+
+export type AttendanceRecord = {
+    id: number;
+    schoolCode: number;
+    schoolName: string;
+    studentId: number;
+    daysPresent: number;
+    daysAbsent: number;
+    daysUnexcusedAbsent: number;
+    daysMembership: number;
+    ada: string;
+};
+
+export type ChartDataSource = {
+    housing: HousingChartRecord[];
+    grades?: GradeRecord[];
+    students?: StudentRecord[];
+    attendance?: AttendanceRecord[];
 };
 
 export type ChartFilters = {
@@ -52,7 +106,7 @@ type VerticalBarChartDefinition = BaseChartDefinition & {
     xLabel: string;
     yLabel: string;
     buildData: (
-        records: HousingChartRecord[],
+        source: ChartDataSource,
         filters: ChartFilters
     ) => VerticalBarDatum[];
 };
@@ -61,7 +115,7 @@ type LineChartDefinition = BaseChartDefinition & {
     type: "line";
     xLabel: string;
     yLabel: string;
-    buildData: (records: HousingChartRecord[], filters: ChartFilters) => LineDatum[];
+    buildData: (source: ChartDataSource, filters: ChartFilters) => LineDatum[];
 };
 
 type HorizontalBarChartDefinition = BaseChartDefinition & {
@@ -69,7 +123,7 @@ type HorizontalBarChartDefinition = BaseChartDefinition & {
     xLabel: string;
     yLabel: string;
     buildData: (
-        records: HousingChartRecord[],
+        source: ChartDataSource,
         filters: ChartFilters
     ) => HorizontalBarDatum[];
 };
@@ -77,7 +131,7 @@ type HorizontalBarChartDefinition = BaseChartDefinition & {
 type DonutChartDefinition = BaseChartDefinition & {
     type: "donut";
     centerLabel: string;
-    buildData: (records: HousingChartRecord[], filters: ChartFilters) => DonutDatum[];
+    buildData: (source: ChartDataSource, filters: ChartFilters) => DonutDatum[];
 };
 
 export type ChartDefinition =
@@ -538,6 +592,291 @@ function housingSourcesSeries(
         .sort((a, b) => b.value - a.value);
 }
 
+const GRADE_ORDER = ["K0", "K1", "K2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+
+function parseNumber(value: string | number | null | undefined) {
+    if (value === null || value === undefined) return null;
+    const parsed = typeof value === "number" ? value : Number.parseFloat(value);
+    return Number.isNaN(parsed) ? null : parsed;
+}
+
+function filterStudents(records: StudentRecord[], filters: ChartFilters) {
+    return records.filter((record) => {
+        if (
+            filters.selectedSchools.length > 0 &&
+            !filters.selectedSchools.includes(record.schoolName)
+        ) {
+            return false;
+        }
+
+        if (
+            filters.selectedLocations.length > 0 &&
+            !filters.selectedLocations.includes(record.city)
+        ) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+function filterGrades(records: GradeRecord[], filters: ChartFilters) {
+    if (!filters.selectedSchools.length) return records;
+    return records.filter((record) =>
+        filters.selectedSchools.includes(record.schoolName)
+    );
+}
+
+function filterAttendance(
+    records: AttendanceRecord[],
+    filters: ChartFilters,
+    students: StudentRecord[] = []
+) {
+    const filteredStudentIds = filters.selectedLocations.length
+        ? new Set(filterStudents(students, filters).map((student) => student.studentId))
+        : null;
+
+    return records.filter((record) => {
+        if (
+            filters.selectedSchools.length > 0 &&
+            !filters.selectedSchools.includes(record.schoolName)
+        ) {
+            return false;
+        }
+
+        if (filteredStudentIds && !filteredStudentIds.has(record.studentId)) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+function gradeImprovementSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): HorizontalBarDatum[] {
+    const bySubject = new Map<string, { fall: number[]; winter: number[] }>();
+
+    filterGrades(source.grades ?? [], filters).forEach((record) => {
+        if (!record.rubricName) return;
+        const entry = bySubject.get(record.rubricName) ?? { fall: [], winter: [] };
+        const fall = parseNumber(record.fMark);
+        const winter = parseNumber(record.wMark);
+
+        if (fall !== null) entry.fall.push(fall);
+        if (winter !== null) entry.winter.push(winter);
+        bySubject.set(record.rubricName, entry);
+    });
+
+    return Array.from(bySubject.entries())
+        .filter(([, values]) => values.fall.length > 0 || values.winter.length > 0)
+        .map(([subject, values]) => {
+            const avgFall = values.fall.length
+                ? values.fall.reduce((sum, value) => sum + value, 0) / values.fall.length
+                : 0;
+            const avgWinter = values.winter.length
+                ? values.winter.reduce((sum, value) => sum + value, 0) / values.winter.length
+                : 0;
+
+            return {
+                category: subject,
+                series: [
+                    { label: "Fall", value: Number(avgFall.toFixed(2)) },
+                    { label: "Winter", value: Number(avgWinter.toFixed(2)) },
+                ],
+            };
+        })
+        .sort(
+            (a, b) =>
+                b.series.reduce((sum, series) => sum + series.value, 0) -
+                a.series.reduce((sum, series) => sum + series.value, 0)
+        );
+}
+
+function gradeDistributionSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): HorizontalBarDatum[] {
+    const bySubject = new Map<string, number[]>();
+
+    filterGrades(source.grades ?? [], filters).forEach((record) => {
+        if (!record.rubricName) return;
+        const mark = parseNumber(record.finalMark);
+        if (mark === null) return;
+        const current = bySubject.get(record.rubricName) ?? [];
+        current.push(mark);
+        bySubject.set(record.rubricName, current);
+    });
+
+    return Array.from(bySubject.entries())
+        .map(([subject, marks]) => ({
+            category: subject,
+            series: [
+                {
+                    label: "Avg Final Mark",
+                    value: Number(
+                        (marks.reduce((sum, mark) => sum + mark, 0) / marks.length).toFixed(2)
+                    ),
+                },
+            ],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value);
+}
+
+function attendanceBreakdownSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): DonutDatum[] {
+    let regular = 0;
+    let atRisk = 0;
+    let chronic = 0;
+
+    filterAttendance(source.attendance ?? [], filters, source.students).forEach((record) => {
+        const ada = parseNumber(record.ada);
+        if (ada === null) return;
+        if (ada >= 0.9) regular += 1;
+        else if (ada >= 0.8) atRisk += 1;
+        else chronic += 1;
+    });
+
+    return [
+        { label: "Regular (>=90%)", value: regular, color: "#7DA3A1" },
+        { label: "At Risk (80-90%)", value: atRisk, color: "#E0A458" },
+        { label: "Chronic (<80%)", value: chronic, color: "#D28A93" },
+    ].filter((datum) => datum.value > 0);
+}
+
+function attendanceByGradeSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): VerticalBarDatum[] {
+    const students = filterStudents(source.students ?? [], filters);
+    const gradeByStudent = new Map(students.map((student) => [student.studentId, student.gradeLevel]));
+    const adaByGrade = new Map<string, number[]>();
+
+    filterAttendance(source.attendance ?? [], filters, students).forEach((record) => {
+        const grade = gradeByStudent.get(record.studentId);
+        const ada = parseNumber(record.ada);
+        if (!grade || ada === null) return;
+        const values = adaByGrade.get(grade) ?? [];
+        values.push(ada * 100);
+        adaByGrade.set(grade, values);
+    });
+
+    return GRADE_ORDER.filter((grade) => adaByGrade.has(grade)).map((grade) => {
+        const values = adaByGrade.get(grade) ?? [];
+        return {
+            label: grade,
+            value: Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)),
+        };
+    });
+}
+
+function studentsPerSchoolSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): HorizontalBarDatum[] {
+    const counts = new Map<string, number>();
+
+    filterStudents(source.students ?? [], filters).forEach((record) => {
+        counts.set(record.schoolName, (counts.get(record.schoolName) ?? 0) + 1);
+    });
+
+    return Array.from(counts.entries())
+        .map(([school, count]) => ({
+            category: school,
+            series: [{ label: "Students", value: count }],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value);
+}
+
+function educationStudentsByCitySeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): HorizontalBarDatum[] {
+    const counts = new Map<string, number>();
+
+    filterStudents(source.students ?? [], filters).forEach((record) => {
+        if (!record.city) return;
+        counts.set(record.city, (counts.get(record.city) ?? 0) + 1);
+    });
+
+    return Array.from(counts.entries())
+        .map(([city, count]) => ({
+            category: city,
+            series: [{ label: "Students", value: count }],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value);
+}
+
+function studentsByZipSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): HorizontalBarDatum[] {
+    const counts = new Map<string, number>();
+
+    filterStudents(source.students ?? [], filters).forEach((record) => {
+        if (!record.zip) return;
+        const zip = String(record.zip);
+        counts.set(zip, (counts.get(zip) ?? 0) + 1);
+    });
+
+    return Array.from(counts.entries())
+        .map(([zip, count]) => ({
+            category: zip,
+            series: [{ label: "Students", value: count }],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value)
+        .slice(0, 15);
+}
+
+function gradeLevelDistributionSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): VerticalBarDatum[] {
+    const counts = new Map<string, number>();
+
+    filterStudents(source.students ?? [], filters).forEach((record) => {
+        if (!record.gradeLevel) return;
+        counts.set(record.gradeLevel, (counts.get(record.gradeLevel) ?? 0) + 1);
+    });
+
+    return GRADE_ORDER.filter((grade) => counts.has(grade)).map((grade) => ({
+        label: grade,
+        value: counts.get(grade) ?? 0,
+    }));
+}
+
+function attendanceBySchoolSeries(
+    source: ChartDataSource,
+    filters: ChartFilters
+): HorizontalBarDatum[] {
+    const bySchool = new Map<string, number[]>();
+
+    filterAttendance(source.attendance ?? [], filters, source.students).forEach((record) => {
+        const ada = parseNumber(record.ada);
+        if (!record.schoolName || ada === null) return;
+        const values = bySchool.get(record.schoolName) ?? [];
+        values.push(ada * 100);
+        bySchool.set(record.schoolName, values);
+    });
+
+    return Array.from(bySchool.entries())
+        .map(([school, values]) => ({
+            category: school,
+            series: [
+                {
+                    label: "Avg Attendance %",
+                    value: Number(
+                        (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)
+                    ),
+                },
+            ],
+        }))
+        .sort((a, b) => b.series[0].value - a.series[0].value);
+}
+
 export const chartDefinitions = {
     "family-intake-bar": {
         title: "Family Intake",
@@ -545,7 +884,7 @@ export const chartDefinitions = {
         xLabel: "Time",
         yLabel: "Families",
         emptyMessage: "No family data to display",
-        buildData: familyIntakeSeries,
+        buildData: (source, filters) => familyIntakeSeries(source.housing, filters),
     },
     "families-housed-line": {
         title: "Families Housed",
@@ -553,7 +892,7 @@ export const chartDefinitions = {
         xLabel: "Time",
         yLabel: "Families housed",
         emptyMessage: "No housing data to display",
-        buildData: familiesHousedSeries,
+        buildData: (source, filters) => familiesHousedSeries(source.housing, filters),
     },
     "days-to-house-bar": {
         title: "Days to House Distribution",
@@ -561,7 +900,7 @@ export const chartDefinitions = {
         xLabel: "School",
         yLabel: "Avg. days to house",
         emptyMessage: "No days to house data to display",
-        buildData: daysToHouseSeries,
+        buildData: (source, filters) => daysToHouseSeries(source.housing, filters),
     },
     "location-bar": {
         title: "Active vs Housed Families by Location",
@@ -569,7 +908,7 @@ export const chartDefinitions = {
         xLabel: "# of Families",
         yLabel: "Location",
         emptyMessage: "No location data to display",
-        buildData: locationSeries,
+        buildData: (source, filters) => locationSeries(source.housing, filters),
     },
     "partner-schools-bar": {
         title: "Partner Schools & Homeless Student Counts",
@@ -577,7 +916,7 @@ export const chartDefinitions = {
         xLabel: "# of Students",
         yLabel: "School",
         emptyMessage: "No counts data to display",
-        buildData: partnerSchoolsSeries,
+        buildData: (source, filters) => partnerSchoolsSeries(source.housing, filters),
     },
     "schools-by-city-bar": {
         title: "Schools by City",
@@ -585,7 +924,7 @@ export const chartDefinitions = {
         xLabel: "# of Schools",
         yLabel: "City",
         emptyMessage: "No school data to display",
-        buildData: schoolsByCitySeries,
+        buildData: (source, filters) => schoolsByCitySeries(source.housing, filters),
     },
     "students-by-city-bar": {
         title: "Students by City",
@@ -593,14 +932,85 @@ export const chartDefinitions = {
         xLabel: "# of Students",
         yLabel: "City",
         emptyMessage: "No student data to display",
-        buildData: studentsByCitySeries,
+        buildData: (source, filters) => studentsByCitySeries(source.housing, filters),
     },
     "housing-sources-donut": {
         title: "Housing Sources",
         type: "donut",
         centerLabel: "Total Housed",
         emptyMessage: "No source data to display",
-        buildData: housingSourcesSeries,
+        buildData: (source, filters) => housingSourcesSeries(source.housing, filters),
+    },
+    "grade-improvement-bar": {
+        title: "Fall vs. Winter Grade Improvement by Subject",
+        type: "horizontal-bar",
+        xLabel: "Average Mark (0-4)",
+        yLabel: "Subject",
+        emptyMessage: "No grade data available.",
+        buildData: gradeImprovementSeries,
+    },
+    "grade-distribution-bar": {
+        title: "Average Final Grade by Subject",
+        type: "horizontal-bar",
+        xLabel: "Average Final Mark (0-4)",
+        yLabel: "Subject",
+        emptyMessage: "No grade data available.",
+        buildData: gradeDistributionSeries,
+    },
+    "attendance-breakdown-donut": {
+        title: "Attendance Rate Breakdown",
+        type: "donut",
+        centerLabel: "Students",
+        emptyMessage: "No attendance data available.",
+        buildData: attendanceBreakdownSeries,
+    },
+    "attendance-by-grade-bar": {
+        title: "Average Daily Attendance by Grade Level",
+        type: "vertical-bar",
+        xLabel: "Grade Level",
+        yLabel: "Avg Daily Attendance (%)",
+        emptyMessage: "No attendance data available.",
+        buildData: attendanceByGradeSeries,
+    },
+    "students-per-school-bar": {
+        title: "Students per Partner School",
+        type: "horizontal-bar",
+        xLabel: "# of Students",
+        yLabel: "School",
+        emptyMessage: "No student data available.",
+        buildData: studentsPerSchoolSeries,
+    },
+    "students-by-zip-bar": {
+        title: "Students by ZIP Code",
+        type: "horizontal-bar",
+        xLabel: "# of Students",
+        yLabel: "ZIP Code",
+        emptyMessage: "No student data available.",
+        buildData: studentsByZipSeries,
+    },
+    "education-students-by-city-bar": {
+        title: "Students by City",
+        type: "horizontal-bar",
+        xLabel: "# of Students",
+        yLabel: "City",
+        emptyMessage: "No student data available.",
+        buildData: educationStudentsByCitySeries,
+    },
+    "grade-level-distribution-bar": {
+        title: "Grade Level Distribution",
+        type: "vertical-bar",
+        xLabel: "Grade Level",
+        yLabel: "# of Students",
+        emptyMessage: "No student data available.",
+        buildData: gradeLevelDistributionSeries,
+    },
+    "attendance-by-school-bar": {
+        title: "Average Attendance Rate by School",
+        type: "horizontal-bar",
+        xLabel: "Avg Daily Attendance (%)",
+        yLabel: "School",
+        emptyMessage: "No attendance data available.",
+        buildData: attendanceBySchoolSeries,
     },
 } satisfies Record<ChartKey, ChartDefinition>;
 
@@ -614,11 +1024,14 @@ export function getChartDefinition(chartKey: ChartKey): ChartDefinition {
 
 export function buildChartModel(
     chartKey: ChartKey,
-    records: HousingChartRecord[],
+    dataSource: HousingChartRecord[] | ChartDataSource,
     filters?: Partial<ChartFilters>
 ): GeneratedChartModel {
     const definition = getChartDefinition(chartKey);
     const resolvedFilters = normalizeFilters(filters);
+    const source = Array.isArray(dataSource)
+        ? { housing: dataSource }
+        : dataSource;
     const base = {
         chartKey,
         title: definition.title,
@@ -630,7 +1043,7 @@ export function buildChartModel(
             return {
                 ...base,
                 type: "vertical-bar",
-                data: definition.buildData(records, resolvedFilters),
+                data: definition.buildData(source, resolvedFilters),
                 xLabel: definition.xLabel,
                 yLabel: definition.yLabel,
             };
@@ -638,7 +1051,7 @@ export function buildChartModel(
             return {
                 ...base,
                 type: "line",
-                data: definition.buildData(records, resolvedFilters),
+                data: definition.buildData(source, resolvedFilters),
                 xLabel: definition.xLabel,
                 yLabel: definition.yLabel,
             };
@@ -646,7 +1059,7 @@ export function buildChartModel(
             return {
                 ...base,
                 type: "horizontal-bar",
-                data: definition.buildData(records, resolvedFilters),
+                data: definition.buildData(source, resolvedFilters),
                 xLabel: definition.xLabel,
                 yLabel: definition.yLabel,
             };
@@ -654,7 +1067,7 @@ export function buildChartModel(
             return {
                 ...base,
                 type: "donut",
-                data: definition.buildData(records, resolvedFilters),
+                data: definition.buildData(source, resolvedFilters),
                 centerLabel: definition.centerLabel,
             };
     }
