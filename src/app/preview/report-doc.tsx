@@ -53,14 +53,15 @@ const styles = StyleSheet.create({
     },
     chartSection: {
         display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
+        flexDirection: "column",
         rowGap: 12,
     },
     chart: {
-        width: "48%",
+        width: "100%",
         marginTop: 12,
+    },
+    chartViewport: {
+        height: 220,
     },
     chartTitle: {
         fontSize: 10,
@@ -155,7 +156,7 @@ function ReportDoc({
                                       {charts.length > 0 ? (charts.map((chart, i) => (
                                           <View key={i} style={styles.chart} wrap={false}>
                                                <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
-                                               <View style={{ aspectRatio: "1/1" }}>{chart.node}</View>
+                                                <View style={styles.chartViewport}>{chart.node}</View>
                                                <Text style={styles.filterHeading}>Applied filters</Text>
                                                {chart.filterLines.map((line, lineIndex) => (
                                                    <Text key={lineIndex} style={styles.filterText}>

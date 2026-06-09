@@ -92,28 +92,34 @@ export async function generateChart(stored: StoredChart, isForPdf = false) {
     const model = await generateChartModel(stored);
     if (!model) return null;
 
+    const pdfChartSize = { width: 520, height: 260 };
+
     if (isForPdf) {
         switch (model.type) {
             case "vertical-bar":
                 return React.createElement(VerticalBarChartPdf, {
+                    ...pdfChartSize,
                     data: model.data,
                     xLabel: model.xLabel,
                     yLabel: model.yLabel,
                 });
             case "line":
                 return React.createElement(LineChartPdf, {
+                    ...pdfChartSize,
                     data: model.data,
                     xLabel: model.xLabel,
                     yLabel: model.yLabel,
                 });
             case "horizontal-bar":
                 return React.createElement(HorizontalBarChartPdf, {
+                    ...pdfChartSize,
                     data: model.data,
                     xLabel: model.xLabel,
                     yLabel: model.yLabel,
                 });
             case "donut":
                 return React.createElement(DonutChartPdf, {
+                    width: pdfChartSize.width,
                     data: model.data,
                     centerLabel: model.centerLabel,
                 });

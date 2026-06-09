@@ -71,14 +71,15 @@ const styles = StyleSheet.create({
     },
     chartSection: {
         display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
+        flexDirection: "column",
         rowGap: 12,
     },
     chart: {
-        width: "48%",
+        width: "100%",
         marginTop: 12,
+    },
+    chartViewport: {
+        height: 220,
     },
     chartTitle: {
         fontSize: 10,
@@ -212,7 +213,7 @@ export async function POST(request: Request) {
                                 ),
                                 React.createElement(
                                     View,
-                                    { style: { aspectRatio: "1/1" } },
+                                    { style: styles.chartViewport },
                                     chart.node
                                 ),
                                 React.createElement(
