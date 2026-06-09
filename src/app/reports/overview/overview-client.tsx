@@ -135,7 +135,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
             />
             <div className="grid grid-cols-1 items-start gap-8 p-10 lg:grid-cols-2">
                 <Chart
-                    title = {formatTitle(filterState, "Family Intake")}
+                    title = {formatTitle(filterState, "Family Intake Over Time")}
                     chartType="family-intake-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
@@ -145,7 +145,7 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title={formatTitle(filterState, "Family Housed")}
+                    title={formatTitle(filterState, "Families Housed Over Time")}
                     chartType="families-housed-line"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}

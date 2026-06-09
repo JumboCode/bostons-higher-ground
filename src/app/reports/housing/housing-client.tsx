@@ -75,7 +75,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
             </div>
             <div className="grid grid-cols-1 items-start gap-8 p-10 py-5 lg:grid-cols-2">
                 <Chart
-                    title = {formatTitle(filterState, "Family Intake")}
+                    title = {formatTitle(filterState, "Family Intake Over Time")}
                     chartType="family-intake-bar"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
@@ -85,7 +85,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                 </Chart>
 
                 <Chart
-                    title = {formatTitle(filterState, "Families Housed")}
+                    title = {formatTitle(filterState, "Families Housed Over Time")}
                     chartType="families-housed-line"
                     reportCharts={charts}
                     appliedFilters={formattedFilters(filterState)}
