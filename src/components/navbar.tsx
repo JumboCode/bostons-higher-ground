@@ -5,6 +5,7 @@ import {
     FileText,
     Settings,
     School,
+    GraduationCap,
     LogOut,
     LayoutDashboard,
     Menu,
@@ -30,7 +31,7 @@ const LIGHT_GRAY = "bg-[#414141]";
 const TAB_CONFIG = [
     { name: "Overview", Icon: LayoutDashboard, href: "/reports/overview" },
     { name: "Housing", Icon: House, href: "/reports/housing" },
-    // { name: "Education", Icon: GraduationCap, href: "/reports/education" },
+    { name: "Education", Icon: GraduationCap, href: "/reports/education" },
     { name: "Schools", Icon: School, href: "/reports/schools" },
     { name: "Reports", Icon: FileText, href: "/reports" },
     { name: "Admin", Icon: Settings, href: "/admin" },
