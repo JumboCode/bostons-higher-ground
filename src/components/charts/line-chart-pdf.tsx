@@ -25,7 +25,7 @@ export function LineChartPdf({
     const margin = {
         top: 10,
         right: 10,
-        bottom: xLabel ? 60 : 50,
+        bottom: xLabel ? 80 : 70,
         left: yLabel ? 50 : 40,
     };
 
@@ -142,15 +142,17 @@ export function LineChartPdf({
 
                 {/* X Tick Labels */}
                 {data.map((d) => (
-                    <Text
+                    <G
                         key={`xlabel-${d.label}`}
-                        x={x(d.label) ?? 0}
-                        y={innerHeight + 15}
-                        style={{ fontSize: 12 }}
-                        textAnchor="middle"
+                        transform={`translate(${x(d.label) ?? 0}, ${innerHeight + 10}) rotate(-45)`}
                     >
-                        {truncateLabel(d.label, Math.floor(x.step() / 5.5))}
-                    </Text>
+                        <Text
+                            style={{ fontSize: 12 }}
+                            textAnchor="end"
+                        >
+                            {truncateLabel(d.label, Math.max(Math.floor(x.step() / 3), 10))}
+                        </Text>
+                    </G>
                 ))}
 
                 {/* Y Tick Labels */}
@@ -170,7 +172,7 @@ export function LineChartPdf({
                 {xLabel && (
                     <Text
                         x={innerWidth / 2}
-                        y={innerHeight + 45}
+                        y={innerHeight + 65}
                         style={{ fontSize: 14 }}
                         textAnchor="middle"
                     >

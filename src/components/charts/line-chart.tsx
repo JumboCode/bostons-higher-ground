@@ -31,6 +31,10 @@ export type LineChartProps = {
     className?: string;
 };
 
+function truncateLabel(label: string) {
+    return label.length > 16 ? `${label.slice(0, 15)}...` : label;
+}
+
 export function LineChart({
     data,
     width,
@@ -59,7 +63,7 @@ export function LineChart({
             <RechartsLineChart
                 accessibilityLayer
                 data={data}
-                margin={{ top: 10, right: 10, bottom: xLabel ? 34 : 14, left: yLabel ? 8 : 0 }}
+                margin={{ top: 10, right: 10, bottom: xLabel ? 48 : 20, left: yLabel ? 8 : 0 }}
             >
                 <CartesianGrid
                     stroke={chartTheme.gridColor}
@@ -71,12 +75,17 @@ export function LineChart({
                     tickLine={false}
                     axisLine={{ stroke: chartTheme.axisColor }}
                     tickMargin={8}
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={64}
+                    tickFormatter={truncateLabel}
                 >
                     {xLabel && (
                         <Label
                             value={xLabel}
                             position="insideBottom"
-                            offset={-20}
+                            offset={-36}
                             fill={chartTheme.labelColor}
                             fontSize={chartTheme.labelFontSize}
                         />
