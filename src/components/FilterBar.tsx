@@ -438,7 +438,7 @@ export function FiscalYearContent({
                         <button
                             key={fy}
                             onClick={() => setFiscalYearValue(fy)}
-                            className={`cursor-pointer w-1/4 rounded-2xl justify-center items-center border text-[14px] py-[5px] ${manrope.className} ${
+                            className={`cursor-pointer border rounded-full ${manrope.className} ${
                                 fiscalYear === fy
                                     ? "border-[#E76C82] text-[#E76C82]"
                                     : "border-[#D9D9D9] text-[#555555]"
