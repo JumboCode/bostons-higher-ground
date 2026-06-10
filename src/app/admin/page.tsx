@@ -606,7 +606,7 @@ function SyncStatusBanner({
 
     if (latest?.status === "error") {
         return (
-            <div className="mt-[13px] mx-[45px] min-h-[46px] py-2 bg-[#FEEBEE] border border-[#F4433633] rounded-[16px] px-4 flex items-start">
+            <div className="mt-[13px] mx-[45px] min-h-[46px] py-2 bg-[#FEEBEE] border border-[#F4433633] rounded-[16px] px-4 flex items-center">
                 <AlertTriangle className="w-[16px] h-[16px] text-[#C62828] shrink-0 mt-[3px]" />
                 <div className="font-manrope text-[14px] text-[#C62828] leading-[20px] pl-[10px]">
                     <p>
@@ -628,7 +628,7 @@ function SyncStatusBanner({
     const lastSyncDate = latestSuccess?.finishedAt ?? null;
     const missing = latest?.missingFields ?? [];
     return (
-        <div className="mt-[13px] mx-[45px] min-h-[46px] py-2 bg-[#4CAF501A] border border-[#4CAF5033] rounded-[16px] px-4 flex items-start">
+        <div className="mt-[13px] mx-[45px] min-h-[46px] py-2 bg-[#4CAF501A] border border-[#4CAF5033] rounded-[16px] px-4 flex items-center">
             <CircleCheckBig className="w-[16px] h-[16px] text-[#555555] shrink-0 mt-[3px]" />
             <div className="font-manrope text-[14px] text-[#555555] leading-[20px] pl-[10px]">
                 <p>
