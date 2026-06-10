@@ -29,11 +29,21 @@ export default function Chart({
     const id = useId(); 
     const isAdding = useRef(false);
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         //initializing element
         const element = document.getElementById(id);
         if (!element) {
             return;
+        }
+        // Wait for web fonts to be fully loaded before rasterizing. Otherwise the
+        // cloned DOM html2canvas renders into can fall back to a system font with
+        // different metrics, which makes title text look squished.
+        try {
+            if (typeof document !== "undefined" && document.fonts?.ready) {
+                await document.fonts.ready;
+            }
+        } catch {
+            // Non-fatal: continue with capture even if fonts.ready rejects.
         }
         //chart container to canvas
         html2canvas(element, { useCORS: true })
@@ -42,12 +52,11 @@ export default function Chart({
                 const image = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
                 link.href = image;
-                console.log(link.href);
                 link.download = title + ".png";
                 // programmatically click the link so that the image automatically downloads
                 link.click();
             })
-            .catch((err) => {
+            .catch(() => {
                 console.error("Unable to take screenshot.");
             });
     };
