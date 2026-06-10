@@ -25,6 +25,7 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
     const [charts, setCharts] = useState<StoredChart[]>([]);
     const [archiving, setArchiving] = useState(false);
     const filename = usePdfMetadataStore((s) => s.filename);
+    const setTitleError = usePdfMetadataStore((s) => s.setTitleError);
     const [showClearModal, setShowClearModal] = useState(false);
 
     const handleClear = async () => {
@@ -162,21 +163,33 @@ function DraftReportPopulated({ onArchived }: { onArchived: () => void }) {
                         <button
                             disabled={archiving || charts.length === 0}
                             onClick={async () => {
+                                // Validate title before submission so users see a clear error
+                                // instead of the request failing silently.
+                                const trimmed = filename.trim();
+                                if (!trimmed) {
+                                    setTitleError("Please enter a report name before saving to archive.");
+                                    return;
+                                }
+                                setTitleError(null);
+
                                 setArchiving(true);
                                 try {
                                     const res = await fetch("/api/reports/upload-pdf", {
                                         method: "POST",
                                         headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ title: filename }),
+                                        body: JSON.stringify({ title: trimmed }),
                                     });
                                     if (res.ok) {
                                         onArchived();
                                     } else {
-                                        const data = await res.json();
-                                        console.error("Archive failed:", data.error);
+                                        const data = await res.json().catch(() => ({}));
+                                        const message = data?.error || "Failed to save report to archive.";
+                                        console.error("Archive failed:", message);
+                                        setTitleError(message);
                                     }
                                 } catch (err) {
                                     console.error("Failed to archive report", err);
+                                    setTitleError("Something went wrong while saving. Please try again.");
                                 } finally {
                                     setArchiving(false);
                                 }

@@ -2,35 +2,42 @@
 
 import { Download } from "lucide-react";
 import { usePdfMetadataStore } from "@/lib/pdfMetadataStore";
-import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";// include router
 
 export default function ReportExportButton() {
     const filename = usePdfMetadataStore((s) => s.filename);
+    const setTitleError = usePdfMetadataStore((s) => s.setTitleError);
     const router = useRouter(); // declare router
 
 
     async function setPdfTitle() {
-        try {
-            console.log("Sending filename:", filename);
+        // Validate title before submission so users aren't left wondering why nothing happened.
+        const trimmed = filename.trim();
+        if (!trimmed) {
+            setTitleError("Please enter a report name before exporting.");
+            return;
+        }
+        setTitleError(null);
 
+        try {
             const res = await fetch("/api/reports/in-progress", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    title: filename,
+                    title: trimmed,
                 }),
             });
-            const data = await res.json();
-            console.log("PATCH response:", data);
 
             if (!res.ok) {
-                throw new Error("Failed to update report name");
+                const data = await res.json().catch(() => ({}));
+                setTitleError(data?.error || "Failed to update report name.");
+                return;
             }
             router.push("/preview");
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
+            setTitleError("Something went wrong. Please try again.");
         }
     }
 
