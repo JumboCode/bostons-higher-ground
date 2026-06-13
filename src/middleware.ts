@@ -2,7 +2,7 @@ import { auth } from "./lib/auth";
 import { isAdmin } from "./lib/checkPermissions";
 import { NextResponse, NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite"];
+const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite", "/reset-password"];
 const ADMIN_ROUTE = "/admin";
 const OVERVIEW_ROUTE = "/reports/overview";
 
