@@ -13,7 +13,7 @@ function formatList(value: unknown, emptyLabel: string) {
 
 export function formatChartFilterLines(filters: StoredChart["filters"]): string[] {
     if (!filters) {
-        return ["Cities: All Cities, Schools: All Schools"];
+        return ["Cities: All Cities", "Schools: All Schools"];
     }
 
     try {
@@ -24,10 +24,8 @@ export function formatChartFilterLines(filters: StoredChart["filters"]): string[
         }
 
         return [
-            [
-                `Cities: ${formatList(parsed.selectedLocations, "All Cities")}`,
-                `Schools: ${formatList(parsed.selectedSchools, "All Schools")}`,
-            ].join(", "),
+            `Cities: ${formatList(parsed.selectedLocations, "All Cities")}`,
+            `Schools: ${formatList(parsed.selectedSchools, "All Schools")}`,
         ];
     } catch {
         return [`Applied filters: ${filters}`];
