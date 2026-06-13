@@ -24,17 +24,46 @@ type Props = {
 
 function ForgotPasswordModal({ isOpen, onClose }: Props) {
     const [email, setEmail] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+
     if (!isOpen) return null;
+
     const hasEmail = email.trim().length > 0;
+
+    async function handleSendResetLink() {
+        if (!hasEmail) return;
+
+        setIsSubmitting(true);
+        setStatus("idle");
+
+        try {
+            const result = await authClient.requestPasswordReset({
+                email: email.trim(),
+                redirectTo: `${window.location.origin}/reset-password`,
+            });
+
+            if (result.error) {
+                setStatus("error");
+            } else {
+                setStatus("success");
+            }
+        } catch {
+            setStatus("error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="bg-[#FFFFFF] w-md h-[248px] rounded-2xl border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6 relative">
+            <div className="bg-[#FFFFFF] w-md min-h-[248px] rounded-2xl border-t border-t-[#0000001A] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] p-6 relative">
                 {/*Close button*/}
                 <button onClick={onClose} className="absolute top-4 right-4">
                     <X className="w-4 h-4 text-[#555555] opacity-70" />
                 </button>
 
-                <div className="absolute top-[25px] left-[25px] w-[398px] h-[66px]">
+                <div className="absolute top-[25px] left-[25px] w-[398px]">
                     {/*Reset Password Heading*/}
                     <h2 className="font-poppins font-semibold text-[18px] leading-[18px] text-[#555555]">
                         Reset Password
@@ -53,30 +82,51 @@ function ForgotPasswordModal({ isOpen, onClose }: Props) {
                         type="email"
                         placeholder="you@highergroundboston.org"
                         value={email}
+                        disabled={isSubmitting || status === "success"}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100"
+                        className="w-full rounded-xl border border-neutral-200 bg-neutral-100/70 px-4 py-3 text-neutral-800 outline-none ring-0 placeholder:text-neutral-400 focus:border-rose-300 focus:bg-white focus:shadow focus:shadow-rose-100 disabled:opacity-60"
                     ></input>
+
+                    {status === "success" && (
+                        <p className="mt-3 text-sm text-[#4A8B6F]">
+                            If an account exists for this email, you will
+                            receive a password reset link shortly.
+                        </p>
+                    )}
+
+                    {status === "error" && (
+                        <p className="mt-3 text-sm text-[#D9534F]">
+                            Something went wrong. Please try again.
+                        </p>
+                    )}
 
                     <div className="flex gap-3 mt-4 items-center">
                         <button
                             className="w-[193px] h-9 rounded-[14px] border border-[#0000001A]  py-2 px-4 font-manrope font-medium leading-5 hover:opacity-80 
                         text-[#555555] font-manrope text-[14px]"
                             onClick={onClose}
+                            disabled={isSubmitting}
                         >
-                            Cancel
+                            {status === "success" ? "Close" : "Cancel"}
                         </button>
 
                         <button
                             type="button"
-                            className="w-[193px] h-9 rounded-[14px] bg-[#D26879] py-2 px-4 font-manrope font-medium leading-5 text-[#FFFFFF] font-manrope text-[14px]"
+                            className="w-[193px] h-9 rounded-[14px] bg-[#D26879] py-2 px-4 font-manrope font-medium leading-5 text-[#FFFFFF] font-manrope text-[14px] disabled:opacity-60"
                             style={{
-                                backgroundColor: hasEmail
-                                    ? "#E76C82"
-                                    : "#E59AA8",
+                                backgroundColor:
+                                    hasEmail && status !== "success"
+                                        ? "#E76C82"
+                                        : "#E59AA8",
                             }}
-                            disabled={!hasEmail}
+                            disabled={!hasEmail || isSubmitting || status === "success"}
+                            onClick={handleSendResetLink}
                         >
-                            Send Reset Link
+                            {isSubmitting
+                                ? "Sending..."
+                                : status === "success"
+                                  ? "Sent"
+                                  : "Send Reset Link"}
                         </button>
                     </div>
                 </div>

@@ -1,5 +1,45 @@
 import { Resend } from "resend";
 
+export async function sendPasswordResetEmail({
+    email,
+    url,
+}: {
+    email: string;
+    url: string;
+}): Promise<void> {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: "no-reply@bhg.jumbocode.org",
+            to: email,
+            subject: "Reset your Boston's Higher Ground password",
+            html: `
+                <p>Hello,</p>
+                <p>You requested a password reset for your Boston's Higher Ground account.</p>
+                <p>
+                    <a href="${url}">Click here to reset your password</a>
+                </p>
+                <p>If you did not request this, you can safely ignore this email.</p>
+                <p>This link will expire shortly.</p>
+            `,
+        });
+
+        if (error) {
+            console.error("[Email] Failed to send password reset email:", error);
+            throw new Error(error.message);
+        }
+
+        console.log("[Email] Password reset email sent:", data);
+    } catch (error) {
+        console.error(
+            `[Email] Failed to send password reset email to ${email}:`,
+            error
+        );
+        throw error;
+    }
+}
+
 export async function sendEmail({
     email,
     otp,

@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
-import { sendEmail } from "./email";
+import { sendEmail, sendPasswordResetEmail } from "./email";
 
 export const auth = betterAuth({
     trustedOrigins: [
@@ -17,6 +17,14 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        revokeSessionsOnPasswordReset: true,
+        sendResetPassword: async ({ user, url }) => {
+            // Avoid awaiting to prevent timing attacks that reveal whether
+            // an account exists. In production, consider using waitUntil.
+            sendPasswordResetEmail({ email: user.email, url }).catch((err) =>
+                console.error("[Auth] Failed to send password reset email:", err)
+            );
+        },
     },
     emailVerification: {
         autoSignInAfterVerification: true,
