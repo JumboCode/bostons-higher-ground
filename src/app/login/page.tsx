@@ -381,8 +381,8 @@ export default function LogIn() {
                         {/* PRIMARY BUTTON */}
                         <button
                             type="submit"
-                            disabled={isSigningIn}
-                            className={`${manrope.className} mt-1 w-full text-center text-white transition ${isSigningIn ? "cursor-not-allowed opacity-80" : "cursor-pointer"}`}
+                            // onClick={handleClick}
+                            className={`${manrope.className} mt-1 w-full text-center text-white transition cursor-pointer`}
                             style={{
                                 backgroundColor: isSigningIn
                                     ? "#F2BCC2"
