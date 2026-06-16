@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { generateChart, type StoredChart } from "@/lib/generateChart";
+import { generatePdfChart, type StoredChart } from "@/lib/generateChart";
 import { formatChartFilterLines } from "@/lib/chart-filter-labels";
 import { headers } from "next/headers";
 import ReportDoc from "./report-doc";
@@ -36,11 +36,15 @@ export default async function PreviewPage() {
         : [];
 
     const rendered = await Promise.all(
-        charts.map(async (chart, idx) => ({
-            key: `${chart.title}-${idx}`,
-            node: await generateChart(chart, true),
-            filterLines: formatChartFilterLines(chart.filters),
-        }))
+        charts.map(async (chart, idx) => {
+            const pdfChart = await generatePdfChart(chart);
+            return {
+                key: `${chart.title}-${idx}`,
+                node: pdfChart.node,
+                height: pdfChart.height,
+                filterLines: formatChartFilterLines(chart.filters),
+            };
+        })
     );
 
     const visible = rendered.filter((c) => c.node !== null);

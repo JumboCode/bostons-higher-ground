@@ -85,31 +85,36 @@ const styles = StyleSheet.create({
         lineHeight: 1.25,
     },
     footer: {
-      display: "flex",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      padding: 5,
-      borderTop: '1px solid #e6e7eb',
-      margin: 12,
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        padding: 5,
+        borderTop: "1px solid #e6e7eb",
+        margin: 12,
     },
     footerText: {
-      fontSize: 10,
-      color: "#555555",
-      fontFamily: "Manrope"
-    }
+        fontSize: 10,
+        color: "#555555",
+        fontFamily: "Manrope",
+    },
 });
 
 function Footer() {
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  return (
-    <View style={styles.footer} fixed>
-      <Text style={styles.footerText}>&copy; {currentYear} Higher Ground Boston</Text>
-      <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (
-        `Page ${pageNumber} of ${totalPages}`
-      )} />
-    </View>
-  )
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    return (
+        <View style={styles.footer} fixed>
+            <Text style={styles.footerText}>
+                &copy; {currentYear} Higher Ground Boston
+            </Text>
+            <Text
+                style={styles.footerText}
+                render={({ pageNumber, totalPages }) =>
+                    `Page ${pageNumber} of ${totalPages}`
+                }
+            />
+        </View>
+    );
 }
 
 function ReportDoc({
@@ -117,7 +122,12 @@ function ReportDoc({
     charts,
 }: {
     reportTitle: string;
-    charts: { key: string; node: ReactElement | null; filterLines: string[] }[];
+    charts: {
+        key: string;
+        node: ReactElement | null;
+        height: number;
+        filterLines: string[];
+    }[];
 }) {
     const [isLoading, setIsLoading] = useState(true);
     const [date, setDate] = useState<string>("");
@@ -140,37 +150,82 @@ function ReportDoc({
                     <Document title={reportTitle}>
                         <Page size="LETTER" style={styles.pageContent}>
                             <View>
-                              <View style={styles.logo}>
-                                  <Image
-                                      src={"/Logo_black_text.png"}
-                                      style={{ width: 250, height: "auto" }}
-                                  />
-                              </View>
-                              <View style={{ paddingHorizontal: 40 }}>
-                                  <Text style={styles.header}>{reportTitle}</Text>
-                                  <Text style={styles.subtitle}>
-                                      Generated on {date}
-                                  </Text>
-                                  <View style={styles.line}></View>
-                                  <View style={styles.chartSection}>
-                                      {charts.length > 0 ? (charts.map((chart, i) => (
-                                          <View key={i} style={styles.chart} wrap={false}>
-                                               <Text style={styles.chartTitle}>{charts[i].key.split("-")[0]}</Text>
-                                                <View style={styles.chartViewport}>{chart.node}</View>
-                                               <Text style={styles.filterHeading}>Applied filters</Text>
-                                               {chart.filterLines.map((line, lineIndex) => (
-                                                   <Text key={lineIndex} style={styles.filterText}>
-                                                       {line}
-                                                   </Text>
-                                               ))}
-                                           </View>
-                                      ))) : (
-                                          <Text style={{ fontSize: 12, color: "#364152", }}>
-                                              No in-progress report found. Add charts using the &quot;+&quot; buttons to see them here.
-                                          </Text>
-                                      )}
-                                  </View>
-                              </View>
+                                <View style={styles.logo}>
+                                    <Image
+                                        src={"/Logo_black_text.png"}
+                                        style={{ width: 250, height: "auto" }}
+                                    />
+                                </View>
+                                <View style={{ paddingHorizontal: 40 }}>
+                                    <Text style={styles.header}>
+                                        {reportTitle}
+                                    </Text>
+                                    <Text style={styles.subtitle}>
+                                        Generated on {date}
+                                    </Text>
+                                    <View style={styles.line}></View>
+                                    <View style={styles.chartSection}>
+                                        {charts.length > 0 ? (
+                                            charts.map((chart, i) => (
+                                                <View
+                                                    key={i}
+                                                    style={styles.chart}
+                                                    wrap={false}
+                                                >
+                                                    <Text
+                                                        style={
+                                                            styles.chartTitle
+                                                        }
+                                                    >
+                                                        {
+                                                            charts[i].key.split(
+                                                                "-"
+                                                            )[0]
+                                                        }
+                                                    </Text>
+                                                    <View
+                                                        style={{
+                                                            ...styles.chartViewport,
+                                                            height: chart.height,
+                                                        }}
+                                                    >
+                                                        {chart.node}
+                                                    </View>
+                                                    <Text
+                                                        style={
+                                                            styles.filterHeading
+                                                        }
+                                                    >
+                                                        Applied filters
+                                                    </Text>
+                                                    {chart.filterLines.map(
+                                                        (line, lineIndex) => (
+                                                            <Text
+                                                                key={lineIndex}
+                                                                style={
+                                                                    styles.filterText
+                                                                }
+                                                            >
+                                                                {line}
+                                                            </Text>
+                                                        )
+                                                    )}
+                                                </View>
+                                            ))
+                                        ) : (
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    color: "#364152",
+                                                }}
+                                            >
+                                                No in-progress report found. Add
+                                                charts using the &quot;+&quot;
+                                                buttons to see them here.
+                                            </Text>
+                                        )}
+                                    </View>
+                                </View>
                             </View>
                             <Footer />
                         </Page>
@@ -179,10 +234,16 @@ function ReportDoc({
             )}
             {/* loader div */}
             <div className="w-full h-dvh absolute z-50 bg-white flex items-center justify-center-safe">
-                {<div className="flex gap-3.5 items-center">
-                  <LoaderCircle size={40} className={isLoading ? "animate-spin" : ""} color="#E76C82"/>
-                  <p className="font-manrope">Loading...</p>
-                </div>}
+                {
+                    <div className="flex gap-3.5 items-center">
+                        <LoaderCircle
+                            size={40}
+                            className={isLoading ? "animate-spin" : ""}
+                            color="#E76C82"
+                        />
+                        <p className="font-manrope">Loading...</p>
+                    </div>
+                }
             </div>
         </>
     );

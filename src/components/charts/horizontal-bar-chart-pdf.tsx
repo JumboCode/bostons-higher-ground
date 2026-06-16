@@ -13,9 +13,50 @@ export type HorizontalBarChartPdfProps = {
 };
 
 const DEFAULT_COLORS = CHART_COLORS;
+const MAX_PDF_HEIGHT = 520;
+
+function getSeriesKeys(data: HorizontalBarDatum[]) {
+    return Array.from(
+        new Set(data.flatMap((d) => d.series.map((s) => s.label)))
+    );
+}
+
+function getLegendSpace(seriesKeys: string[]) {
+    return seriesKeys.length > 1 ? 60 : 0;
+}
+
+function getMargins(
+    xLabel: string | undefined,
+    yLabel: string | undefined,
+    legendSpace: number
+) {
+    return {
+        top: 20,
+        right: 40,
+        bottom: (xLabel ? 70 : 50) + legendSpace,
+        left: yLabel ? 120 : 100,
+    };
+}
 
 function truncateLabel(label: string, maxChars: number): string {
     return label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
+}
+
+export function computeHorizontalBarChartPdfHeight(
+    data: HorizontalBarDatum[],
+    xLabel?: string,
+    yLabel?: string
+): number {
+    if (!data.length) return 260;
+
+    const seriesKeys = getSeriesKeys(data);
+    const legendSpace = getLegendSpace(seriesKeys);
+    const margins = getMargins(xLabel, yLabel, legendSpace);
+    const minBandHeight = data.length > 12 ? 18 : 24;
+    const innerHeight = Math.ceil((data.length * minBandHeight) / 0.65);
+    const naturalHeight = innerHeight + margins.top + margins.bottom;
+
+    return Math.max(260, Math.min(naturalHeight, MAX_PDF_HEIGHT));
 }
 
 export function HorizontalBarChartPdf({
@@ -28,22 +69,15 @@ export function HorizontalBarChartPdf({
 }: HorizontalBarChartPdfProps) {
     if (!data.length) return null;
 
-    const seriesKeys = Array.from(
-        new Set(data.flatMap((d) => d.series.map((s) => s.label)))
-    );
+    const seriesKeys = getSeriesKeys(data);
 
     const seriesCount = Math.max(seriesKeys.length, 1);
-    const legendSpace = seriesKeys.length > 1 ? 60 : 0;
+    const legendSpace = getLegendSpace(seriesKeys);
 
     const computedHeight =
-        height ?? Math.max(420, data.length * 52 + 120 + legendSpace);
+        height ?? computeHorizontalBarChartPdfHeight(data, xLabel, yLabel);
 
-    const margin = {
-        top: 20,
-        right: 40,
-        bottom: (xLabel ? 70 : 50) + legendSpace,
-        left: yLabel ? 120 : 100,
-    };
+    const margin = getMargins(xLabel, yLabel, legendSpace);
 
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = computedHeight - margin.top - margin.bottom;
@@ -71,8 +105,16 @@ export function HorizontalBarChartPdf({
     // max chars for y labels based on left margin space, ~5.5px per char at fontSize 10
     const maxLabelChars = Math.floor((margin.left - 15) / 5.5);
 
+    const bandHeight = y.bandwidth();
+    const labelInterval =
+        bandHeight < 18 ? Math.max(1, Math.ceil(18 / bandHeight)) : 1;
+
     return (
-        <Svg width="100%" height="100%" viewBox={`0 0 ${width} ${computedHeight}`}>
+        <Svg
+            width="100%"
+            height="100%"
+            viewBox={`0 0 ${width} ${computedHeight}`}
+        >
             <G transform={`translate(${margin.left}, ${margin.top})`}>
                 {/* Vertical Grid Lines */}
                 {xTicks.map((tick) => (
@@ -92,16 +134,20 @@ export function HorizontalBarChartPdf({
                 {seriesKeys.map((seriesKey, seriesIndex) =>
                     data.map((d, i) => {
                         const value =
-                            d.series.find((s) => s.label === seriesKey)?.value ?? 0;
+                            d.series.find((s) => s.label === seriesKey)
+                                ?.value ?? 0;
                         const fillColor =
-                            d.series.find((s) => s.label === seriesKey)?.color ??
-                            colors[seriesIndex % colors.length];
+                            d.series.find((s) => s.label === seriesKey)
+                                ?.color ?? colors[seriesIndex % colors.length];
 
                         return (
                             <Rect
                                 key={`${seriesKey}-${i}`}
                                 x={0}
-                                y={(y(d.category) ?? 0) + seriesIndex * barHeight}
+                                y={
+                                    (y(d.category) ?? 0) +
+                                    seriesIndex * barHeight
+                                }
                                 width={x(value)}
                                 height={barHeight - 3}
                                 fill={fillColor}
@@ -132,17 +178,19 @@ export function HorizontalBarChartPdf({
                 />
 
                 {/* Category Labels (Y Axis) */}
-                {data.map((d) => (
-                    <Text
-                        key={`ylabel-${d.category}`}
-                        x={-10}
-                        y={(y(d.category) ?? 0) + y.bandwidth() / 2}
-                        style={{ fontSize: 12 }}
-                        textAnchor="end"
-                    >
-                        {truncateLabel(d.category, maxLabelChars)}
-                    </Text>
-                ))}
+                {data.map((d, i) =>
+                    i % labelInterval === 0 ? (
+                        <Text
+                            key={`ylabel-${d.category}`}
+                            x={-10}
+                            y={(y(d.category) ?? 0) + y.bandwidth() / 2}
+                            style={{ fontSize: 12 }}
+                            textAnchor="end"
+                        >
+                            {truncateLabel(d.category, maxLabelChars)}
+                        </Text>
+                    ) : null
+                )}
 
                 {/* X Tick Labels */}
                 {xTicks.map((tick) => (
@@ -171,7 +219,9 @@ export function HorizontalBarChartPdf({
 
                 {/* Y Axis Label */}
                 {yLabel && (
-                    <G transform={`translate(${-(margin.left * 0.6)}, ${innerHeight / 2}) rotate(-90)`}>
+                    <G
+                        transform={`translate(${-(margin.left * 0.6)}, ${innerHeight / 2}) rotate(-90)`}
+                    >
                         <Text
                             x={0}
                             y={0}
@@ -185,9 +235,14 @@ export function HorizontalBarChartPdf({
 
                 {/* Legend */}
                 {seriesKeys.length > 1 && (
-                    <G transform={`translate(${innerWidth / 2 - 80}, ${innerHeight + 60})`}>
+                    <G
+                        transform={`translate(${innerWidth / 2 - 80}, ${innerHeight + 60})`}
+                    >
                         {seriesKeys.map((key, index) => (
-                            <G key={key} transform={`translate(${index * 120}, 0)`}>
+                            <G
+                                key={key}
+                                transform={`translate(${index * 120}, 0)`}
+                            >
                                 <Rect
                                     x={0}
                                     y={0}

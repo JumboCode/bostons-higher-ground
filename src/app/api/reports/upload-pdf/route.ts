@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inProgressReports } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { generateChart, type StoredChart } from "@/lib/generateChart";
+import { generatePdfChart, type StoredChart } from "@/lib/generateChart";
 import { formatChartFilterLines } from "@/lib/chart-filter-labels";
 import { uploadFile } from "@/lib/upload-file";
 import { list, del } from "@vercel/blob";
@@ -146,11 +146,15 @@ export async function POST(request: Request) {
         : [];
 
     const rendered = await Promise.all(
-        charts.map(async (chart, idx) => ({
-            key: `${chart.title}-${idx}`,
-            node: await generateChart(chart, true),
-            filterLines: formatChartFilterLines(chart.filters),
-        }))
+        charts.map(async (chart, idx) => {
+            const pdfChart = await generatePdfChart(chart);
+            return {
+                key: `${chart.title}-${idx}`,
+                node: pdfChart.node,
+                height: pdfChart.height,
+                filterLines: formatChartFilterLines(chart.filters),
+            };
+        })
     );
 
     const visible = rendered.filter((c) => c.node !== null);
@@ -213,7 +217,12 @@ export async function POST(request: Request) {
                                 ),
                                 React.createElement(
                                     View,
-                                    { style: styles.chartViewport },
+                                    {
+                                        style: {
+                                            ...styles.chartViewport,
+                                            height: chart.height,
+                                        },
+                                    },
                                     chart.node
                                 ),
                                 React.createElement(
@@ -325,7 +334,10 @@ export async function GET(request: Request) {
         return Response.json({ success: true, reports });
     } catch (error) {
         console.error("[reports/upload-pdf] list failed", error);
-        return Response.json({ error: "failed to list reports" }, { status: 500 });
+        return Response.json(
+            { error: "failed to list reports" },
+            { status: 500 }
+        );
     }
 }
 

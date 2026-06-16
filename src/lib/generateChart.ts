@@ -14,6 +14,7 @@ import {
 } from "@/lib/chart-definitions";
 import {
     ChartRenderer,
+    computeHorizontalBarChartPdfHeight,
     DonutChartPdf,
     HorizontalBarChartPdf,
     LineChartPdf,
@@ -27,6 +28,13 @@ export type StoredChart = {
     title: string;
     chartType: string;
     filters: string | null;
+};
+
+const PDF_CHART_WIDTH = 520;
+
+export type PdfChart = {
+    node: React.ReactElement | null;
+    height: number;
 };
 
 function parseFilters(filters: string | null): Partial<ChartFilters> {
@@ -88,43 +96,79 @@ export async function generateChartModel(
     return buildChartModel(chartKey, data, filters);
 }
 
+function computePdfChartHeight(model: GeneratedChartModel): number {
+    switch (model.type) {
+        case "horizontal-bar":
+            return computeHorizontalBarChartPdfHeight(
+                model.data,
+                model.xLabel,
+                model.yLabel
+            );
+        case "vertical-bar":
+        case "line":
+            return 260;
+        case "donut":
+            return 420;
+    }
+}
+
+function buildPdfChartNode(
+    model: GeneratedChartModel,
+    height: number
+): React.ReactElement | null {
+    switch (model.type) {
+        case "vertical-bar":
+            return React.createElement(VerticalBarChartPdf, {
+                width: PDF_CHART_WIDTH,
+                height,
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        case "line":
+            return React.createElement(LineChartPdf, {
+                width: PDF_CHART_WIDTH,
+                height,
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        case "horizontal-bar":
+            return React.createElement(HorizontalBarChartPdf, {
+                width: PDF_CHART_WIDTH,
+                height,
+                data: model.data,
+                xLabel: model.xLabel,
+                yLabel: model.yLabel,
+            });
+        case "donut":
+            return React.createElement(DonutChartPdf, {
+                width: PDF_CHART_WIDTH,
+                height,
+                data: model.data,
+                centerLabel: model.centerLabel,
+            });
+    }
+}
+
+export async function generatePdfChart(stored: StoredChart): Promise<PdfChart> {
+    const model = await generateChartModel(stored);
+    if (!model) {
+        return { node: null, height: 260 };
+    }
+
+    const height = computePdfChartHeight(model);
+    return { node: buildPdfChartNode(model, height), height };
+}
+
 export async function generateChart(stored: StoredChart, isForPdf = false) {
+    if (isForPdf) {
+        const pdfChart = await generatePdfChart(stored);
+        return pdfChart.node;
+    }
+
     const model = await generateChartModel(stored);
     if (!model) return null;
-
-    const pdfChartSize = { width: 520, height: 260 };
-
-    if (isForPdf) {
-        switch (model.type) {
-            case "vertical-bar":
-                return React.createElement(VerticalBarChartPdf, {
-                    ...pdfChartSize,
-                    data: model.data,
-                    xLabel: model.xLabel,
-                    yLabel: model.yLabel,
-                });
-            case "line":
-                return React.createElement(LineChartPdf, {
-                    ...pdfChartSize,
-                    data: model.data,
-                    xLabel: model.xLabel,
-                    yLabel: model.yLabel,
-                });
-            case "horizontal-bar":
-                return React.createElement(HorizontalBarChartPdf, {
-                    ...pdfChartSize,
-                    data: model.data,
-                    xLabel: model.xLabel,
-                    yLabel: model.yLabel,
-                });
-            case "donut":
-                return React.createElement(DonutChartPdf, {
-                    width: pdfChartSize.width,
-                    data: model.data,
-                    centerLabel: model.centerLabel,
-                });
-        }
-    }
 
     return React.createElement(ChartRenderer, { model });
 }
