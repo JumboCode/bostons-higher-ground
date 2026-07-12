@@ -17,6 +17,7 @@ import {
 import {
     InvitationSentCard,
     ResendInviteCard,
+    MakeAdminCard,
 } from "@/components/onboarding/notifCard";
 
 import {
@@ -110,6 +111,8 @@ export default function Admin() {
     const [isInviteSentOpen, setIsInviteSentOpen] = useState(false);
     const [inviteSentEmail, setInviteSentEmail] = useState("");
     const [isResendOpen, setIsResendOpen] = useState(false);
+    const [isMakeAdminOpen, setIsMakeAdminOpen] = useState(false);
+    const [makeAdminTarget, setMakeAdminTarget] = useState<User | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
     // Salesforce sync state
@@ -153,6 +156,32 @@ export default function Admin() {
         }, 2000);
         return () => clearInterval(interval);
     }, [isSyncing, syncLatest?.id, router]);
+
+    async function handleMakeAdmin(user: User) {
+        try {
+            const res = await fetch("/api/users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: user.id, permissions: "admin" }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                alert(data?.error ?? "Failed to make admin");
+                return;
+            }
+
+            setUsers((prev) =>
+                prev.map((u) =>
+                    u.id === user.id ? { ...u, role: "admin" } : u
+                )
+            );
+            setIsMakeAdminOpen(false);
+            setMakeAdminTarget(null);
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
     async function handleSync() {
         setSyncError(null);
@@ -336,6 +365,12 @@ export default function Admin() {
                                             setIsInviteSentOpen={
                                                 setIsInviteSentOpen
                                             }
+                                            setIsMakeAdminOpen={
+                                                setIsMakeAdminOpen
+                                            }
+                                            setMakeAdminTarget={
+                                                setMakeAdminTarget
+                                            }
                                         />
                                     ))
                                 ) : (
@@ -400,6 +435,25 @@ export default function Admin() {
                 </ModalOverlay>
             )}
 
+            {isMakeAdminOpen && makeAdminTarget && (
+                <ModalOverlay
+                    onClose={() => {
+                        setIsMakeAdminOpen(false);
+                        setMakeAdminTarget(null);
+                    }}
+                >
+                    <MakeAdminCard
+                        showOverlay={false}
+                        name={makeAdminTarget.name}
+                        onCancel={() => {
+                            setIsMakeAdminOpen(false);
+                            setMakeAdminTarget(null);
+                        }}
+                        onConfirm={() => handleMakeAdmin(makeAdminTarget)}
+                    />
+                </ModalOverlay>
+            )}
+
             {resendError && (
                 <div className="fixed top-10 right-4 w-80 bg-white border border-gray-300 px-4 py-3 shadow-lg shadow-gray-400 z-50 cursor-pointer rounded-md text-sm flex items-center gap-5">
                     <button
@@ -421,12 +475,16 @@ function UserRow({
     setResendError,
     setInviteSentEmail,
     setIsInviteSentOpen,
+    setIsMakeAdminOpen,
+    setMakeAdminTarget,
 }: {
     user: User;
     setIsResendOpen: (value: boolean) => void;
     setResendError: (value: boolean) => void;
     setInviteSentEmail: (value: string) => void;
     setIsInviteSentOpen: (value: boolean) => void;
+    setIsMakeAdminOpen: (value: boolean) => void;
+    setMakeAdminTarget: (value: User | null) => void;
 }) {
     const [actionVisible, setActionVisible] = useState(false);
     const actionsRef = useRef<HTMLDivElement | null>(null);
@@ -472,6 +530,11 @@ function UserRow({
 
     async function handleRemove() {
         setIsRemoveOpen(true);
+    }
+
+    function handleMakeAdminClick() {
+        setMakeAdminTarget(user);
+        setIsMakeAdminOpen(true);
     }
 
     async function removeUser() {
@@ -555,6 +618,13 @@ function UserRow({
                             <DropdownMenuItem onClick={handleResend}>
                                 <Send className="mr-2 h-4 w-4" />
                                 Resend Invite
+                            </DropdownMenuItem>
+                        )}
+
+                        {user.role !== "admin" && (
+                            <DropdownMenuItem onClick={handleMakeAdminClick}>
+                                <Shield className="mr-2 h-4 w-4" />
+                                Make Admin
                             </DropdownMenuItem>
                         )}
 

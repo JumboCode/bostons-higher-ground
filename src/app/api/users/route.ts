@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
 import { APIError } from "better-auth";
 
+const VALID_PERMISSIONS = ["admin", "user", "none"] as const;
 
 /* Adds a user*/
 export async function POST(request: Request) {
@@ -96,6 +97,54 @@ export async function DELETE(request: Request) {
     await db.delete(session).where(eq(session.id, body.id));
     await db.delete(account).where(eq(account.id, body.id));
     await db.delete(verification).where(eq(verification.id, body.id));
+
+    return Response.json({ success: true });
+}
+
+/* Updates a user's permissions (admin only) */
+export async function PATCH(request: Request) {
+    const user_session = await auth.api.getSession({ headers: request.headers });
+
+    if (!user_session) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    const Id = user_session.user.id;
+
+    const userPermission = await getUserPermission(Id);
+    if (userPermission !== "admin") {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    let body: { id?: string; permissions?: string };
+    try {
+        body = await request.json();
+    } catch {
+        return Response.json({ error: "invalid_json" }, { status: 400 });
+    }
+
+    if (!body.id) {
+        return Response.json({ error: "missing_id" }, { status: 400 });
+    }
+
+    if (!body.permissions || !VALID_PERMISSIONS.includes(body.permissions as typeof VALID_PERMISSIONS[number])) {
+        return Response.json({ error: "invalid_permissions" }, { status: 400 });
+    }
+
+    const [targetUser] = await db
+        .select({ id: userInfo.id })
+        .from(userInfo)
+        .where(eq(userInfo.userId, body.id))
+        .limit(1);
+
+    if (!targetUser) {
+        return Response.json({ error: "user_not_found" }, { status: 404 });
+    }
+
+    await db
+        .update(userInfo)
+        .set({ permissions: body.permissions })
+        .where(eq(userInfo.userId, body.id));
 
     return Response.json({ success: true });
 }

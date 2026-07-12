@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, Trash2, Send } from "lucide-react";
+import { CheckCircle, Trash2, Send, ShieldCheck } from "lucide-react";
 import clsx from "clsx";
 
 /** ---------------------------
@@ -210,6 +210,40 @@ export function RemoveUserCard({
             primaryAction={{ label: "Remove", onClick: onRemove }}
         >
             <>Are you sure you want to remove this user?</>
+        </NotifCard>
+    );
+
+    return showOverlay ? (
+        <ModalOverlay onClose={onCancel}>{card}</ModalOverlay>
+    ) : (
+        card
+    );
+}
+
+/** Make Admin (no pill) */
+export function MakeAdminCard({
+    name = "this user",
+    onCancel,
+    onConfirm,
+    showOverlay = true,
+}: {
+    name?: string;
+    onCancel?: () => void;
+    onConfirm?: () => void;
+    showOverlay?: boolean;
+}) {
+    const card = (
+        <NotifCard
+            icon={<ShieldCheck className="text-[#E76C82]" />}
+            title="Make Admin"
+            secondaryAction={{ label: "Cancel", onClick: onCancel }}
+            primaryAction={{ label: "Make Admin", onClick: onConfirm }}
+        >
+            <>
+                Are you sure you want to make{" "}
+                <span className="font-medium">{name}</span> an admin? They will
+                have full access to user management and data sync.
+            </>
         </NotifCard>
     );
 
