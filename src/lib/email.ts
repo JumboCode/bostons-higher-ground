@@ -10,8 +10,12 @@ export async function sendPasswordResetEmail({
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
+        if (!process.env.EMAIL_SEND_ADDRESS) {
+            throw new Error("email send address not configured");
+        }
+
         const { data, error } = await resend.emails.send({
-            from: "no-reply@bhg.jumbocode.org",
+            from: process.env.EMAIL_SEND_ADDRESS,
             to: email,
             subject: "Reset your Boston's Higher Ground password",
             html: `
@@ -53,10 +57,13 @@ export async function sendEmail({
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
+        if (!process.env.EMAIL_SEND_ADDRESS) {
+            throw new Error("email send address not configured");
+        }
         if (type === "email-verification") {
             const verifyInviteUrl = `${baseUrl}/onboarding/verify-invite?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`;
             const { data, error } = await resend.emails.send({
-                from: "no-reply@bhg.jumbocode.org",
+                from: process.env.EMAIL_SEND_ADDRESS,
                 to: email,
                 subject: "You've been invited to join Boston's Higher Ground!",
                 html: `
@@ -80,7 +87,7 @@ export async function sendEmail({
 
         if (type === "sign-in") {
             await resend.emails.send({
-                from: "no-reply@bhg.jumbocode.org",
+                from: process.env.EMAIL_SEND_ADDRESS,
                 to: email,
                 subject: "Your sign-in code",
                 html: `
@@ -93,7 +100,7 @@ export async function sendEmail({
             return;
         } else {
             await resend.emails.send({
-                from: "no-reply@bhg.jumbocode.org",
+                from: process.env.EMAIL_SEND_ADDRESS,
                 to: email,
                 subject: "Your password reset code",
                 html: `
