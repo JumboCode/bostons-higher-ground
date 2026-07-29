@@ -10,11 +10,17 @@ function escapeHtml(text: string): string {
 }
 
 function baseUrl(): string {
-    return process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    if (process.env.NEXT_PUBLIC_URL) {
+        return process.env.NEXT_PUBLIC_URL;
+    }
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+    }
+    return "http://localhost:3000";
 }
 
 function logoUrl(): string {
-    return `${baseUrl()}/Logo_black_text.png`;
+    return `${baseUrl()}/Logo_email.png`;
 }
 
 function emailTemplate({

@@ -5,7 +5,15 @@ import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
 import { sendEmail, sendPasswordResetEmail } from "./email";
 
+const authBaseUrl =
+    process.env.NEXT_PUBLIC_URL ||
+    (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.BETTER_AUTH_URL ||
+          "http://localhost:3000");
+
 export const auth = betterAuth({
+    baseURL: authBaseUrl,
     trustedOrigins: [
         "http://localhost:3000",
         ...(process.env.VERCEL_URL
