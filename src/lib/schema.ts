@@ -37,6 +37,15 @@ export const housingRecords = pgTable("housing_records", {
     studentCount: integer("student_count"),
 });
 
+// Keep baselines across Salesforce syncs.
+export const metricBaselines = pgTable("metric_baselines", {
+    metric: text("metric").primaryKey(),
+    startingValue: integer("starting_value").notNull(),
+    asOfDate: date("as_of_date").notNull(),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 /**
  * Append-only log of Salesforce sync attempts. The most recent row with
  * status === "success" is what the admin page displays as "Last sync".
