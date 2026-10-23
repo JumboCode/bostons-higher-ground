@@ -2,7 +2,7 @@ import { auth } from "./lib/auth";
 import { isAdmin } from "./lib/checkPermissions";
 import { NextResponse, NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite", "/reset-password"];
+const PUBLIC_ROUTES = ["/login", "/onboarding/verify-invite", "/reset-password", "/public-dashboard"];
 const ADMIN_ROUTE = "/admin";
 const OVERVIEW_ROUTE = "/reports/overview";
 
@@ -40,6 +40,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
     runtime: "nodejs",
     matcher: [
-        "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)|",
     ],
 };
