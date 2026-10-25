@@ -8,8 +8,8 @@
 import PeopleIcons from "@/components/PeopleIcons";
 
 // ponytail: placeholder data, swap for a real query later
-const NEED = { count: 87, label: "families waiting for housing" };
-const RESPONSE = { count: 43, label: "families housed" };
+const NEED = { count: 97, label: "Families in need of housing" };
+const RESPONSE = { count: 81, label: "Families housed through Boston's Higher Ground    " };
 
 function Panel({ title, count, label, className }: { title: string; count: number; label: string; className: string }) {
     return (

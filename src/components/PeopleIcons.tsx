@@ -1,9 +1,9 @@
 import { UserRound } from "lucide-react";
 
-// One icon per `perIcon` families. Any remainder renders a half-filled last icon.
+// One icon per `perIcon` families. Remainder fills the last icon proportionally.
 export default function PeopleIcons({
     count,
-    perIcon = 10,
+    perIcon = 5,
     label,
     className = "text-bhg-pink",
 }: {
@@ -13,7 +13,7 @@ export default function PeopleIcons({
     className?: string;
 }) {
     const full = Math.floor(count / perIcon);
-    const half = count % perIcon > 0;
+    const rest = count % perIcon;
     const icon = (filled: boolean) => (
         <UserRound size={28} fill={filled ? "currentColor" : "none"} aria-hidden />
     );
@@ -24,10 +24,10 @@ export default function PeopleIcons({
                 {Array.from({ length: full }, (_, i) => (
                     <span key={i}>{icon(true)}</span>
                 ))}
-                {half && (
+                {rest > 0 && (
                     <span className="relative inline-block">
                         <span className="opacity-30">{icon(false)}</span>
-                        <span className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">{icon(true)}</span>
+                        <span className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: `${(rest / perIcon) * 100}%` }}>{icon(true)}</span>
                     </span>
                 )}
             </div>
