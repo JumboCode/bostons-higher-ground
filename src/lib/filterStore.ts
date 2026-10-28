@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { type DateRange } from "react-day-picker";
 
 export type Timeframe =
+    | "pastTwoYears"
     | "thisMonth"
     | "lastMonth"
     | "thisFY"
@@ -25,7 +26,7 @@ export type FilterState = {
 const initialState = {
     selectedSchools: [] as string[],
     selectedLocations: [] as string[],
-    timeframe: "allTime" as Timeframe,
+    timeframe: "pastTwoYears" as Timeframe,
     fiscalYear: undefined as number | undefined,
     customRange: undefined as DateRange | undefined,
 };

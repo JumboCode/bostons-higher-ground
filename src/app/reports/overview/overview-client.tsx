@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import type { HousedBaselineSummary } from "@/lib/baselines";
 import { useEffect, useMemo, useState } from "react";
 import DashboardTop from "@/components/DashboardTop";
 import Chart from "@/components/chart";
@@ -21,7 +23,13 @@ export type FilterSummary = Pick<
     | "customRange"
 >;
 
-export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
+export default function OverviewClient({ data, housedSummary }: { data: OverviewRecord[]; housedSummary: HousedBaselineSummary }) {
+    const router = useRouter();
+    useEffect(() => {
+        const refresh = () => router.refresh();
+        window.addEventListener("focus", refresh);
+        return () => window.removeEventListener("focus", refresh);
+    }, [router]);
     const [charts, setCharts] = useState<StoredChart[]>([]);
     const selectedLocations = useFilters((s) => s.selectedLocations);
     const selectedSchools = useFilters((s) => s.selectedSchools);
@@ -62,9 +70,6 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
 
     const fastFacts = useMemo(() => {
         const totalFamilies = filteredData.length;
-        const housedFamilies = filteredData.filter(
-            (record) => record.dateHoused !== null && record.dateHoused !== undefined
-        ).length;
         const waitTimes = filteredData
             .map((record) => {
                 if (!record.intakeDate || !record.dateHoused) return null;
@@ -83,17 +88,10 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                           waitTimes.length
                   )
                 : null;
-        const successRate =
-            totalFamilies > 0
-                ? `${((housedFamilies / totalFamilies) * 100).toFixed(1)}% success rate`
-                : "No families enrolled";
-
         return {
             totalFamilies: totalFamilies.toLocaleString(),
-            housedFamilies: housedFamilies.toLocaleString(),
             averageWaitTime:
                 averageWaitTime === null ? "N/A" : `${averageWaitTime} days`,
-            successRate,
         };
     }, [filteredData]);
 
@@ -121,15 +119,15 @@ export default function OverviewClient({ data }: { data: OverviewRecord[] }) {
                 pageTitle="Overview"
                 title="Total Families Enrolled"
                 body={fastFacts.totalFamilies}
-                subtext="All-time enrollment"
+                subtext="Selected report filters"
                 bgColor="bg-[#E0F7F4]"
                 title1="Families Housed to Date"
                 title2="Average Wait Time"
                 bgColor1="bg-[#F0E7ED]"
                 bgColor2="bg-[#FFF8E9]"
-                body1={fastFacts.housedFamilies}
+                body1={housedSummary.total?.toLocaleString() ?? "Not set"}
                 body2={fastFacts.averageWaitTime}
-                subtext1={fastFacts.successRate}
+                subtext1={housedSummary.baseline ? `${housedSummary.provisional ? "Provisional · " : ""}${housedSummary.baseline.startingValue.toLocaleString()} historical + ${housedSummary.additions?.toLocaleString()} since ${housedSummary.baseline.asOfDate} · All families` : "Historical baseline not set"}
                 subtext2="Intake to housed"
                 mt="-mt-[10px]"
             />

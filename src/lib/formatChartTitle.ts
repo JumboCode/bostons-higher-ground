@@ -19,6 +19,8 @@ function getFiscalYear(filters: FilterSummary) {
 function getDateFilterLabel(filters: FilterSummary) {
     const today = new Date();
 
+    if (filters.timeframe === "pastTwoYears") return "Past 2 Years";
+
     if (
         filters.timeframe === "custom" &&
         filters.customRange?.from &&

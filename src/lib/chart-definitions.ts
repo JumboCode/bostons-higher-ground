@@ -244,6 +244,12 @@ function resolveDateRange(filters: ChartFilters): DateRange | null {
     const today = new Date();
 
     switch (filters.timeframe) {
+        case "pastTwoYears": {
+            const start = new Date(today);
+            start.setFullYear(start.getFullYear() - 2);
+            start.setHours(0, 0, 0, 0);
+            return { start, end: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999) };
+        }
         case "thisMonth":
             return {
                 start: new Date(today.getFullYear(), today.getMonth(), 1),
