@@ -34,6 +34,7 @@ type ResolvedMapping = FieldMapping & { sfField: string };
 
 export type SyncOutcome = {
     rowsSynced: number;
+    rowsSkipped: number;
     missingFields: string[];
 };
 
@@ -51,6 +52,7 @@ export async function runSalesforceSync(logId: string): Promise<SyncOutcome> {
                 status: "success",
                 finishedAt: new Date(),
                 rowsSynced: outcome.rowsSynced,
+                rowsSkipped: outcome.rowsSkipped,
                 missingFields: outcome.missingFields,
             })
             .where(eq(syncLog.id, logId));
@@ -148,7 +150,11 @@ async function doSync(): Promise<SyncOutcome> {
     // least the delete statement.
     await db.batch(statements as [BatchItem<"pg">, ...BatchItem<"pg">[]]);
 
-    return { rowsSynced: rows.length, missingFields };
+    return {
+        rowsSynced: rows.length,
+        rowsSkipped: records.length - rows.length,
+        missingFields,
+    };
 }
 
 type HousingRow = {

@@ -3,9 +3,11 @@ import { getEducationData } from "@/lib/getEducationData";
 
 import EducationClient from "./education-client";
 
-const { grades, students, attendance } = await getEducationData();
+export const dynamic = "force-dynamic";
 
-export default function Education() {
+export default async function Education() {
+    const { grades, students, attendance } = await getEducationData();
+
     return (
         <div>
             <div className="fixed top-0 left-62.5 z-50 flex min-h-10 w-full justify-between bg-white py-3 drop-shadow-sm">

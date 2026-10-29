@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
     pgTable,
     text,
@@ -58,11 +59,16 @@ export const syncLog = pgTable("sync_log", {
     startedAt: timestamp("started_at").defaultNow().notNull(),
     finishedAt: timestamp("finished_at"),
     rowsSynced: integer("rows_synced"),
+    rowsSkipped: integer("rows_skipped"),
     // Fields configured but missing from the SF object at sync time.
     missingFields: jsonb("missing_fields").$type<string[]>(),
     errorMessage: text("error_message"),
     triggeredBy: text("triggered_by"), // user.id
-});
+}, (table) => [
+    uniqueIndex("sync_log_source_running_unique")
+        .on(table.source)
+        .where(sql`${table.status} = 'running'`),
+]);
 
 export const inProgressReports = pgTable(
     "in_progress_reports",
