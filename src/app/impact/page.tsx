@@ -161,7 +161,7 @@ export default async function Impact({
             <h1 className="mb-6 text-2xl font-bold text-bhg-gray-300">Our Impact</h1>
             <Design items={getModels()} />
             <p className="mt-8 text-xs text-gray-500">
-                Sample data. Groups under 10 students are hidden to protect privacy.
+                Sample data.
             </p>
         </main>
     );
