@@ -359,8 +359,22 @@ export async function DELETE(request: Request) {
     }
 
     try {
-        await del(url);
-        return Response.json({ success: true });
+        // Only delete URLs returned by this store for the current user's reports.
+        // Comparing the exact URL also rejects foreign stores and encoded paths.
+        const prefix = `reports/${session.user.id}/`;
+        let cursor: string | undefined;
+        do {
+            const result = await list({ prefix, cursor });
+            const report = result.blobs.find(
+                (blob) => blob.url === url && blob.pathname.startsWith(prefix)
+            );
+            if (report) {
+                await del(report.url);
+                return Response.json({ success: true });
+            }
+            cursor = result.hasMore ? result.cursor : undefined;
+        } while (cursor);
+        return Response.json({ error: "forbidden" }, { status: 403 });
     } catch (error) {
         console.error("[reports/upload-pdf] delete failed", error);
         return Response.json({ error: "delete failed" }, { status: 500 });
