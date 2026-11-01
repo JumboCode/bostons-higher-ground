@@ -1,9 +1,6 @@
 import FilterBar from "@/components/FilterBar";
-import { getEducationData } from "@/lib/getEducationData";
 
 import EducationClient from "./education-client";
-
-const { grades, students, attendance } = await getEducationData();
 
 export default function Education() {
     return (
@@ -12,11 +9,7 @@ export default function Education() {
                 <FilterBar />
             </div>
             <div className="pt-14">
-                <EducationClient
-                    grades={grades}
-                    students={students}
-                    attendance={attendance}
-                />
+                <EducationClient />
             </div>
         </div>
     );

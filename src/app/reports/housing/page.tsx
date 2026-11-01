@@ -1,15 +1,5 @@
-import { getAllData } from "@/lib/getAllData";
 import HousingClient from "./housing-client";
 import FilterBar from "@/components/FilterBar";
-
-// Grabbing all data from the database
-const data = await getAllData();
-
-const final_Data = data.map((d) => ({
-    ...d,
-    intakeMonth: d.intakeDate ? new Date(d.intakeDate).getMonth() : null,
-    housedMonth: d.dateHoused ? new Date(d.dateHoused).getMonth() : null,
-}));
 
 export default function Housing() {
     return (
@@ -19,7 +9,7 @@ export default function Housing() {
                         {/* {userName || "John Doe"} */}
             </div>
             <div className="pt-14">
-                <HousingClient data={final_Data}/>
+                <HousingClient />
             </div>
             
         </div> );

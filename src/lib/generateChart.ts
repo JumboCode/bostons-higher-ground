@@ -37,7 +37,7 @@ export type PdfChart = {
     height: number;
 };
 
-function parseFilters(filters: string | null): Partial<ChartFilters> {
+export function parseFilters(filters: string | null): Partial<ChartFilters> {
     if (!filters) return {};
 
     try {

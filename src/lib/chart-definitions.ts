@@ -43,12 +43,9 @@ export type HousingChartRecord = FilterableRecord & {
     housedMonth?: number | null;
 };
 
+// Only the columns getEducationData selects. No names or street addresses.
 export type GradeRecord = {
-    id: number;
-    schoolCode: number;
     schoolName: string;
-    studentId: number;
-    rubricCode: string;
     rubricName: string;
     fMark: string | null;
     wMark: string | null;
@@ -56,30 +53,25 @@ export type GradeRecord = {
 };
 
 export type StudentRecord = {
-    id: number;
-    schoolCode: number;
-    schoolName: string;
     studentId: number;
+    schoolName: string;
     gradeLevel: string;
-    firstName: string;
-    middleName: string | null;
-    lastName: string;
-    address: string;
     city: string;
     zip: number;
 };
 
 export type AttendanceRecord = {
-    id: number;
-    schoolCode: number;
     schoolName: string;
     studentId: number;
-    daysPresent: number;
-    daysAbsent: number;
-    daysUnexcusedAbsent: number;
-    daysMembership: number;
     ada: string;
 };
+
+// Any education bucket with fewer records than this is hidden so small groups
+// can't be re-identified.
+//  no complementary suppression (total - visible buckets); add if totals ever show beside these charts.
+export const MIN_GROUP_SIZE = 10;
+
+const bigEnough = (n: number) => n >= MIN_GROUP_SIZE;
 
 export type ChartDataSource = {
     housing: HousingChartRecord[];
@@ -676,14 +668,11 @@ function gradeImprovementSeries(
     });
 
     return Array.from(bySubject.entries())
-        .filter(([, values]) => values.fall.length > 0 || values.winter.length > 0)
+        // Both terms must clear the threshold; a suppressed side would render as a misleading 0.
+        .filter(([, values]) => bigEnough(values.fall.length) && bigEnough(values.winter.length))
         .map(([subject, values]) => {
-            const avgFall = values.fall.length
-                ? values.fall.reduce((sum, value) => sum + value, 0) / values.fall.length
-                : 0;
-            const avgWinter = values.winter.length
-                ? values.winter.reduce((sum, value) => sum + value, 0) / values.winter.length
-                : 0;
+            const avgFall = values.fall.reduce((sum, value) => sum + value, 0) / values.fall.length;
+            const avgWinter = values.winter.reduce((sum, value) => sum + value, 0) / values.winter.length;
 
             return {
                 category: subject,
@@ -716,6 +705,7 @@ function gradeDistributionSeries(
     });
 
     return Array.from(bySubject.entries())
+        .filter(([, marks]) => bigEnough(marks.length))
         .map(([subject, marks]) => ({
             category: subject,
             series: [
@@ -750,7 +740,7 @@ function attendanceBreakdownSeries(
         { label: "Regular (>=90%)", value: regular, color: "#7DA3A1" },
         { label: "At Risk (80-90%)", value: atRisk, color: "#E0A458" },
         { label: "Chronic (<80%)", value: chronic, color: "#D28A93" },
-    ].filter((datum) => datum.value > 0);
+    ].filter((datum) => bigEnough(datum.value));
 }
 
 function attendanceByGradeSeries(
@@ -770,7 +760,7 @@ function attendanceByGradeSeries(
         adaByGrade.set(grade, values);
     });
 
-    return GRADE_ORDER.filter((grade) => adaByGrade.has(grade)).map((grade) => {
+    return GRADE_ORDER.filter((grade) => bigEnough(adaByGrade.get(grade)?.length ?? 0)).map((grade) => {
         const values = adaByGrade.get(grade) ?? [];
         return {
             label: grade,
@@ -790,6 +780,7 @@ function studentsPerSchoolSeries(
     });
 
     return Array.from(counts.entries())
+        .filter(([, count]) => bigEnough(count))
         .map(([school, count]) => ({
             category: school,
             series: [{ label: "Students", value: count }],
@@ -809,6 +800,7 @@ function educationStudentsByCitySeries(
     });
 
     return Array.from(counts.entries())
+        .filter(([, count]) => bigEnough(count))
         .map(([city, count]) => ({
             category: city,
             series: [{ label: "Students", value: count }],
@@ -829,6 +821,7 @@ function studentsByZipSeries(
     });
 
     return Array.from(counts.entries())
+        .filter(([, count]) => bigEnough(count))
         .map(([zip, count]) => ({
             category: zip,
             series: [{ label: "Students", value: count }],
@@ -848,7 +841,7 @@ function gradeLevelDistributionSeries(
         counts.set(record.gradeLevel, (counts.get(record.gradeLevel) ?? 0) + 1);
     });
 
-    return GRADE_ORDER.filter((grade) => counts.has(grade)).map((grade) => ({
+    return GRADE_ORDER.filter((grade) => bigEnough(counts.get(grade) ?? 0)).map((grade) => ({
         label: grade,
         value: counts.get(grade) ?? 0,
     }));
@@ -869,6 +862,7 @@ function attendanceBySchoolSeries(
     });
 
     return Array.from(bySchool.entries())
+        .filter(([, values]) => bigEnough(values.length))
         .map(([school, values]) => ({
             category: school,
             series: [

@@ -4,6 +4,8 @@ import { syncLog } from "@/lib/schema";
 import { getUserPermission } from "@/lib/usersFunction";
 import { runSalesforceSync } from "@/lib/salesforce/sync";
 import { and, desc, eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import { after } from "next/server";
 
 export const runtime = "nodejs"; // jsforce needs Node, not Edge.
 export const dynamic = "force-dynamic";
@@ -118,10 +120,15 @@ export async function POST(request: Request) {
     // Fire and forget. The sync function updates the log row when done.
     // We don't await it so the admin UI gets a fast response; the client
     // polls GET /api/admin/sync and triggers a router refresh on success.
-    runSalesforceSync(logRow.id).catch((err) => {
-        // Already logged into sync_log; just print for server logs.
-        console.error("[salesforce sync] fatal:", err);
-    });
+    // after() keeps request context so revalidateTag can flush cached report data.
+    after(
+        runSalesforceSync(logRow.id)
+            .then(() => revalidateTag("report-data"))
+            .catch((err) => {
+                // Already logged into sync_log; just print for server logs.
+                console.error("[salesforce sync] fatal:", err);
+            })
+    );
 
     return Response.json({ ok: true, log: logRow });
 }

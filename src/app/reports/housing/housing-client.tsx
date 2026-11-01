@@ -16,23 +16,7 @@ export type FilterSummary = Pick<
     | "customRange"
 >;
 
-export type HousingRecord = {
-    id: number;
-    familyId: string;
-    intakeDate: string | null;
-    dateHoused: string | null;
-    currentStatus: string | null;
-    sourceOfHousing: string | null;
-    city: string | null;
-    zipCode: string | null;
-    school: string | null;
-    schoolId: string | null;
-    studentCount: number | null;
-    intakeMonth: number | null;
-    housedMonth: number | null;
-};
-
-export default function HousingClient({ data }: { data: HousingRecord[] }) {
+export default function HousingClient() {
     const [charts, setCharts] = useState<StoredChart[]>([]);
     const selectedLocations = useFilters((s) => s.selectedLocations);
     const selectedSchools = useFilters((s) => s.selectedSchools);
@@ -81,7 +65,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="family-intake-bar" records={data} filters={filterState} />
+                    <DashboardChart chartKey="family-intake-bar" filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -91,7 +75,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="families-housed-line" records={data} filters={filterState} />
+                    <DashboardChart chartKey="families-housed-line" filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -101,7 +85,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     appliedFilters={formattedFilters(filterState)}
                     filterState={filterState}
                 >
-                    <DashboardChart chartKey="days-to-house-bar" records={data} filters={filterState} />
+                    <DashboardChart chartKey="days-to-house-bar" filters={filterState} />
                 </Chart>
 
                 <Chart
@@ -112,7 +96,7 @@ export default function HousingClient({ data }: { data: HousingRecord[] }) {
                     filterState={filterState}
                 >
                     <div className="overflow-y-auto max-h-150">
-                        <DashboardChart chartKey="location-bar" records={data} filters={filterState} />
+                        <DashboardChart chartKey="location-bar" filters={filterState} />
                     </div>
                 </Chart>
             </div>

@@ -6,17 +6,7 @@ import FilterBar from "@/components/FilterBar";
 export const dynamic = "force-dynamic";
 
 export default async function Overview() {
-    const dataPromise = getAllData();
-    const [data, housedSummary] = await Promise.all([
-        dataPromise,
-        getHousedBaselineSummary(dataPromise),
-    ]);
-
-    const final_Data = data.map((d) => ({
-        ...d,
-        intakeMonth: d.intakeDate ? new Date(d.intakeDate).getMonth() : null,
-        housedMonth: d.dateHoused ? new Date(d.dateHoused).getMonth() : null,
-    }));
+    const housedSummary = await getHousedBaselineSummary(getAllData());
 
     return (
         <div>
@@ -25,10 +15,7 @@ export default async function Overview() {
                 {/* {userName || "John Doe"} */}
             </div>
             <div className="pt-14">
-                <OverviewClient
-                    data={final_Data}
-                    housedSummary={housedSummary}
-                />
+                <OverviewClient housedSummary={housedSummary} />
             </div>
         </div>
     );
