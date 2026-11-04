@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { syncLog } from "@/lib/schema";
@@ -5,15 +6,15 @@ import { getUserPermission } from "@/lib/usersFunction";
 import { runSalesforceSync } from "@/lib/salesforce/sync";
 import { and, desc, eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { after } from "next/server";
 
 export const runtime = "nodejs"; // jsforce needs Node, not Edge.
 export const dynamic = "force-dynamic";
+// Includes post-response work; keep below the stale-run recovery window.
+export const maxDuration = 300;
 
-async function requireAdmin(request: Request): Promise<
-    | { ok: true; userId: string }
-    | { ok: false; response: Response }
-> {
+async function requireAdmin(
+    request: Request
+): Promise<{ ok: true; userId: string } | { ok: false; response: Response }> {
     const session = await auth.api.getSession({ headers: request.headers });
     if (!session) {
         return {
@@ -51,15 +52,15 @@ export async function GET(request: Request) {
         .select()
         .from(syncLog)
         .where(
-            and(
-                eq(syncLog.source, "salesforce"),
-                eq(syncLog.status, "success")
-            )
+            and(eq(syncLog.source, "salesforce"), eq(syncLog.status, "success"))
         )
         .orderBy(desc(syncLog.startedAt))
         .limit(1);
 
-    return Response.json({ latest: latest ?? null, latestSuccess: latestSuccess ?? null });
+    return Response.json({
+        latest: latest ?? null,
+        latestSuccess: latestSuccess ?? null,
+    });
 }
 
 /**
@@ -79,10 +80,7 @@ export async function POST(request: Request) {
         .select()
         .from(syncLog)
         .where(
-            and(
-                eq(syncLog.source, "salesforce"),
-                eq(syncLog.status, "running")
-            )
+            and(eq(syncLog.source, "salesforce"), eq(syncLog.status, "running"))
         )
         .orderBy(desc(syncLog.startedAt))
         .limit(1);
@@ -105,7 +103,9 @@ export async function POST(request: Request) {
                 finishedAt: new Date(),
                 errorMessage: "Marked stale by next sync attempt",
             })
-            .where(eq(syncLog.id, running.id));
+            .where(
+                and(eq(syncLog.id, running.id), eq(syncLog.status, "running"))
+            );
     }
 
     const [logRow] = await db
@@ -115,20 +115,50 @@ export async function POST(request: Request) {
             status: "running",
             triggeredBy: guard.userId,
         })
+        // The partial unique index arbitrates concurrent requests atomically.
+        .onConflictDoNothing()
         .returning();
 
-    // Fire and forget. The sync function updates the log row when done.
-    // We don't await it so the admin UI gets a fast response; the client
-    // polls GET /api/admin/sync and triggers a router refresh on success.
+    if (!logRow) {
+        // Another request claimed the source after our initial read. It may
+        // already have finished by this read; 409 still tells the UI to retry
+        // status rather than launching a second job.
+        const [active] = await db
+            .select()
+            .from(syncLog)
+            .where(
+                and(
+                    eq(syncLog.source, "salesforce"),
+                    eq(syncLog.status, "running")
+                )
+            )
+            .orderBy(desc(syncLog.startedAt))
+            .limit(1);
+        return Response.json(
+            { error: "sync_already_running", log: active ?? null },
+            { status: 409 }
+        );
+    }
+
+    // Register with Next's request lifecycle so Vercel keeps the invocation
+    // alive after responding. Await the whole job inside the callback.
     // after() keeps request context so revalidateTag can flush cached report data.
-    after(
-        runSalesforceSync(logRow.id)
-            .then(() => revalidateTag("report-data"))
-            .catch((err) => {
-                // Already logged into sync_log; just print for server logs.
-                console.error("[salesforce sync] fatal:", err);
-            })
-    );
+    after(async () => {
+        try {
+            await runSalesforceSync(logRow.id);
+        } catch (err) {
+            // runSalesforceSync persists failures; retain server diagnostics.
+            console.error("[salesforce sync] fatal:", err);
+            return;
+        }
+        try {
+            // The sync succeeded; a cache flush failure only delays fresh charts
+            // until unstable_cache's 300s revalidate window expires.
+            revalidateTag("report-data");
+        } catch (err) {
+            console.error("[salesforce sync] cache revalidation failed:", err);
+        }
+    });
 
     return Response.json({ ok: true, log: logRow });
 }
