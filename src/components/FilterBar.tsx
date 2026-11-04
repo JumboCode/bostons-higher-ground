@@ -280,6 +280,8 @@ export function DateFilter() {
 
     const formattedRange = useMemo(() => {
         switch (timeframe) {
+            case "pastTwoYears":
+                return "Past 2 Years";
             case "thisMonth":
                 return "This Month";
             case "lastMonth":
@@ -361,7 +363,8 @@ export function DateFilter() {
                 </div>
 
                 <div className="mt-4">
-                    <div className="flex mb-[14px] gap-2 h-[30px] cursor-pointer">
+                    <div className="flex flex-wrap mb-[14px] gap-2 cursor-pointer">
+                        <button onClick={() => handleQuickTimeframe("pastTwoYears")} className={`rounded-full border px-3 py-1 text-sm ${timeframe === "pastTwoYears" ? "border-[#E76C82] text-[#E76C82]" : "border-gray-300 text-gray-600"}`}>Past 2 Years</button>
                         <button
                             onClick={() => handleQuickTimeframe("thisMonth")}
                             className={`cursor-pointer w-1/4 rounded-full justify-center items-center border text-[14px] py-[4px] ${manrope.className} ${

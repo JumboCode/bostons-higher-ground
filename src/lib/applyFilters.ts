@@ -27,6 +27,12 @@ function resolveDateRange(
     const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
 
     switch (timeframe) {
+        case "pastTwoYears": {
+            const start = new Date(today);
+            start.setFullYear(start.getFullYear() - 2);
+            start.setHours(0, 0, 0, 0);
+            return { start, end: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999) };
+        }
         case "thisMonth":
             return { start: startOfMonth, end: today };
         case "lastMonth":
@@ -86,7 +92,8 @@ export function filterRecords<T extends FilterableRecord>(
         if (range) {
             const dateStr = record.intakeDate ?? record.dateHoused;
             if (!dateStr) return false;
-            const date = new Date(dateStr);
+            // Parse calendar dates in local time.
+            const date = new Date(`${dateStr.slice(0, 10)}T00:00:00`);
             if (!inRange(date, range)) return false;
         }
 

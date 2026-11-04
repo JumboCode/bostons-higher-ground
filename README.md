@@ -9,7 +9,9 @@ First, make sure you have the project's dependencies installed:
 pnpm install
 ```
 
-Then, run the development server:
+Copy `.env.example` to `.env.local` and fill in the development settings from
+the backend handoff guide. Then run the development server (restart it after
+changing environment settings):
 
 ```bash
 pnpm dev
