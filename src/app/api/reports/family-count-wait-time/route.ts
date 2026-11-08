@@ -4,6 +4,7 @@ import { filterRecords } from "@/lib/applyFilters";
 import { auth } from "@/lib/auth";
 import { parseFilters } from "@/lib/generateChart";
 import { getAllData } from "@/lib/getAllData";
+import { canonicalFamilies } from "@/lib/family-metrics";
 
 // Filtered family count + average intake-to-housed wait time for the overview, computed server-side so raw housing rows stay off the client.
 export async function POST(request: Request) {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
         typeof body?.filters === "string" ? body.filters : null
     );
 
-    const filtered = filterRecords(await getAllData(), {
+    const filtered = filterRecords(canonicalFamilies(await getAllData()), {
         selectedLocations: parsed.selectedLocations ?? [],
         selectedSchools: parsed.selectedSchools ?? [],
         timeframe: parsed.timeframe ?? "allTime",

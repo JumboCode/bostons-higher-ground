@@ -1,4 +1,5 @@
 import type { FilterableRecord } from "@/lib/applyFilters";
+import { canonicalFamilies } from "./family-metrics";
 import type { Timeframe } from "@/lib/filterStore";
 import type {
     DonutDatum,
@@ -416,14 +417,14 @@ function familyIntakeSeries(
     records: HousingChartRecord[],
     filters: ChartFilters
 ): VerticalBarDatum[] {
-    return buildTimeSeries(records, filters, "intakeDate");
+    return buildTimeSeries(canonicalFamilies(records), filters, "intakeDate");
 }
 
 function familiesHousedSeries(
     records: HousingChartRecord[],
     filters: ChartFilters
 ): LineDatum[] {
-    return buildTimeSeries(records, filters, "dateHoused");
+    return buildTimeSeries(canonicalFamilies(records), filters, "dateHoused");
 }
 
 function daysToHouseSeries(
@@ -432,7 +433,7 @@ function daysToHouseSeries(
 ): VerticalBarDatum[] {
     const totals = new Map<string, { totalDays: number; count: number }>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    filterCommonRecords(canonicalFamilies(records), filters).forEach((record) => {
         if (!record.intakeDate || !record.dateHoused) return;
 
         const start = new Date(record.intakeDate);
@@ -462,7 +463,7 @@ function locationSeries(
 ): HorizontalBarDatum[] {
     const cityCounts = new Map<string, { active: number; housed: number }>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    filterCommonRecords(canonicalFamilies(records), filters).forEach((record) => {
         if (!record.city) return;
 
         const existing = cityCounts.get(record.city) ?? {
@@ -579,7 +580,7 @@ function housingSourcesSeries(
 ): DonutDatum[] {
     const counts = new Map<string, number>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    filterCommonRecords(canonicalFamilies(records), filters).forEach((record) => {
         if (record.currentStatus !== "housed" || !record.sourceOfHousing) return;
         const current = counts.get(record.sourceOfHousing) ?? 0;
         counts.set(record.sourceOfHousing, current + 1);

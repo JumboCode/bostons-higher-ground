@@ -16,6 +16,7 @@ let selections: unknown[][] = [];
 let conflict = false;
 let failBatch = false;
 let records: Record<string, unknown>[] = [];
+let queries: string[] = [];
 const db = {
     update: () => ({
         set: (value: Record<string, unknown>) => ({
@@ -74,7 +75,7 @@ loader._load = function (id, ...args) {
                         fields: [{ name: "Family_Id__c" }],
                     }),
                 }),
-                query: async () => ({
+                query: async (soql: string) => (queries.push(soql), {
                     records: records.slice(0, 2),
                     done: false,
                     nextRecordsUrl: "page2",
@@ -102,11 +103,12 @@ function reset() {
     selections = [];
     conflict = false;
     failBatch = false;
+    queries = [];
     records = [
         { Family_Id__c: " A " },
-        { Family_Id__c: null },
-        {},
-        { Family_Id__c: "  " },
+        { Id: "001000000000001AAA", Family_Id__c: null, Name: "Do not persist" },
+        { Id: "001000000000002AAA" },
+        { Id: "001000000000003AAA", Family_Id__c: "  " },
         { Family_Id__c: "B" },
     ];
 }
@@ -121,6 +123,10 @@ test("counts missing and blank family IDs across pages and persists the count", 
     );
     assert.equal(updated[0].status, "success");
     assert.equal(updated[0].rowsSkipped, 3);
+    assert.deepEqual(updated[0].skippedRecordIds, ["001000000000001AAA", "001000000000002AAA", "001000000000003AAA"]);
+    assert.match(queries[0], /SELECT Id,/);
+    assert.match(queries[0], /WHERE RecordType.DeveloperName = 'FLSI_Household'/);
+    assert.doesNotMatch(JSON.stringify(updated), /Do not persist/);
     assert.ok(outcome.missingFields.includes("City__c"));
 });
 test("zero rejected records is recorded as zero", async () => {

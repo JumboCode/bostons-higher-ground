@@ -35,6 +35,7 @@ type ResolvedMapping = FieldMapping & { sfField: string };
 export type SyncOutcome = {
     rowsSynced: number;
     rowsSkipped: number;
+    skippedRecordIds: string[];
     missingFields: string[];
 };
 
@@ -53,6 +54,7 @@ export async function runSalesforceSync(logId: string): Promise<SyncOutcome> {
                 finishedAt: new Date(),
                 rowsSynced: outcome.rowsSynced,
                 rowsSkipped: outcome.rowsSkipped,
+                skippedRecordIds: outcome.skippedRecordIds,
                 missingFields: outcome.missingFields,
             })
             .where(eq(syncLog.id, logId));
@@ -113,7 +115,7 @@ async function doSync(): Promise<SyncOutcome> {
     }
 
     // 2. Build & run the SOQL query (paged).
-    const projection = resolvedMappings.map((m) => m.sfField).join(", ");
+    const projection = [...new Set(["Id", ...resolvedMappings.map((m) => m.sfField)])].join(", ");
     const where = SF_QUERY_FILTER ? ` WHERE ${SF_QUERY_FILTER}` : "";
     const soql = `SELECT ${projection} FROM ${SF_SOBJECT}${where}`;
 
@@ -130,9 +132,15 @@ async function doSync(): Promise<SyncOutcome> {
     // 3. Coerce SF records → housing_records rows. Skip records missing the
     //    required familyId (otherwise the NOT NULL insert will fail and tank
     //    the whole sync).
-    const rows = records
-        .map((r) => mapSfRecord(r, resolvedMappings))
-        .filter((row): row is HousingRow => row !== null);
+    const rows: HousingRow[] = [];
+    const skippedRecordIds: string[] = [];
+    for (const record of records) {
+        const row = mapSfRecord(record, resolvedMappings);
+        if (row) rows.push(row);
+        else if (typeof record.Id === "string" && /^[a-zA-Z0-9]{15}(?:[a-zA-Z0-9]{3})?$/.test(record.Id)) {
+            skippedRecordIds.push(record.Id);
+        }
+    }
 
     // 4. Truncate + bulk insert atomically.
     //    neon-http does not support interactive transactions (db.transaction);
@@ -153,6 +161,7 @@ async function doSync(): Promise<SyncOutcome> {
     return {
         rowsSynced: rows.length,
         rowsSkipped: records.length - rows.length,
+        skippedRecordIds: [...new Set(skippedRecordIds)],
         missingFields,
     };
 }

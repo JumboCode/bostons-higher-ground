@@ -16,6 +16,7 @@ const success: SyncLogRow = {
     finishedAt: "2026-10-28T12:01:00Z",
     rowsSynced: 12,
     rowsSkipped: 3,
+    skippedRecordIds: ["001000000000001AAA"],
     missingFields: ["City__c"],
     errorMessage: null,
     triggeredBy: "admin",
@@ -40,6 +41,7 @@ for (const status of ["success", "error", "running"] as const) {
         assert.doesNotMatch(html, /School__c/);
         assert.match(html, /3 skipped \(missing familyId\)/);
         assert.doesNotMatch(html, /99 skipped/);
+        assert.match(html, /001000000000001AAA/);
     });
 }
 test("no successful sync does not invent counts or warnings", () => {
