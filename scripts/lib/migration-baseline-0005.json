@@ -1,0 +1,1225 @@
+{
+  "migrations": [
+    {
+      "hash": "4bb61d01b9b603ec6b2dac0e2495889a0e57da0dcf77e9b33b5fa2f355bb206b",
+      "created_at": 1761079474935
+    },
+    {
+      "hash": "4ad1ad8988aa1e4671d038a1981dec1a6121236eaf32d861a5237542b4d6b311",
+      "created_at": 1768197418274
+    },
+    {
+      "hash": "fb553c33ef6a387c6c22804f6736185afbbb44f1ccdf7ca8eb776f00d809e200",
+      "created_at": 1774911197144
+    },
+    {
+      "hash": "819368e10ba4e20f4febec66dad2fa9560cfe7959dbd98c008571c7530c3ece6",
+      "created_at": 1780100510220
+    },
+    {
+      "hash": "cfb921805bb06266aa13b0a671ff4327dae374b6693e0cbe0bf68fc3c21dce69",
+      "created_at": 1792682442114
+    },
+    {
+      "hash": "afcffce5baca238e368854fc4b26ef5056743555eba15914239f5f25d5eae1e8",
+      "created_at": 1793292862096
+    }
+  ],
+  "schema": [
+    {
+      "table_name": "account",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "access_token",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "access_token_expires_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "account_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "id_token",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "password",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "provider_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "refresh_token",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "scope",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "user_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "account_account_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL account_id"
+        },
+        {
+          "name": "account_created_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL created_at"
+        },
+        {
+          "name": "account_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "account_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "account_provider_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL provider_id"
+        },
+        {
+          "name": "account_updated_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL updated_at"
+        },
+        {
+          "name": "account_user_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL user_id"
+        },
+        {
+          "name": "account_user_id_user_id_fk",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "FOREIGN KEY (user_id) REFERENCES \"user\"(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "account_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX account_pkey ON public.account USING btree (id)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "in_progress_reports",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "chart_type_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "charts",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "user_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "in_progress_reports_charts_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL charts"
+        },
+        {
+          "name": "in_progress_reports_created_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL created_at"
+        },
+        {
+          "name": "in_progress_reports_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "in_progress_reports_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "in_progress_reports_updated_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL updated_at"
+        },
+        {
+          "name": "in_progress_reports_user_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL user_id"
+        },
+        {
+          "name": "in_progress_reports_user_id_user_id_fk",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "FOREIGN KEY (user_id) REFERENCES \"user\"(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "in_progress_reports_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX in_progress_reports_pkey ON public.in_progress_reports USING btree (id)"
+        },
+        {
+          "name": "in_progress_reports_user_id_unique",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX in_progress_reports_user_id_unique ON public.in_progress_reports USING btree (user_id)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "metric_baselines",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "as_of_date",
+          "type": "date",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "metric",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "starting_value",
+          "type": "integer",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "updated_by",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "metric_baselines_as_of_date_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL as_of_date"
+        },
+        {
+          "name": "metric_baselines_metric_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL metric"
+        },
+        {
+          "name": "metric_baselines_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (metric)"
+        },
+        {
+          "name": "metric_baselines_starting_value_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL starting_value"
+        },
+        {
+          "name": "metric_baselines_updated_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL updated_at"
+        },
+        {
+          "name": "metric_baselines_updated_by_user_id_fk",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "FOREIGN KEY (updated_by) REFERENCES \"user\"(id) ON DELETE SET NULL"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "metric_baselines_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX metric_baselines_pkey ON public.metric_baselines USING btree (metric)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "session",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "ip_address",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "token",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "user_agent",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "user_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "session_created_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL created_at"
+        },
+        {
+          "name": "session_expires_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL expires_at"
+        },
+        {
+          "name": "session_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "session_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "session_token_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL token"
+        },
+        {
+          "name": "session_token_unique",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "UNIQUE (token)"
+        },
+        {
+          "name": "session_updated_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL updated_at"
+        },
+        {
+          "name": "session_user_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL user_id"
+        },
+        {
+          "name": "session_user_id_user_id_fk",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "FOREIGN KEY (user_id) REFERENCES \"user\"(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "session_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX session_pkey ON public.session USING btree (id)"
+        },
+        {
+          "name": "session_token_unique",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX session_token_unique ON public.session USING btree (token)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "sync_log",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "error_message",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "finished_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "missing_fields",
+          "type": "jsonb",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "rows_skipped",
+          "type": "integer",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "rows_synced",
+          "type": "integer",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": "'salesforce'::text",
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "started_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "triggered_by",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "sync_log_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "sync_log_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "sync_log_source_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL source"
+        },
+        {
+          "name": "sync_log_started_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL started_at"
+        },
+        {
+          "name": "sync_log_status_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL status"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sync_log_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX sync_log_pkey ON public.sync_log USING btree (id)"
+        },
+        {
+          "name": "sync_log_source_running_unique",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX sync_log_source_running_unique ON public.sync_log USING btree (source) WHERE (status = 'running'::text)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "user",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "email_verified",
+          "type": "boolean",
+          "default": "false",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "image",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "user_created_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL created_at"
+        },
+        {
+          "name": "user_email_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL email"
+        },
+        {
+          "name": "user_email_unique",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "UNIQUE (email)"
+        },
+        {
+          "name": "user_email_verified_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL email_verified"
+        },
+        {
+          "name": "user_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "user_name_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL name"
+        },
+        {
+          "name": "user_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "user_updated_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL updated_at"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "user_email_unique",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX user_email_unique ON public.\"user\" USING btree (email)"
+        },
+        {
+          "name": "user_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX user_pkey ON public.\"user\" USING btree (id)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "user_info",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "authorized",
+          "type": "boolean",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "permissions",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "user_id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "user_info_authorized_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL authorized"
+        },
+        {
+          "name": "user_info_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "user_info_permissions_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL permissions"
+        },
+        {
+          "name": "user_info_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "user_info_user_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL user_id"
+        },
+        {
+          "name": "user_info_user_id_user_id_fk",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "FOREIGN KEY (user_id) REFERENCES \"user\"(id) ON DELETE CASCADE"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "user_info_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX user_info_pkey ON public.user_info USING btree (id)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    },
+    {
+      "table_name": "verification",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp without time zone",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "identifier",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp without time zone",
+          "default": "now()",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "verification_created_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL created_at"
+        },
+        {
+          "name": "verification_expires_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL expires_at"
+        },
+        {
+          "name": "verification_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "verification_identifier_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL identifier"
+        },
+        {
+          "name": "verification_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "verification_updated_at_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL updated_at"
+        },
+        {
+          "name": "verification_value_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL value"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "verification_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX verification_pkey ON public.verification USING btree (id)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    }
+  ],
+  "ledgerSchema": [
+    {
+      "table_name": "__drizzle_migrations",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false,
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "bigint",
+          "default": null,
+          "identity": "",
+          "not_null": false,
+          "collation": null,
+          "generated": ""
+        },
+        {
+          "name": "hash",
+          "type": "text",
+          "default": null,
+          "identity": "",
+          "not_null": true,
+          "collation": "default",
+          "generated": ""
+        },
+        {
+          "name": "id",
+          "type": "integer",
+          "default": "nextval('drizzle.__drizzle_migrations_id_seq'::regclass)",
+          "identity": "",
+          "not_null": true,
+          "collation": null,
+          "generated": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "__drizzle_migrations_hash_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL hash"
+        },
+        {
+          "name": "__drizzle_migrations_id_not_null",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "NOT NULL id"
+        },
+        {
+          "name": "__drizzle_migrations_pkey",
+          "deferred": false,
+          "validated": true,
+          "deferrable": false,
+          "definition": "PRIMARY KEY (id)"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "__drizzle_migrations_pkey",
+          "ready": true,
+          "valid": true,
+          "definition": "CREATE UNIQUE INDEX __drizzle_migrations_pkey ON drizzle.__drizzle_migrations USING btree (id)"
+        }
+      ],
+      "user_triggers": 0,
+      "policies": 0,
+      "user_rules": 0
+    }
+  ]
+}

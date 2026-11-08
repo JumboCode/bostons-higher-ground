@@ -98,6 +98,7 @@ test("public loader is server-only, tagged, day-keyed and returns aggregates wit
         [
             "familiesHousedToDate",
             "housingOverTime",
+            "housingGranularity",
             "asOfDate",
             "minimumGroupSize",
             "provisional",

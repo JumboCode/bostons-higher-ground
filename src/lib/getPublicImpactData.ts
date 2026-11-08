@@ -24,7 +24,7 @@ const loadPublicImpactData = unstable_cache(
             today
         );
     },
-    ["public-impact-data-v1"],
+    ["public-impact-data-v2"],
     { tags: ["report-data"], revalidate: 300 }
 );
 

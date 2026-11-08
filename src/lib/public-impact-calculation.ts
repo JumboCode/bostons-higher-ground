@@ -5,9 +5,17 @@ import {
 import { canonicalFamilies } from "./family-metrics";
 import { MIN_GROUP_SIZE } from "./chart-definitions";
 
+export type HousingGranularity = "month" | "quarter" | "year" | "allTime";
+export type PublicHousingPeriod = {
+    periodStart: string;
+    periodEnd: string;
+    label: string;
+    familiesHoused: number;
+};
 export type PublicImpactData = {
     familiesHousedToDate: number | null;
-    housingOverTime: { month: string; familiesHoused: number | null }[];
+    housingOverTime: PublicHousingPeriod[];
+    housingGranularity: HousingGranularity | null;
     asOfDate: string;
     minimumGroupSize: number;
     provisional: boolean;
@@ -17,10 +25,76 @@ type ImpactRecord = {
     intakeDate: string | null;
     dateHoused: string | null;
 };
+const iso = (date: Date) => date.toISOString().slice(0, 10);
 
-/** Fixed, unfiltered public release. null means withheld/unavailable, never zero.
- * Monthly counts are first housing AFTER the baseline cutoff, not cumulative.
- * Historical baseline outcomes are not assigned invented housing dates.
+function periodStart(
+    date: string,
+    granularity: Exclude<HousingGranularity, "allTime">
+) {
+    const result = new Date(`${date}T00:00:00Z`);
+    result.setUTCDate(1);
+    if (granularity === "quarter")
+        result.setUTCMonth(Math.floor(result.getUTCMonth() / 3) * 3);
+    if (granularity === "year") result.setUTCMonth(0);
+    return result;
+}
+
+function periods(
+    dates: string[],
+    start: string,
+    end: string,
+    granularity: HousingGranularity
+): PublicHousingPeriod[] {
+    if (granularity === "allTime")
+        return [
+            {
+                periodStart: start,
+                periodEnd: end,
+                label:
+                    start.slice(0, 4) === end.slice(0, 4)
+                        ? start.slice(0, 4)
+                        : `${start.slice(0, 4)}–${end.slice(0, 4)}`,
+                familiesHoused: dates.length,
+            },
+        ];
+    const counts = new Map<string, number>();
+    for (const date of dates) {
+        const key = iso(periodStart(date, granularity));
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const result: PublicHousingPeriod[] = [];
+    let cursor = periodStart(start, granularity);
+    const months =
+        granularity === "month" ? 1 : granularity === "quarter" ? 3 : 12;
+    while (iso(cursor) <= end) {
+        const key = iso(cursor);
+        const next = new Date(cursor);
+        next.setUTCMonth(next.getUTCMonth() + months);
+        const final = iso(new Date(next.getTime() - 86_400_000));
+        const label =
+            granularity === "month"
+                ? new Intl.DateTimeFormat("en-US", {
+                      month: "short",
+                      year: "numeric",
+                      timeZone: "UTC",
+                  }).format(cursor)
+                : granularity === "quarter"
+                  ? `Q${Math.floor(cursor.getUTCMonth() / 3) + 1} ${cursor.getUTCFullYear()}`
+                  : String(cursor.getUTCFullYear());
+        result.push({
+            periodStart: key < start ? start : key,
+            periodEnd: final > end ? end : final,
+            label,
+            familiesHoused: counts.get(key) ?? 0,
+        });
+        cursor = next;
+    }
+    return result;
+}
+
+/** One fixed, unfiltered release. Coarsen the entire series uniformly until
+ * every nonzero group is >= k; never send suppressed finer buckets alongside
+ * their total. Historical baseline families receive no invented housing dates.
  */
 export function buildPublicImpactData(
     records: ImpactRecord[],
@@ -31,54 +105,42 @@ export function buildPublicImpactData(
     const result: PublicImpactData = {
         familiesHousedToDate: null,
         housingOverTime: [],
+        housingGranularity: null,
         asOfDate: today,
         minimumGroupSize: MIN_GROUP_SIZE,
         provisional,
     };
     if (!baseline) return result;
-    const { total } = calculateHousedTotal(records, baseline, today);
+    const { additions, total } = calculateHousedTotal(records, baseline, today);
+    const small = (n: number) => n > 0 && n < MIN_GROUP_SIZE;
+    // Also protect small baseline/additions populations from total-minus-series
+    // or total-minus-known-baseline inference.
     result.familiesHousedToDate =
-        total === 0 || total >= MIN_GROUP_SIZE ? total : null;
-    const counts = new Map<string, number>();
-    for (const row of canonicalFamilies(records)) {
-        if (
-            !row.dateHoused ||
-            row.dateHoused <= baseline.asOfDate ||
-            row.dateHoused > today
-        )
-            continue;
-        const month = row.dateHoused.slice(0, 7);
-        counts.set(month, (counts.get(month) ?? 0) + 1);
-    }
-    // Fixed calendar range, including zero months, so missing buckets never
-    // silently become zero and the range doesn't disclose a first small group.
-    const cursor = new Date(`${baseline.asOfDate.slice(0, 7)}-01T00:00:00Z`);
-    while (cursor.toISOString().slice(0, 10) <= today) {
-        const month = cursor.toISOString().slice(0, 7);
-        result.housingOverTime.push({
-            month,
-            familiesHoused: counts.get(month) ?? 0,
-        });
-        cursor.setUTCMonth(cursor.getUTCMonth() + 1);
-    }
-    const hiddenMonths = new Set(
-        [...counts.entries()]
-            .filter(([, count]) => count < MIN_GROUP_SIZE)
-            .map(([month]) => month)
-    );
-    // Always withhold the headline when a month is hidden. Merely hiding a
-    // second bucket is insufficient: e.g. ten positive buckets totaling ten
-    // exposes every count as one. Do not release a recoverable hidden subtotal.
-    if (
-        hiddenMonths.size ||
-        (baseline.startingValue > 0 && baseline.startingValue < MIN_GROUP_SIZE)
-    )
-        result.familiesHousedToDate = null;
-    result.housingOverTime = result.housingOverTime.map((point) => ({
-        ...point,
-        familiesHoused: hiddenMonths.has(point.month)
+        small(total) || small(baseline.startingValue) || small(additions)
             ? null
-            : point.familiesHoused,
-    }));
+            : total;
+    if (small(additions)) return result;
+    const first = new Date(`${baseline.asOfDate}T00:00:00Z`);
+    first.setUTCDate(first.getUTCDate() + 1);
+    const start = iso(first);
+    if (start > today) return result;
+    const dates = canonicalFamilies(records).flatMap((row) =>
+        row.dateHoused && row.dateHoused >= start && row.dateHoused <= today
+            ? [row.dateHoused]
+            : []
+    );
+    for (const granularity of [
+        "month",
+        "quarter",
+        "year",
+        "allTime",
+    ] as const) {
+        const series = periods(dates, start, today, granularity);
+        if (series.every((point) => !small(point.familiesHoused))) {
+            result.housingOverTime = series;
+            result.housingGranularity = granularity;
+            break;
+        }
+    }
     return result;
 }

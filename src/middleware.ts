@@ -10,6 +10,9 @@ export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
     const isLoginRoute = path === "/login";
 
+    // Public housing aggregates must not depend on the auth service/session DB.
+    if (path === "/impact") return NextResponse.next();
+
     const session = await auth.api.getSession({ headers: req.headers });
 
     if (isLoginRoute && session) {

@@ -1,72 +1,83 @@
 # Public impact data — #114
 
-## Alex's integration contract
+## Final integration contract
 
-Import from a **Server Component** (for example `src/app/impact/page.tsx`):
+`src/app/impact/page.tsx` now calls the server-only `getPublicImpactData()` loader
+for real housing figures in all three design variants. Mock housing counters
+and the mock housing series are removed. Education remains a clearly labeled
+sample-data design preview; it is not presented as reported program results.
 
 ```tsx
 import { getPublicImpactData } from "@/lib/getPublicImpactData";
-
 const impact = await getPublicImpactData();
 ```
-
-The final return type is:
 
 ```ts
 type PublicImpactData = {
     familiesHousedToDate: number | null;
     housingOverTime: {
-        month: string; // YYYY-MM, ascending, includes zero months
-        familiesHoused: number | null;
+        periodStart: string; // YYYY-MM-DD, inclusive
+        periodEnd: string;   // YYYY-MM-DD, inclusive
+        label: string;       // e.g. Feb 2025, Q1 2025, 2025, or 2024–2025
+        familiesHoused: number;
     }[];
+    housingGranularity: "month" | "quarter" | "year" | "allTime" | null;
     asOfDate: string; // YYYY-MM-DD, America/New_York
-    minimumGroupSize: number; // currently 10, shared with existing charts
+    minimumGroupSize: number; // 10
     provisional: boolean;
 };
 ```
 
-`familiesHousedToDate` uses #103's saved historical baseline plus distinct
-families first housed **strictly after** its inclusive cutoff and no later than
-`asOfDate`. A family with housing before the cutoff is never counted again for
-a later intake. IDs are trimmed; blank IDs and invalid/future housing dates do
-not count. No baseline fields, identifiers, names, addresses, or source rows
-leave this function.
+This replaces the initial `month`/nullable-bucket contract. Alex can use the
+page's finished integration or import the loader elsewhere in a Server
+Component. No identifiers, source rows or baseline breakdown leave the loader;
+only finished aggregate chart models are passed to the client renderer.
+The public page also renders an accessible data table of the same aggregates.
 
-`housingOverTime` is **monthly new families housed since the baseline cutoff**,
-not a cumulative series. It starts with the cutoff's calendar month (only dates
-after the cutoff count) and ends with the current Boston month. Historical
-baseline families have no invented monthly dates. The series may therefore
-have a different sum from the all-time headline. The current month is partial.
+## Counting and privacy rules
 
-`null` means withheld or unavailable. Display “Not available” for a null
-headline. Chart nulls must remain gaps/withheld buckets; **never coerce them to
-zero or connect a line across gaps**. Zero is a measured zero. Do not add public
-location/school/date filters, unsuppressed totals, or baseline breakdowns without
-revisiting privacy. Additional releases could defeat suppression by subtraction.
+The headline follows #103: saved historical baseline plus distinct families
+first housed **strictly after** its inclusive cutoff, through `asOfDate`.
+Trim Family IDs, ignore blank IDs and invalid/future housing dates, and never
+count a previously housed family again after a repeat intake.
 
-Nonzero monthly groups below 10 are withheld. **Whenever any monthly bucket is
-withheld, the headline is also withheld**, even when the historical baseline is
-large. A nonzero historical baseline smaller than 10 also withholds the
-headline, preventing recovery by subtracting visible months. Hiding just one
-extra month is insufficient: for example, ten hidden
-positive months totaling ten reveals every month's count as one. This
-conservative rule prevents recovery from the headline and visible months in
-this release. Sparse monthly data can therefore leave the public headline
-unavailable; a future design could instead publish coarser time periods. It
-does not claim protection against all historical snapshots or other datasets.
+The series contains **newly housed families since the baseline cutoff**, not
+cumulative totals. Its first date is the day after that cutoff; its last date
+is the current Boston day. Historical baseline families have no invented
+housing dates. The current period may be partial. Its sum therefore excludes
+the historical baseline while the headline includes it.
 
-If baseline storage is missing, return a null headline and empty series. If the
+Try one uniform calendar granularity at a time: month, quarter, year, then one
+all-time period. Publish the finest complete series in which every nonzero
+bucket has at least 10 distinct families. Zero remains a measured zero. Never
+publish the rejected finer buckets or allow public filters to retrieve them.
+For example, ten singleton months become one yearly group of 10, rather than
+ten hidden positive months whose values could be recovered from a total.
+Use bars and the returned labels/boundaries, since the reporting unit can change.
+
+When the entire additions population is between 1 and 9, return an empty
+series, null granularity, and null headline: subtracting a known historical
+baseline from the headline would otherwise disclose that small population.
+When a nonzero historical baseline is smaller than 10, withhold the headline
+to prevent recovery by subtracting the visible series. A total of zero is valid;
+null means unavailable/withheld, never zero.
+
+These rules protect minimum groups **within a single release**. Exact public
+incrementing counters can disclose changes when compared across snapshots or
+against other datasets. This is not differential privacy or a promise of
+longitudinal inference protection. Stronger protection would require a separate
+publication/batching policy and coordination across all public releases.
+
+If baseline storage is missing, return a null headline and empty series. If its
 table exists but no baseline is saved, use #103's provisional zero baseline
-before the first intake and set `provisional: true`. Database failures propagate;
-the UI should show an unavailable state, not mock numbers.
+before the first intake and set `provisional: true`. Database failures render a
+generic unavailable state on /impact; they do not expose diagnostics or fall
+back to housing mocks. /impact does not depend on the authenticated session
+service. Other route authorization is unchanged.
 
-The loader is guarded by `server-only`, cached for 300 seconds under
-`report-data`, and keyed by Boston calendar day. Successful Salesforce syncs and
-baseline saves invalidate that tag. Only finished aggregates should be passed
-to client components. There is intentionally no public route exposing raw rows.
-
-The /impact design and its existing mock education data are left for Alex to
-integrate. No message has been sent to Alex; this document is the handoff.
+The loader is cached for 300 seconds under `report-data` and keyed by Boston
+calendar day. Successful Salesforce syncs and baseline saves invalidate that
+tag. The v2 cache key prevents reuse of the old return shape.
 
 ## Verified duplicate-family findings (2026-11-08)
 
@@ -130,33 +141,46 @@ It loads `.env.local` without printing credentials, queries Salesforce metadata
 and mapped records, and prints only metadata and aggregate diagnostics. It
 does not print family IDs, Salesforce Account IDs, or personal data.
 
-## Deployment
+## Deployment and remaining external verification
 
-1. Apply `drizzle/0006_skipped_salesforce_record_ids.sql` **before deploying the
-   updated sync/admin code**. For environments with an accurate migration
-   ledger, use the normal migration process. For the production environment
-   with an empty ledger, do not replay 0000–0005: first verify 0005 is installed,
-   back up, and have the database operator apply only 0006 transactionally:
-
-   ```sh
-   psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction \
-     -f drizzle/0006_skipped_salesforce_record_ids.sql
-   ```
-
-   Verify the new nullable `sync_log.skipped_record_ids` JSONB column. Existing
-   log rows stay null; they cannot retroactively identify skipped Accounts.
+1. Apply migration **0006 before deploying** the updated sync/admin code. Do
+   not blindly replay historical migrations on the production database with
+   an empty ledger. Use the branch-only reconciliation procedure in
+   [migration-history-reconciliation.md](migration-history-reconciliation.md)
+   to validate 0000–0005 and exercise ordinary migration of 0006 on a disposable
+   Neon branch first. That tool defaults to dry run, refuses production endpoint
+   selection, rejects drift and never executes historical migration SQL on its
+   target. Local tests are not a substitute for the required Neon branch test.
 2. Set `SALESFORCE_QUERY_FILTER="RecordType.DeveloperName = 'FLSI_Household'"`
-   in deployment settings. This is also the code default for Account syncs.
-   An explicitly blank override intentionally disables filtering; remove any
-   old blank override. Never add `Family_Id__c != null` to this filter, because
-   admins need the missing-ID records to appear in skipped diagnostics.
-3. Deploy and run one admin sync. The admin banner shows a collapsible list of
-   skipped Salesforce IDs from the latest **successful** sync. Staff fix
-   `Family_Id__c` in Salesforce and sync again. Only validated 15/18-character
-   IDs are persisted; no names or other Account fields are stored in the log.
-   The existing sync GET/POST routes remain admin-authorized.
-4. Alex wires the contract above into /impact, replacing housing placeholders.
+   in deployment settings. It is also the Account code default. Remove old
+   explicitly blank overrides. Do not add `Family_Id__c != null`, because staff
+   need the missing-ID records to appear in skipped diagnostics.
+3. Deploy and run an admin sync. The admin banner shows validated skipped
+   Salesforce IDs from the latest successful sync. Staff fill in `Family_Id__c`
+   in Salesforce and sync again. Old log rows cannot retroactively supply IDs.
+4. Verify /impact in each design and admin baseline changes/cache invalidation.
 
-No live schema migration, sync, Salesforce cleanup, deployment, or migration
-ledger modification was performed for this change. The migration-history
-stretch goal remains out of scope.
+No production migration, sync, Salesforce cleanup, deployment, or message to
+Alex/PM/TL has been performed. The local implementation and migration tests are
+complete, but **Neon branch verification is pending**. The user selected local
+checks first because no branch connection/management session is available.
+See [the draft PM/TL access question](issue-114-neon-question.md); it includes
+what was found in the issue discussions. Do not mark the stretch acceptance
+criterion complete until the actual branch test has passed.
+
+## Local validation receipt
+
+- Full application/security suite with isolated PGlite enabled: **78 passed,
+  2 skipped** (live aggregate and opt-in Salesforce soak).
+- Reconciliation tests cover dry-run rollback, exact ledger records,
+  drift/trigger/rule refusal, injected write rollback, endpoint-routing guards,
+  and the installed Drizzle migrator applying only 0006.
+- Production build, TypeScript, changed-file ESLint, Drizzle check and whitespace
+  checks passed. Existing unrelated build lint warnings remain.
+- Real local HTTP/browser verification: `/impact` returns 200, headline **186**
+  for the current cached database snapshot, one safe `2017–2026` reporting
+  period, explicit education sample labels, and no raw ID field names in HTML.
+- Desktop/mobile screenshots confirmed visible chart bars. Browser diagnosis
+  isolated an SVG paint issue with CSS-variable fills; both shared bar renderers
+  now pass their configured colors directly, with two regression tests.
+- No actual Neon branch reconciliation test or production changes performed.
