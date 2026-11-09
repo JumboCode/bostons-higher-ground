@@ -80,22 +80,22 @@ function Stat({ value, label, className }: { value: string; label: string; class
     );
 }
 
-// A: current panels + chart grid
-function DesignA({ items }: { items: ChartItem[] }) {
-    return (
-        <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Panel title="Need" {...NEED} className="text-bhg-pink" />
-                <Panel title="Response" {...RESPONSE} className="text-bhg-mint-200" />
-            </div>
-            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {items.map(({ model }) => (
-                    <ChartCard key={model.chartKey} model={model} />
-                ))}
-            </div>
-        </>
-    );
-}
+// // A: current panels + chart grid
+// function DesignA({ items }: { items: ChartItem[] }) {
+//     return (
+//         <>
+//             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+//                 <Panel title="Need" {...NEED} className="text-bhg-pink" />
+//                 <Panel title="Response" {...RESPONSE} className="text-bhg-mint-200" />
+//             </div>
+//             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+//                 {items.map(({ model }) => (
+//                     <ChartCard key={model.chartKey} model={model} />
+//                 ))}
+//             </div>
+//         </>
+//     );
+// }
 
 // B: story scroll, one idea per section
 function DesignB({ items }: { items: ChartItem[] }) {
@@ -132,7 +132,7 @@ function DesignC({ items }: { items: ChartItem[] }) {
     );
 }
 
-const DESIGNS = { a: DesignA, b: DesignB, c: DesignC } as const;
+const DESIGNS = { b: DesignB } as const;
 type DesignKey = keyof typeof DESIGNS;
 
 export default async function Impact({
@@ -141,14 +141,14 @@ export default async function Impact({
     searchParams: Promise<{ design?: string }>;
 }) {
     const { design } = await searchParams;
-    const key: DesignKey = design && design in DESIGNS ? (design as DesignKey) : "a";
+    const key: DesignKey = design && design in DESIGNS ? (design as DesignKey) : "b";
     const Design = DESIGNS[key];
 
     return (
         <main className="min-h-screen bg-[#F5F5F5] p-4 md:p-8">
             {/* ponytail: wireframe-only design switcher; delete once BHG picks one */}
             <nav className="mb-4 flex gap-2 text-sm">
-                {(Object.keys(DESIGNS) as DesignKey[]).map((d) => (
+                {/* {(Object.keys(DESIGNS) as DesignKey[]).map((d) => (
                     <Link
                         key={d}
                         href={`/impact?design=${d}`}
@@ -156,7 +156,7 @@ export default async function Impact({
                     >
                         Design {d.toUpperCase()}
                     </Link>
-                ))}
+                ))} */}
             </nav>
             <h1 className="mb-6 text-2xl font-bold text-bhg-gray-300">Our Impact</h1>
             <Design items={getModels()} />
