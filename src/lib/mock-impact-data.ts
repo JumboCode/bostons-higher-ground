@@ -28,7 +28,20 @@ const SCHOOLS: [string, number][] = [
     ["Dever Academy", 40],
     ["Tiny Pilot School", 6],
 ];
-const CITIES = ["Dorchester", "Roxbury", "Mattapan", "East Boston"];
+// Repeats = weighting, so the map has hot and cool spots.
+const CITIES = [
+    ...Array(6).fill("Dorchester"),
+    ...Array(5).fill("Roxbury"),
+    ...Array(4).fill("Mattapan"),
+    ...Array(3).fill("East Boston"),
+    ...Array(2).fill("Hyde Park"),
+    ...Array(2).fill("Chelsea"),
+    ...Array(2).fill("Quincy"),
+    "Jamaica Plain",
+    "Cambridge",
+    "Lowell",
+    "Groton",
+] as string[];
 const GRADES = ["K1", "K2", "1", "2", "3", "4", "5", "6", "7", "8"];
 const SUBJECTS = ["ELA", "Math", "Science", "Social Studies"];
 
@@ -70,7 +83,7 @@ export function getMockImpactData(): ChartDataSource {
 
     const now = Date.now();
     const day = 86_400_000;
-    const housing: HousingChartRecord[] = Array.from({ length: 160 }, (_, i) => {
+    const housing: HousingChartRecord[] = Array.from({ length: 480 }, (_, i) => {
         const intake = new Date(now - rand() * 700 * day);
         const housed = rand() < 0.8 ? new Date(intake.getTime() + (30 + rand() * 200) * day) : null;
         return {
