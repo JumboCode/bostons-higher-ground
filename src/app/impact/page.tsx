@@ -13,16 +13,18 @@ import {
     buildChartModel,
     filterCommonRecords,
     MIN_GROUP_SIZE,
+    type ChartDataSource,
     type ChartFilters,
+    type HousingChartRecord,
     type GeneratedChartModel,
 } from "@/lib/chart-definitions";
 import type { Timeframe } from "@/lib/filterStore";
-import { getMockImpactData } from "@/lib/mock-impact-data";
+import { getAllData } from "@/lib/getAllData";
+import { getEducationData } from "@/lib/getEducationData";
 
 import FilterSelect from "./FilterSelect";
 
-// ponytail: filters read searchParams so the route is dynamic (no ISR). Fine at mock-data
-// scale; wrap the real loaders in unstable_cache once they replace getMockImpactData.
+// Filters read searchParams so the route is dynamic; caching lives in the loaders.
 
 const TIMEFRAMES: { value: Timeframe; label: string }[] = [
     { value: "allTime", label: "All time" },
@@ -31,6 +33,20 @@ const TIMEFRAMES: { value: Timeframe; label: string }[] = [
 ];
 const ALL = "all";
 const DAY = 86_400_000;
+
+// Salesforce city is free text: fix case/typos, drop non-places.
+const CITY_FIXES: Record<string, string | null> = {
+    dorcheseter: "Dorchester",
+    rosindale: "Roslindale",
+    "confidential address": null,
+    "west broadway": null,
+};
+function cleanCity(city: string | null) {
+    const k = city?.trim().toLowerCase();
+    if (!k) return null;
+    if (k in CITY_FIXES) return CITY_FIXES[k];
+    return k.replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 // null = group too small to publish (same rule as chart buckets).
 const pct = (part: number, whole: number) =>
@@ -148,11 +164,20 @@ export default async function Impact({
     searchParams: Promise<{ town?: string; timeframe?: string }>;
 }) {
     const params = await searchParams;
-    // ponytail: mock data; swap for getAllData()/getEducationData() once BHG sends final stats.
-    const source = getMockImpactData();
+    // Both loaders are unstable_cache'd (5 min). Raw rows stay on the server.
+    const [rawHousing, education] = await Promise.all([
+        getAllData() as Promise<HousingChartRecord[]>,
+        getEducationData(),
+    ]);
+    const housing = rawHousing.map((h) => ({ ...h, city: cleanCity(h.city) }));
+    const students = education.students.map((s) => ({
+        ...s,
+        city: cleanCity(s.city) ?? "",
+    }));
+    const source: ChartDataSource = { ...education, housing, students };
 
     // Only towns big enough to publish are selectable, so a filter can't single out a few families.
-    const towns = [...countBy(source.housing, (h) => h.city)]
+    const towns = [...countBy(housing, (h) => h.city)]
         .filter(([, n]) => n >= MIN_GROUP_SIZE)
         .map(([t]) => t)
         .sort();
@@ -168,8 +193,14 @@ export default async function Impact({
         timeframe,
     };
 
-    // Housing
-    const families = filterCommonRecords(source.housing, filters);
+    // Housing. Town filtered here, not via filters: the shared location filter
+    // lets records with no city through, and most real records have none.
+    const inTimeframe = filterCommonRecords(housing, {
+        ...filters,
+        selectedLocations: [],
+    });
+    const families =
+        town === ALL ? inTimeframe : inTimeframe.filter((h) => h.city === town);
     const housed = families.filter((f) => f.dateHoused);
     const housedFast = housed.filter(
         (f) =>
@@ -178,24 +209,19 @@ export default async function Impact({
             183 * DAY
     );
 
-    // Map ignores the town filter (it *is* the town picker) but respects timeframe.
-    const inTimeframe = filterCommonRecords(source.housing, {
-        ...filters,
-        selectedLocations: [],
-    });
-    const shares: PlaceShare[] = [...countBy(inTimeframe, (h) => h.city)]
+    // Map: share of families with a known town, in the selected timeframe.
+    const byTown = countBy(inTimeframe, (h) => h.city);
+    const known = [...byTown.values()].reduce((a, n) => a + n, 0);
+    const shares: PlaceShare[] = [...byTown]
         .filter(([, n]) => n >= MIN_GROUP_SIZE)
-        .map(([place, n]) => ({
-            place,
-            pct: Math.round((n / inTimeframe.length) * 100),
-        }))
+        .map(([place, n]) => ({ place, pct: Math.round((n / known) * 100) }))
         .sort((a, b) => b.pct - a.pct);
     const hrefFor = (place: string) =>
         `/impact?${new URLSearchParams({ town: place, timeframe })}`;
 
     // Education (no dates on student rows, so timeframe doesn't apply)
     const studentIds = new Set(
-        (source.students ?? [])
+        students
             .filter((s) => town === ALL || s.city === town)
             .map((s) => s.studentId)
     );
@@ -236,7 +262,7 @@ export default async function Impact({
                 >
                     <Card
                         title="Where we've helped families"
-                        caption="Brighter = more families. Click a town to filter."
+                        caption="Share of families with a known town. Click a town to filter."
                         action={
                             <form
                                 method="get"
@@ -329,8 +355,7 @@ export default async function Impact({
             </div>
 
             <p className="mt-8 text-xs text-gray-500">
-                Sample data. Groups under {MIN_GROUP_SIZE} are hidden to protect
-                privacy.
+                Groups under {MIN_GROUP_SIZE} are hidden to protect privacy.
             </p>
         </main>
     );

@@ -28,6 +28,11 @@ const NEIGHBORHOODS: Record<string, [number, number]> = {
     "East Boston": [-71.032, 42.375],
     "Hyde Park": [-71.124, 42.256],
     "Jamaica Plain": [-71.114, 42.31],
+    // "Boston" with no neighborhood: downtown, not the polygon centroid
+    Boston: [-71.058, 42.358],
+    Brighton: [-71.156, 42.35],
+    Roslindale: [-71.13, 42.283],
+    "South Boston": [-71.047, 42.335],
 };
 const CENTROIDS = new Map<string, [number, number]>([
     ...TOWNS.features.map(
