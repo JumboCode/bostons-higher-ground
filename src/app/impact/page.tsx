@@ -323,7 +323,7 @@ export default async function Impact({
                                                 <div
                                                     className="h-1.5 rounded bg-bhg-pink"
                                                     style={{
-                                                        width: `${(s.pct / (shares[0]?.pct || 1)) * 100}%`,
+                                                        width: `${s.pct}%`,
                                                     }}
                                                 />
                                             </div>
