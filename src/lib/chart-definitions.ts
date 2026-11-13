@@ -308,7 +308,7 @@ function getPreferredRecordDate(record: HousingChartRecord) {
     return parseDate(record.intakeDate) ?? parseDate(record.dateHoused);
 }
 
-function filterCommonRecords(
+export function filterCommonRecords(
     records: HousingChartRecord[],
     filters: ChartFilters
 ) {

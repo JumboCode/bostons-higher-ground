@@ -6,56 +6,38 @@ import { userInfo, user, verification, account } from "@/lib/schema";
 import {session} from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { getUserPermission } from "@/lib/usersFunction";
-import { APIError } from "better-auth";
+import { createUser } from "@/lib/create-user";
 
 const VALID_PERMISSIONS = ["admin", "user", "none"] as const;
 
 /* Adds a user*/
 export async function POST(request: Request) {
-    /* Grabs info from client*/
-    const body = await request.json();
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session) {
+        return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
+    if ((await getUserPermission(session.user.id)) !== "admin") {
+        return Response.json({ error: "forbidden" }, { status: 403 });
+    }
 
-    /* Tries to insert user profile, catches an error if the action produces an error */
+    const body = await request.json().catch(() => null);
+    if (
+        !body || typeof body.email !== "string" ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim()) ||
+        typeof body.name !== "string" || !body.name.trim()
+    ) {
+        return Response.json({ error: "invalid_user" }, { status: 400 });
+    }
+
     try {
-        const newUser = await auth.api.signUpEmail({
-            body: {
-                email: body.email,
-                password: crypto.randomUUID(), // temporary password
-                name: body.name,
-            },
+        const newUser = await createUser({
+            email: body.email,
+            name: body.name,
+            password: crypto.randomUUID(),
         });
-
-        if (!newUser) {
-            return Response.json(
-                { success: false, error: "Error signing up user" },
-                { status: 500 }
-            );
-        } else {
-            const userInfoId = crypto.randomUUID();
-
-            await db.insert(userInfo).values({
-                id: userInfoId,
-                userId: newUser.user.id,
-                authorized: false,
-                permissions: "none",
-            });
-
-            return Response.json({ success: true, user: newUser.user });
-        }
-    } catch (err: unknown) {
-        if (err instanceof APIError) {
-            // return handleBetterAuthError(err)
-            return Response.json(
-                { error: err.message || "Unknown server error" },
-                { status: 500 }
-            );
-        } else {
-            return Response.json(
-                { error: "Unknown server error" },
-                { status: 500 }
-            );
-        }
-        /* TODO ask what error message to put*/
+        return Response.json({ success: true, user: newUser });
+    } catch {
+        return Response.json({ error: "Unable to create user" }, { status: 500 });
     }
 }
 

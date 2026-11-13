@@ -8,6 +8,8 @@ import {
     GraduationCap,
     LogOut,
     LayoutDashboard,
+    Globe,
+    ExternalLink,
     Menu,
     X,
 } from "lucide-react";
@@ -35,6 +37,7 @@ const TAB_CONFIG = [
     { name: "Schools", Icon: School, href: "/reports/schools" },
     { name: "Reports", Icon: FileText, href: "/reports" },
     { name: "Admin", Icon: Settings, href: "/admin" },
+    { name: "Public Dashboard", Icon: Globe, href: "/impact", external: true },
 ];
 
 export default function Navbar({ userName }: { userName: string }) {
@@ -107,7 +110,7 @@ export default function Navbar({ userName }: { userName: string }) {
                     isMobileMenuOpen ? "flex" : "hidden"
                 } md:flex flex-col gap-3 md:gap-4 p-4 md:p-5`}
             >
-                {visibleTabs.map(({ name, Icon, href }) => {
+                {visibleTabs.map(({ name, Icon, href, external }) => {
                     const isSelected =
                         pathname === href ||
                         (href !== "/reports" &&
@@ -118,6 +121,10 @@ export default function Navbar({ userName }: { userName: string }) {
                             href={href}
                             key={name}
                             prefetch={false}
+                            // The public dashboard opens separately so staff keep their place here.
+                            {...(external
+                                ? { target: "_blank", rel: "noopener noreferrer" }
+                                : {})}
                             onClick={() => setIsMobileMenuOpen(false)}
                             onMouseEnter={() => setHovered(name)}
                             onMouseLeave={() => setHovered("")}
@@ -135,6 +142,12 @@ export default function Navbar({ userName }: { userName: string }) {
                             >
                                 <Icon className="w-6 h-6 mr-4" />
                                 <span className="text-base">{name}</span>
+                                {external && (
+                                    <ExternalLink
+                                        className="w-4 h-4 ml-auto opacity-70"
+                                        aria-label="opens in a new tab"
+                                    />
+                                )}
                             </div>
                         </Link>
                     );
