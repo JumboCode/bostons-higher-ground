@@ -133,7 +133,7 @@ export default function ImpactMap({
                             stroke={p.place === selected ? "#2D2D2D" : "#fff"}
                             strokeWidth={p.place === selected ? 3 : 1.5}
                         >
-                            <title>{`${p.place}: ${p.pct}% of families we've helped`}</title>
+                            <title>{`${p.place}: ${p.pct}% of families with a known town`}</title>
                         </circle>
                     </a>
                 ))}

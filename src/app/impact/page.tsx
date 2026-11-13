@@ -48,9 +48,19 @@ function cleanCity(city: string | null) {
     return k.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// null = group too small to publish (same rule as chart buckets).
+// null = too small to publish. Both sides must clear the threshold: "1 of 11"
+// shows as 9% and would reveal a single family. This also hides 0% and 100%.
 const pct = (part: number, whole: number) =>
-    whole < MIN_GROUP_SIZE ? null : Math.round((part / whole) * 100);
+    [whole, part, whole - part].some((n) => n < MIN_GROUP_SIZE)
+        ? null
+        : Math.round((part / whole) * 100);
+
+// Many families are housed without a dateHoused in Salesforce, so the status counts too.
+const isHoused = (h: HousingChartRecord) =>
+    Boolean(h.dateHoused) || h.currentStatus?.toLowerCase() === "housed";
+// Families whose outcome is recorded (any status or a housed date).
+const hasOutcome = (h: HousingChartRecord) =>
+    Boolean(h.dateHoused || h.currentStatus?.trim());
 
 function countBy<T>(items: T[], key: (t: T) => string | null) {
     const m = new Map<string, number>();
@@ -61,13 +71,14 @@ function countBy<T>(items: T[], key: (t: T) => string | null) {
     return m;
 }
 
-// Bars as share of total instead of raw counts.
+// Bars as share of `total` instead of raw counts. Pass the real total, not the
+// sum of visible bars, so suppressed buckets don't inflate the shown ones.
 function toShares(
     model: GeneratedChartModel,
-    xLabel: string
+    xLabel: string,
+    total: number
 ): GeneratedChartModel {
-    if (model.type !== "horizontal-bar") return model;
-    const total = model.data.reduce((s, d) => s + d.series[0].value, 0) || 1;
+    if (model.type !== "horizontal-bar" || total <= 0) return model;
     return {
         ...model,
         xLabel,
@@ -97,7 +108,7 @@ function Stat({
             </p>
             <p className="mt-1 text-sm text-bhg-gray-300">
                 {value === null
-                    ? "Too few people in this selection to share a figure."
+                    ? "Not enough data in this selection to share a figure without identifying families."
                     : label}
             </p>
         </div>
@@ -138,18 +149,23 @@ function Card({
 // Stats on the left, matching visual on the right (stacks on narrow screens).
 function Row({
     heading,
+    note,
     stats,
     children,
 }: {
     heading: string;
+    note?: string;
     stats: React.ReactNode;
     children: React.ReactNode;
 }) {
     return (
         <section>
-            <h2 className="mb-3 text-xl font-semibold text-bhg-gray-300">
-                {heading}
-            </h2>
+            <div className="mb-3">
+                <h2 className="text-xl font-semibold text-bhg-gray-300">
+                    {heading}
+                </h2>
+                {note && <p className="text-sm text-gray-600">{note}</p>}
+            </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
                 <div className="flex flex-col gap-4">{stats}</div>
                 {children}
@@ -201,13 +217,16 @@ export default async function Impact({
     });
     const families =
         town === ALL ? inTimeframe : inTimeframe.filter((h) => h.city === town);
-    const housed = families.filter((f) => f.dateHoused);
-    const housedFast = housed.filter(
-        (f) =>
-            Date.parse(f.dateHoused!) -
-                Date.parse(f.intakeDate ?? f.dateHoused!) <=
-            183 * DAY
-    );
+    const recorded = families.filter(hasOutcome);
+    const housed = recorded.filter(isHoused);
+    // Time to housing needs both dates; missing or reversed dates are left out
+    // of numerator and denominator rather than counted as instant.
+    const housingDays = housed.flatMap((f) => {
+        const ms =
+            Date.parse(f.dateHoused ?? "") - Date.parse(f.intakeDate ?? "");
+        return Number.isFinite(ms) && ms >= 0 ? [ms / DAY] : [];
+    });
+    const housedFast = housingDays.filter((d) => d <= 183);
 
     // Map: share of families with a known town, in the selected timeframe.
     const byTown = countBy(inTimeframe, (h) => h.city);
@@ -220,18 +239,29 @@ export default async function Impact({
         `/impact?${new URLSearchParams({ town: place, timeframe })}`;
 
     // Education (no dates on student rows, so timeframe doesn't apply)
-    const studentIds = new Set(
-        students
-            .filter((s) => town === ALL || s.city === town)
-            .map((s) => s.studentId)
+    const townStudents = students.filter(
+        (s) => town === ALL || s.city === town
     );
-    const attendance = (source.attendance ?? []).filter((a) =>
-        studentIds.has(a.studentId)
+    const studentIds = new Set(townStudents.map((s) => s.studentId));
+    // One figure per student: average ADA across their attendance rows.
+    const adaByStudent = new Map<number, number[]>();
+    for (const a of source.attendance ?? []) {
+        const ada = Number(a.ada);
+        if (!studentIds.has(a.studentId) || !Number.isFinite(ada)) continue;
+        adaByStudent.set(a.studentId, [
+            ...(adaByStudent.get(a.studentId) ?? []),
+            ada,
+        ]);
+    }
+    const studentAda = [...adaByStudent.values()].map(
+        (v) => v.reduce((s, n) => s + n, 0) / v.length
     );
-    const regular = attendance.filter((a) => Number(a.ada) >= 0.9);
+    const regular = studentAda.filter((ada) => ada >= 0.9);
+    // Chart counts student rows per school, so the total is the same row count.
     const schoolShares = toShares(
         buildChartModel("students-per-school-bar", source, filters),
-        "% of students"
+        "% of students",
+        townStudents.length
     );
 
     const where = town === ALL ? "" : ` in ${town}`;
@@ -248,12 +278,15 @@ export default async function Impact({
                     stats={
                         <>
                             <Stat
-                                value={pct(housed.length, families.length)}
-                                label={`of families who came to us${where} are now in stable housing.`}
+                                value={pct(housed.length, recorded.length)}
+                                label={`of families we've worked with${where} have moved into stable housing.`}
                                 className="bg-bhg-pink-100"
                             />
                             <Stat
-                                value={pct(housedFast.length, housed.length)}
+                                value={pct(
+                                    housedFast.length,
+                                    housingDays.length
+                                )}
                                 label="of housed families found a home within 6 months."
                                 className="bg-bhg-mint-100"
                             />
@@ -337,9 +370,10 @@ export default async function Impact({
 
                 <Row
                     heading="Education"
+                    note="Current school-year data. The time period filter applies to housing only."
                     stats={
                         <Stat
-                            value={pct(regular.length, attendance.length)}
+                            value={pct(regular.length, studentAda.length)}
                             label={`of students we support${where} attend school at least 90% of days.`}
                             className="bg-bhg-yellow-100"
                         />
@@ -347,7 +381,7 @@ export default async function Impact({
                 >
                     <Card
                         title="Students by partner school"
-                        caption="Share of the students we support at each school."
+                        caption={`Share of the students we support${where} at each school. Schools with fewer than ${MIN_GROUP_SIZE} students aren't shown.`}
                     >
                         <ChartRenderer model={schoolShares} />
                     </Card>
