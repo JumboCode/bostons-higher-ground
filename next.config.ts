@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    /* config options here */
+    // Excel parsing runs only in the Node admin route. Keep its filesystem/ZIP
+    // dependencies out of Turbopack's application bundle.
+    serverExternalPackages: ["exceljs", "yauzl"],
 };
 
 export default nextConfig;

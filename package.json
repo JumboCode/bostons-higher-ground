@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
+    "exceljs": "4.4.0",
     "feather-icons": "^4.29.2",
     "feather-icons-react": "^0.9.0",
     "html2canvas": "^1.4.1",
@@ -40,6 +41,7 @@
     "resend": "^6.9.3",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "yauzl": "3.2.0",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
@@ -50,6 +52,7 @@
     "@types/node": "^20.19.24",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@types/yauzl": "2.10.3",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.1",
     "eslint-config-next": "15.5.4",

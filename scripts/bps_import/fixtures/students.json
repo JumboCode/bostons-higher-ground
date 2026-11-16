@@ -1,0 +1,112 @@
+[
+  {
+    "student_id": "MOCK-0001",
+    "record_id": "mock-sf-1",
+    "cohort": "afterschool"
+  },
+  {
+    "student_id": "MOCK-0002",
+    "record_id": "mock-sf-2",
+    "cohort": "afterschool"
+  },
+  {
+    "student_id": "MOCK-0003",
+    "record_id": "mock-sf-3",
+    "cohort": "afterschool"
+  },
+  {
+    "student_id": "MOCK-0004",
+    "record_id": "mock-sf-4",
+    "cohort": "afterschool"
+  },
+  {
+    "student_id": "MOCK-0005",
+    "record_id": "mock-sf-5",
+    "cohort": "afterschool"
+  },
+  {
+    "student_id": "MOCK-0006",
+    "record_id": "mock-sf-6",
+    "cohort": "afterschool"
+  },
+  {
+    "student_id": "MOCK-0007",
+    "record_id": "mock-sf-7",
+    "cohort": "housed"
+  },
+  {
+    "student_id": "MOCK-0008",
+    "record_id": "mock-sf-8",
+    "cohort": "housed"
+  },
+  {
+    "student_id": "MOCK-0009",
+    "record_id": "mock-sf-9",
+    "cohort": "housed"
+  },
+  {
+    "student_id": "MOCK-0010",
+    "record_id": "mock-sf-10",
+    "cohort": "housed"
+  },
+  {
+    "student_id": "MOCK-0011",
+    "record_id": "mock-sf-11",
+    "cohort": "housed"
+  },
+  {
+    "student_id": "MOCK-0012",
+    "record_id": "mock-sf-12",
+    "cohort": "housed"
+  },
+  {
+    "student_id": "MOCK-0013",
+    "record_id": "mock-sf-13",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0014",
+    "record_id": "mock-sf-14",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0015",
+    "record_id": "mock-sf-15",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0016",
+    "record_id": "mock-sf-16",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0017",
+    "record_id": "mock-sf-17",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0018",
+    "record_id": "mock-sf-18",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0090",
+    "record_id": "mock-sf-90a",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0090",
+    "record_id": "mock-sf-90b",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0091",
+    "record_id": "mock-sf-91",
+    "cohort": "comparison"
+  },
+  {
+    "student_id": "MOCK-0092",
+    "record_id": "mock-sf-92",
+    "cohort": "comparison"
+  }
+]

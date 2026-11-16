@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import SyncStatusBanner, { type SyncLogRow } from "@/components/SyncStatusBanner";
 import BaselineSettings from "@/components/BaselineSettings";
+import BpsUploadPreview from "@/components/BpsUploadPreview";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
 import { ModalOverlay } from "../../components/onboarding/notifCard";
@@ -250,6 +251,7 @@ export default function Admin() {
                 />
 
                 <BaselineSettings />
+                <BpsUploadPreview />
 
                 {/*Table*/}
                 <div className="mt-[25px] mx-[45px] h-full overflow-scroll border border-[#0000001A] rounded-[20px] bg-[#FFFFFF] p-[24px] flex flex-col min-w-[800px]">
