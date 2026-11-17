@@ -4,7 +4,7 @@ This is a narrowly scoped recovery tool for a database whose application schema 
 
 ## Prerequisites and protected target
 
-Obtain a disposable Neon child branch cloned from the relevant database, its connection URL, and the protected production endpoint hostname from the project owner. Never substitute a production URL. The tool deliberately ignores `DATABASE_URL` and does not load `.env` files. Provide secrets through your shell's secret mechanism without printing them:
+Obtain a disposable Neon child branch cloned from the relevant database, its direct (unpooled) connection URL, and the protected production endpoint hostname from the project owner. The Neon pooler rejects the tool's startup `search_path` setting. Never substitute a production URL. The tool deliberately ignores `DATABASE_URL` and does not load `.env` files. Provide secrets through your shell's secret mechanism without printing them:
 
 ```sh
 export BRANCH_DATABASE_URL='<disposable Neon child branch connection URL>'
@@ -59,4 +59,6 @@ try {
 JS
 ```
 
-Expect seven ledger entries, the final timestamp `1794096000000`, and `skippedRecordIdsType: 'jsonb'`. Verify existing rows again and rerun this normal migration command to confirm no further changes. Reconciliation itself will now refuse the 0006 schema as designed. Discard the test branch after review. No Neon branch validation has been performed as part of the local implementation; a branch URL and independent endpoint confirmation remain prerequisites.
+Expect seven ledger entries, the final timestamp `1794096000000`, and `skippedRecordIdsType: 'jsonb'`. Verify existing rows again and rerun this normal migration command to confirm no further changes. Reconciliation itself will now refuse the 0006 schema as designed. Discard the test branch after review.
+
+On November 8, 2026, a read-only Neon catalog check confirmed that the app database runs PostgreSQL 18.6, its eight baseline tables match 0000–0005, its Drizzle ledger is empty and matches the expected schema, and the 0006 column is absent. An isolated Claimable Neon project provisioned PostgreSQL 17.11. The dry run refused its ledger constraint metadata, which differs from the reviewed baseline. The required test on a child of the app database remains pending.

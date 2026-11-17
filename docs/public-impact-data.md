@@ -168,6 +168,13 @@ See [the draft PM/TL access question](issue-114-neon-question.md); it includes
 what was found in the issue discussions. Do not mark the stretch acceptance
 criterion complete until the actual branch test has passed.
 
+The handoff was subsequently recovered from the October 27 conversation. It
+provides a Neon project console link and shared Google sign-in instructions;
+its database endpoint matches the current app connection. This identifies the
+access route but does not supply a separate disposable branch. Verify console
+access and create/identify a child branch before running the branch-only tool.
+Credentials and the full guide are intentionally not copied into this repo.
+
 ## Local validation receipt
 
 - Full application/security suite with isolated PGlite enabled: **78 passed,
@@ -184,3 +191,13 @@ criterion complete until the actual branch test has passed.
   isolated an SVG paint issue with CSS-variable fills; both shared bar renderers
   now pass their configured colors directly, with two regression tests.
 - No actual Neon branch reconciliation test or production changes performed.
+
+## Offline completion check (2026-11-17)
+
+Google/Neon management access remains unavailable. The main ticket work passed
+78 application/security tests (2 live/opt-in skips), TypeScript and a production
+build. A separate local reconstruction test also passed. See
+[local database reconstruction](local-database-reconstruction.md) for the
+repeatable 12-table recovery and its limitations. No remote migration or
+production sync was performed. The disposable-Neon-child stretch test remains
+pending and is not substituted by local PostgreSQL-compatible tests.
