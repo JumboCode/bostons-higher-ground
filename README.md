@@ -4,6 +4,9 @@ TL: Amitav Nott
 
 ## Getting Started
 
+For the synthetic BPS admin upload, see [the preview guide](docs/bps-admin-preview.md)
+and [the import plan and BHG questions](docs/bps-import-plan.md).
+
 First, make sure you have the project's dependencies installed:
 ```bash
 pnpm install
