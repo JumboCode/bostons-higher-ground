@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --import tsx --test \"tests/**/*.test.{ts,tsx,mjs}\""
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

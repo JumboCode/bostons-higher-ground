@@ -162,7 +162,7 @@ export function HorizontalBarChart({
                     <Bar
                         key={entry.key}
                         dataKey={entry.key}
-                        fill={`var(--color-${entry.key})`}
+                        fill={config[entry.key].color}
                         radius={[0, chartTheme.barRadius, chartTheme.barRadius, 0]}
                     />
                 ))}

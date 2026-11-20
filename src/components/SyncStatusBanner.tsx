@@ -8,6 +8,7 @@ export type SyncLogRow = {
     finishedAt: string | null;
     rowsSynced: number | null;
     rowsSkipped: number | null;
+    skippedRecordIds?: string[] | null;
     missingFields: string[] | null;
     errorMessage: string | null;
     triggeredBy: string | null;
@@ -58,6 +59,15 @@ export default function SyncStatusBanner({
                 <p className="text-[#8a6d00] text-[12px] mt-1">
                     {latestSuccess.rowsSkipped} skipped (missing familyId)
                 </p>
+            )}
+            {!!latestSuccess?.skippedRecordIds?.length && (
+                <details className="text-[#8a6d00] text-[12px] mt-1">
+                    <summary className="cursor-pointer">Salesforce records needing a Family ID</summary>
+                    <p>Open these record IDs in Salesforce and fill in Family_Id__c, then sync again.</p>
+                    <ul className="mt-1 max-h-40 overflow-auto font-mono">
+                        {latestSuccess.skippedRecordIds.map(id => <li key={id}>{id}</li>)}
+                    </ul>
+                </details>
             )}
             {missing.length > 0 && (
                 <p className="text-[#8a6d00] text-[12px] mt-1">

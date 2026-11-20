@@ -22,6 +22,10 @@ test("migration resolves historical duplicates and atomically excludes concurren
         const { rows } = await db.query("SELECT id, status, rows_skipped FROM sync_log ORDER BY id");
         assert.deepEqual(rows.map(row => row.status), ["error", "running", "success", "running"]);
         assert.ok(rows.every(row => row.rows_skipped === null));
+        await db.exec(await readFile(new URL("../drizzle/0006_skipped_salesforce_record_ids.sql", import.meta.url), "utf8"));
+        assert.ok((await db.query("SELECT skipped_record_ids FROM sync_log")).rows.every(row => row.skipped_record_ids === null));
+        await db.query("UPDATE sync_log SET skipped_record_ids = $1::jsonb WHERE status = 'success'", [JSON.stringify(["001000000000001AAA"])]);
+        assert.deepEqual((await db.query("SELECT skipped_record_ids FROM sync_log WHERE status = 'success'")).rows[0].skipped_record_ids, ["001000000000001AAA"]);
         const claim = () => db.query("INSERT INTO sync_log (source, status) VALUES ('salesforce', 'running') ON CONFLICT DO NOTHING RETURNING id");
         assert.equal((await claim()).rows.length, 0);
         await db.exec("UPDATE sync_log SET status = 'success' WHERE source = 'salesforce' AND status = 'running'");

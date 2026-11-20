@@ -60,6 +60,7 @@ export const syncLog = pgTable("sync_log", {
     finishedAt: timestamp("finished_at"),
     rowsSynced: integer("rows_synced"),
     rowsSkipped: integer("rows_skipped"),
+    skippedRecordIds: jsonb("skipped_record_ids").$type<string[]>(),
     // Fields configured but missing from the SF object at sync time.
     missingFields: jsonb("missing_fields").$type<string[]>(),
     errorMessage: text("error_message"),

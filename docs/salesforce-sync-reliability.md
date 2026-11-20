@@ -210,3 +210,30 @@ soak test were skipped in that separate fast invocation. The soak itself ran
 explicitly and passed as reported above. TypeScript and `npm run lint` passed
 again, with the same 24 existing lint warnings. No production code changes were
 needed as a result of the extended test.
+
+## Program-family scope and skipped IDs (#114)
+
+Verified on 2026-11-08: the Account record type label is `FLSI Household` and
+its API name is `FLSI_Household`. Use this filter (without a leading WHERE):
+
+```dotenv
+SALESFORCE_QUERY_FILTER="RecordType.DeveloperName = 'FLSI_Household'"
+```
+
+This is now the default for Account syncs. An explicitly empty override disables
+it, so remove old blank environment entries. Do not exclude null Family IDs in
+SOQL: retain those records so staff can see the skipped Salesforce IDs.
+
+General Household Accounts and Organizations are outside this sync.
+
+Migration **0006** adds nullable `sync_log.skipped_record_ids` (IDs only, no
+Account names or other personal fields). The admin banner displays these IDs
+from the latest successful run, including while a newer run is pending or
+failed. Old runs retain null rather than fabricated ID lists. The existing
+admin-only sync API protects the list. The code tolerates the column being
+absent until the migration is applied: syncs still run and are logged, and only
+the skipped-ID list is unavailable.
+
+See [public-impact-data.md](public-impact-data.md) for the repeated-Family-ID
+policy, distinct-family reporting rules, the public loader contract, and
+deployment steps.

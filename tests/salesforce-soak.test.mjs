@@ -217,6 +217,7 @@ test(
             for (const file of [
                 "0003_eager_dazzler.sql",
                 "0005_salesforce_sync_reliability.sql",
+                "0006_skipped_salesforce_record_ids.sql",
             ])
                 await pg.exec(
                     await readFile(
