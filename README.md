@@ -4,6 +4,9 @@ TL: Amitav Nott
 
 ## Getting Started
 
+For the synthetic BPS admin upload, see [the preview guide](docs/bps-admin-preview.md)
+and [the import plan and BHG questions](docs/bps-import-plan.md).
+
 First, make sure you have the project's dependencies installed:
 ```bash
 pnpm install
@@ -36,3 +39,9 @@ To learn more about Next.js, take a look at the following resources:
 You can check out [the Next.js GitHub
 repository](https://github.com/vercel/next.js) - your feedback and contributions
 are welcome!
+
+## Salesforce sync operations
+
+See [Salesforce sync reliability](docs/salesforce-sync-reliability.md) for the
+request lifecycle, skipped-record reporting, migration 0005 rollout and rollback,
+known migration-history caveats, and verification commands.

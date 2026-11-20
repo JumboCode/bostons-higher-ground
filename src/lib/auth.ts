@@ -25,6 +25,7 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        disableSignUp: true,
         revokeSessionsOnPasswordReset: true,
         sendResetPassword: async ({ user, url }) => {
             // Avoid awaiting to prevent timing attacks that reveal whether
@@ -45,6 +46,7 @@ export const auth = betterAuth({
     plugins: [
         nextCookies(),
         emailOTP({
+            disableSignUp: true,
             otpLength: 6,
             expiresIn: 15 * 60,
             sendVerificationOTP: async ({ email, otp, type }) => {

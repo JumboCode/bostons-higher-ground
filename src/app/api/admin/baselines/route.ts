@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { metricBaselines } from "@/lib/schema";
 import { FAMILIES_HOUSED } from "@/lib/baseline-calculation";
 import { getHousedBaselineSummary } from "@/lib/baselines";
+import { revalidateTag } from "next/cache";
 
 export const dynamic = "force-dynamic";
 async function authorize(request: Request) {
@@ -32,5 +33,6 @@ export const { GET, PUT } = createBaselineHandlers({
                 target: metricBaselines.metric,
                 set: { ...baseline, updatedBy: userId, updatedAt: new Date() },
             });
+        revalidateTag("report-data");
     },
 });

@@ -20,6 +20,13 @@ const eslintConfig = [
             "next-env.d.ts",
         ],
     },
+    {
+        // CommonJS files (e.g. scripts/security-routes.test.cjs) must use require().
+        files: ["**/*.cjs"],
+        rules: {
+            "@typescript-eslint/no-require-imports": "off",
+        },
+    },
 ];
 
 export default eslintConfig;
