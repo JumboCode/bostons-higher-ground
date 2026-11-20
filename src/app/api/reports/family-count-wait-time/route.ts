@@ -28,15 +28,9 @@ export async function POST(request: Request) {
         customRange: parsed.customRange as DateRange | undefined,
     });
 
+    // Intake and housing from the same record (never across two intake episodes).
     const waitTimes = filtered
-        .map((record) => {
-            if (!record.intakeDate || !record.dateHoused) return null;
-            const days =
-                (new Date(record.dateHoused).getTime() -
-                    new Date(record.intakeDate).getTime()) /
-                (1000 * 60 * 60 * 24);
-            return Number.isFinite(days) ? days : null;
-        })
+        .map((record) => record.daysToHouse)
         .filter((days): days is number => days !== null);
 
     return Response.json({

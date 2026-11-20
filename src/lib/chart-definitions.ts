@@ -413,6 +413,16 @@ function buildTimeSeries(
     }));
 }
 
+/** filterCommonRecords for canonical families, keeping their FamilyOutcome
+ * fields in the type (the filter returns the same objects it was given). */
+function filterFamilies<T extends HousingChartRecord>(
+    families: T[],
+    filters: ChartFilters
+): T[] {
+    const kept = new Set<HousingChartRecord>(filterCommonRecords(families, filters));
+    return families.filter((family) => kept.has(family));
+}
+
 function familyIntakeSeries(
     records: HousingChartRecord[],
     filters: ChartFilters
@@ -433,13 +443,10 @@ function daysToHouseSeries(
 ): VerticalBarDatum[] {
     const totals = new Map<string, { totalDays: number; count: number }>();
 
-    filterCommonRecords(canonicalFamilies(records), filters).forEach((record) => {
-        if (!record.intakeDate || !record.dateHoused) return;
-
-        const start = new Date(record.intakeDate);
-        const end = new Date(record.dateHoused);
-        const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-        if (!Number.isFinite(days)) return;
+    filterFamilies(canonicalFamilies(records), filters).forEach((record) => {
+        // Intake and housing from the same record; see FamilyOutcome.daysToHouse.
+        const days = record.daysToHouse;
+        if (days === null) return;
 
         const school = record.school ?? "Unknown";
         const current = totals.get(school) ?? { totalDays: 0, count: 0 };
@@ -463,7 +470,7 @@ function locationSeries(
 ): HorizontalBarDatum[] {
     const cityCounts = new Map<string, { active: number; housed: number }>();
 
-    filterCommonRecords(canonicalFamilies(records), filters).forEach((record) => {
+    filterFamilies(canonicalFamilies(records), filters).forEach((record) => {
         if (!record.city) return;
 
         const existing = cityCounts.get(record.city) ?? {
@@ -501,7 +508,7 @@ function partnerSchoolsSeries(
 ): HorizontalBarDatum[] {
     const schoolCounts = new Map<string, { active: number; housed: number }>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    filterFamilies(canonicalFamilies(records), filters).forEach((record) => {
         if (!record.school || !record.studentCount) return;
 
         const existing = schoolCounts.get(record.school) ?? {
@@ -539,7 +546,7 @@ function schoolsByCitySeries(
 ): HorizontalBarDatum[] {
     const citySchools = new Map<string, Set<string>>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    filterFamilies(canonicalFamilies(records), filters).forEach((record) => {
         if (!record.city || !record.school) return;
         const current = citySchools.get(record.city) ?? new Set<string>();
         current.add(record.school);
@@ -560,7 +567,7 @@ function studentsByCitySeries(
 ): HorizontalBarDatum[] {
     const cityTotals = new Map<string, number>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    filterFamilies(canonicalFamilies(records), filters).forEach((record) => {
         if (!record.city || !record.studentCount) return;
         const current = cityTotals.get(record.city) ?? 0;
         cityTotals.set(record.city, current + record.studentCount);
@@ -580,10 +587,11 @@ function housingSourcesSeries(
 ): DonutDatum[] {
     const counts = new Map<string, number>();
 
-    filterCommonRecords(canonicalFamilies(records), filters).forEach((record) => {
-        if (record.currentStatus !== "housed" || !record.sourceOfHousing) return;
-        const current = counts.get(record.sourceOfHousing) ?? 0;
-        counts.set(record.sourceOfHousing, current + 1);
+    filterFamilies(canonicalFamilies(records), filters).forEach((record) => {
+        // From the family's housed record, even if a newer intake is still active.
+        const source = record.housedSource;
+        if (!source) return;
+        counts.set(source, (counts.get(source) ?? 0) + 1);
     });
 
     return Array.from(counts.entries())

@@ -17,10 +17,13 @@ let conflict = false;
 let failBatch = false;
 let records: Record<string, unknown>[] = [];
 let queries: string[] = [];
+// Error thrown by the separate skipped-ID write (e.g. column missing before 0006).
+let skippedWriteError: unknown = null;
 const db = {
     update: () => ({
         set: (value: Record<string, unknown>) => ({
             where: async () => {
+                if (skippedWriteError && "skippedRecordIds" in value) throw skippedWriteError;
                 updated.push(value);
             },
         }),
@@ -104,6 +107,7 @@ function reset() {
     conflict = false;
     failBatch = false;
     queries = [];
+    skippedWriteError = null;
     records = [
         { Family_Id__c: " A " },
         { Id: "001000000000001AAA", Family_Id__c: null, Name: "Do not persist" },
@@ -123,11 +127,25 @@ test("counts missing and blank family IDs across pages and persists the count", 
     );
     assert.equal(updated[0].status, "success");
     assert.equal(updated[0].rowsSkipped, 3);
-    assert.deepEqual(updated[0].skippedRecordIds, ["001000000000001AAA", "001000000000002AAA", "001000000000003AAA"]);
+    // The status update never references the 0006 column; IDs are written separately.
+    assert.equal("skippedRecordIds" in updated[0], false);
+    assert.deepEqual(updated[1].skippedRecordIds, ["001000000000001AAA", "001000000000002AAA", "001000000000003AAA"]);
     assert.match(queries[0], /SELECT Id,/);
     assert.match(queries[0], /WHERE RecordType.DeveloperName = 'FLSI_Household'/);
     assert.doesNotMatch(JSON.stringify(updated), /Do not persist/);
     assert.ok(outcome.missingFields.includes("City__c"));
+});
+test("a missing 0006 column, or any skipped-ID write failure, keeps the sync successful", async () => {
+    const missingColumn = Object.assign(new Error("query failed"), {
+        cause: Object.assign(new Error('column "skipped_record_ids" does not exist'), { code: "42703" }),
+    });
+    for (const error of [missingColumn, new Error("network blip")]) {
+        reset();
+        skippedWriteError = error;
+        const outcome = await runSalesforceSync("run-1");
+        assert.equal(outcome.rowsSkipped, 3);
+        assert.deepEqual(updated.map((u) => u.status), ["success"]);
+    }
 });
 test("zero rejected records is recorded as zero", async () => {
     reset();

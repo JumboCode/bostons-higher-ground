@@ -18,6 +18,7 @@
 
 import { db } from "@/lib/db";
 import { housingRecords, syncLog } from "@/lib/schema";
+import { isMissingColumnError } from "@/lib/sync-log";
 import type { BatchItem } from "drizzle-orm/batch";
 import { eq } from "drizzle-orm";
 import { getSalesforceConnection } from "./client";
@@ -54,10 +55,24 @@ export async function runSalesforceSync(logId: string): Promise<SyncOutcome> {
                 finishedAt: new Date(),
                 rowsSynced: outcome.rowsSynced,
                 rowsSkipped: outcome.rowsSkipped,
-                skippedRecordIds: outcome.skippedRecordIds,
                 missingFields: outcome.missingFields,
             })
             .where(eq(syncLog.id, logId));
+        // Separate, best-effort write: the skipped-ID list is diagnostics only.
+        // Before migration 0006 the column does not exist, and no failure here
+        // may turn an already-recorded successful sync into a failed one.
+        try {
+            await db
+                .update(syncLog)
+                .set({ skippedRecordIds: outcome.skippedRecordIds })
+                .where(eq(syncLog.id, logId));
+        } catch (err) {
+            console.warn(
+                isMissingColumnError(err)
+                    ? "[salesforce sync] skipped_record_ids column missing; apply migration 0006"
+                    : "[salesforce sync] could not record skipped Salesforce IDs"
+            );
+        }
         return outcome;
     } catch (err) {
         const message =

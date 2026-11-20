@@ -1,226 +1,137 @@
-/* Public housing aggregates are loaded on the server; education remains an
- * explicitly labeled design preview until its public release is approved. */
+/*
+    Author: Alex Vu
+    Date: 10/23/26
+
+    Purpose: public-facing summary of BHG's impact. Charts are built here on
+    the server; the browser only receives finished aggregate models.
+*/
+
 import Link from "next/link";
+
 import { ChartRenderer } from "@/components/charts";
 import PeopleIcons from "@/components/PeopleIcons";
 import {
     buildChartModel,
+    type ChartKey,
     type GeneratedChartModel,
 } from "@/lib/chart-definitions";
 import { getMockImpactData } from "@/lib/mock-impact-data";
-import {
-    getPublicImpactData,
-    type PublicImpactData,
-} from "@/lib/getPublicImpactData";
 
-export const revalidate = 300;
+// ISR: rebuild at most hourly. Note: reading searchParams (design picker below)
+// makes the route dynamic; once BHG picks a design, drop the param and ISR applies.
+export const revalidate = 3600;
 
-function ChartCard({
-    model,
-    caption,
-}: {
-    model: GeneratedChartModel;
-    caption: string;
-}) {
+// ponytail: placeholder counts, swap for a real query later
+const NEED = { count: 97, label: "Families in need of housing" };
+const RESPONSE = { count: 81, label: "Families housed through Boston's Higher Ground" };
+
+const CHARTS: { key: ChartKey; caption: string }[] = [
+    { key: "families-housed-line", caption: "Families moving into stable housing each month." },
+    { key: "students-per-school-bar", caption: "Students we support at each partner school." },
+    { key: "grade-level-distribution-bar", caption: "Students we support, by grade." },
+    // { key: "attendance-breakdown-donut", caption: "How often our students make it to class." },
+];
+
+function getModels() {
+    // ponytail: mock data; swap for getAllData()/getEducationData() after design sign-off.
+    // Group-size suppression already runs inside buildChartModel.
+    const source = getMockImpactData();
+    return CHARTS.map(({ key, caption }) => ({
+        caption,
+        model: buildChartModel(key, source, { timeframe: "pastTwoYears" }),
+    }));
+}
+
+type ChartItem = ReturnType<typeof getModels>[number];
+
+function totalStudents(items: ChartItem[]) {
+    const m = items.find((i) => i.model.chartKey === "students-per-school-bar")?.model;
+    if (m?.type !== "horizontal-bar") return 0;
+    return m.data.reduce((sum, d) => sum + d.series[0].value, 0);
+}
+
+function Panel({ title, count, label, className }: { title: string; count: number; label: string; className: string }) {
+    return (
+        <section className="rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-bhg-gray-300">{title}</h2>
+            <p className="my-2 text-5xl font-bold text-bhg-gray-300">{count}</p>
+            <p className="mb-4 text-sm text-bhg-gray-300">{label}</p>
+            <PeopleIcons count={count} label={label} className={className} />
+        </section>
+    );
+}
+
+function ChartCard({ model, caption }: { model: GeneratedChartModel; caption?: string }) {
     return (
         <figure className="min-w-0 rounded-lg bg-white p-6 shadow-sm">
-            <h3 className="mb-1 text-lg font-semibold text-bhg-gray-300">
-                {model.title}
-            </h3>
-            <figcaption className="mb-4 text-sm text-gray-600">
-                {caption}
-            </figcaption>
+            <h3 className="mb-1 text-lg font-semibold text-bhg-gray-300">{model.title}</h3>
+            {caption && <figcaption className="mb-4 text-sm text-gray-600">{caption}</figcaption>}
             <ChartRenderer model={model} />
         </figure>
     );
 }
 
-function HousedTotal({
-    data,
-    compact = false,
-}: {
-    data: PublicImpactData;
-    compact?: boolean;
-}) {
-    const count = data.familiesHousedToDate;
+function Stat({ value, label, className }: { value: string; label: string; className: string }) {
     return (
-        <section
-            className={`rounded-lg p-6 ${compact ? "bg-bhg-mint-100" : "bg-white shadow-sm"}`}
-        >
-            <h2 className="text-lg font-semibold text-bhg-gray-300">
-                Families housed to date
-            </h2>
-            <p className="my-2 text-5xl font-bold text-bhg-gray-300">
-                {count === null ? "Not available" : count.toLocaleString()}
-            </p>
-            <p className="mb-4 text-sm text-gray-600">
-                Families housed through Boston&apos;s Higher Ground.
-            </p>
-            {data.provisional && (
-                <p className="mb-4 text-sm text-gray-600">
-                    Provisional figure; historical starting figures have not yet
-                    been confirmed.
-                </p>
-            )}
-            {count !== null && !compact && (
-                <PeopleIcons
-                    count={count}
-                    perIcon={Math.max(5, Math.ceil(count / 40 / 5) * 5)}
-                    label="families housed"
-                    className="text-bhg-mint-200"
-                />
-            )}
-            {count === null && (
-                <p className="text-sm text-gray-600">
-                    This figure is not available for public reporting yet.
-                </p>
-            )}
-        </section>
-    );
-}
-
-function HousingTimeline({ data }: { data: PublicImpactData }) {
-    if (!data.housingOverTime.length)
-        return (
-            <section className="rounded-lg bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-bhg-gray-300">
-                    Families Housed Over Time
-                </h2>
-                <p className="mt-3 text-sm text-gray-600">
-                    Housing-over-time figures are not available for public
-                    reporting yet.
-                </p>
-            </section>
-        );
-    const unit = {
-        month: "month",
-        quarter: "quarter",
-        year: "year",
-        allTime: "reporting period",
-    }[data.housingGranularity!];
-    const model: GeneratedChartModel = {
-        chartKey: "families-housed-line",
-        type: "vertical-bar",
-        title: "Families Housed Over Time",
-        emptyMessage: "No housing outcomes recorded in this period.",
-        xLabel: "Reporting period",
-        yLabel: "Families",
-        data: data.housingOverTime.map((point) => ({
-            label: point.label,
-            value: point.familiesHoused,
-        })),
-    };
-    return (
-        <div className="min-w-0">
-            <ChartCard
-                model={model}
-                caption={`New families housed per ${unit}. Periods are grouped to protect families’ privacy. The current period may be partial; historical starting figures are included in the headline, not assigned to the timeline.`}
-            />
-            <details className="mt-3 rounded-lg bg-white p-4 text-sm text-gray-600">
-                <summary className="cursor-pointer">
-                    View housing data table
-                </summary>
-                <div className="mt-3 overflow-x-auto">
-                    <table className="w-full text-left">
-                        <caption className="sr-only">
-                            Recorded families housed by reporting period
-                        </caption>
-                        <thead>
-                            <tr>
-                                <th scope="col" className="p-2">
-                                    Period
-                                </th>
-                                <th scope="col" className="p-2">
-                                    Dates
-                                </th>
-                                <th scope="col" className="p-2">
-                                    Families housed
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.housingOverTime.map((point) => (
-                                <tr key={point.periodStart}>
-                                    <th scope="row" className="p-2 font-normal">
-                                        {point.label}
-                                    </th>
-                                    <td className="p-2">
-                                        {point.periodStart} – {point.periodEnd}
-                                    </td>
-                                    <td className="p-2">
-                                        {point.familiesHoused.toLocaleString()}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </details>
+        <div className={`rounded-lg p-4 ${className}`}>
+            <p className="text-3xl font-bold text-bhg-gray-300">{value}</p>
+            <p className="text-sm text-bhg-gray-300">{label}</p>
         </div>
     );
 }
 
-function EducationPreview() {
-    const source = getMockImpactData();
+// A: current panels + chart grid
+function DesignA({ items }: { items: ChartItem[] }) {
     return (
-        <section
-            className="mt-10 border-t border-gray-300 pt-6"
-            aria-labelledby="education-preview-title"
-        >
-            <h2
-                id="education-preview-title"
-                className="text-xl font-semibold text-bhg-gray-300"
-            >
-                Education preview
-            </h2>
-            <p className="mb-4 mt-2 text-sm text-gray-600">
-                Sample data for the design preview. These are not reported
-                program results.
-            </p>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {(
-                    [
-                        "students-per-school-bar",
-                        "grade-level-distribution-bar",
-                    ] as const
-                ).map((key) => (
-                    <ChartCard
-                        key={key}
-                        model={buildChartModel(key, source, {
-                            timeframe: "pastTwoYears",
-                        })}
-                        caption="Sample education data — design preview only."
-                    />
+        <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Panel title="Need" {...NEED} className="text-bhg-pink" />
+                <Panel title="Response" {...RESPONSE} className="text-bhg-mint-200" />
+            </div>
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {items.map(({ model }) => (
+                    <ChartCard key={model.chartKey} model={model} />
                 ))}
             </div>
-        </section>
+        </>
     );
 }
 
-function DesignA({ data }: { data: PublicImpactData }) {
+// B: story scroll, one idea per section
+function DesignB({ items }: { items: ChartItem[] }) {
     return (
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-            <HousedTotal data={data} />
-            <HousingTimeline data={data} />
+        <div className="mx-auto max-w-3xl space-y-12">
+            <section className="text-center">
+                <p className="text-6xl font-bold text-bhg-pink">{RESPONSE.count}</p>
+                <p className="mt-2 text-lg text-bhg-gray-300">
+                    families housed, out of {NEED.count} who came to us in need.
+                </p>
+            </section>
+            {items.map(({ model, caption }) => (
+                <ChartCard key={model.chartKey} model={model} caption={caption} />
+            ))}
         </div>
     );
 }
-function DesignB({ data }: { data: PublicImpactData }) {
-    return (
-        <div className="mx-auto max-w-3xl space-y-8">
-            <HousedTotal data={data} />
-            <HousingTimeline data={data} />
-        </div>
-    );
-}
-function DesignC({ data }: { data: PublicImpactData }) {
+
+// C: compact, sized for an iframe embed on BHG's site
+function DesignC({ items }: { items: ChartItem[] }) {
     return (
         <div className="space-y-4">
-            <HousedTotal data={data} compact />
-            <HousingTimeline data={data} />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <Stat value={String(NEED.count)} label="Families in need" className="bg-bhg-pink-100" />
+                <Stat value={String(RESPONSE.count)} label="Families housed" className="bg-bhg-mint-100" />
+                <Stat value={totalStudents(items).toLocaleString()} label="Students supported" className="bg-bhg-yellow-100" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {items.slice(0, 2).map(({ model }) => (
+                    <ChartCard key={model.chartKey} model={model} />
+                ))}
+            </div>
         </div>
     );
 }
+
 const DESIGNS = { a: DesignA, b: DesignB, c: DesignC } as const;
 type DesignKey = keyof typeof DESIGNS;
 
@@ -230,21 +141,13 @@ export default async function Impact({
     searchParams: Promise<{ design?: string }>;
 }) {
     const { design } = await searchParams;
-    const key: DesignKey =
-        design && Object.hasOwn(DESIGNS, design) ? (design as DesignKey) : "a";
+    const key: DesignKey = design && design in DESIGNS ? (design as DesignKey) : "a";
     const Design = DESIGNS[key];
-    let data: PublicImpactData | null = null;
-    try {
-        data = await getPublicImpactData();
-    } catch {
-        console.error("[public impact] Housing aggregate unavailable");
-    }
+
     return (
         <main className="min-h-screen bg-[#F5F5F5] p-4 md:p-8">
-            <nav
-                className="mb-4 flex gap-2 text-sm"
-                aria-label="Impact design preview"
-            >
+            {/* ponytail: wireframe-only design switcher; delete once BHG picks one */}
+            <nav className="mb-4 flex gap-2 text-sm">
                 {(Object.keys(DESIGNS) as DesignKey[]).map((d) => (
                     <Link
                         key={d}
@@ -255,28 +158,11 @@ export default async function Impact({
                     </Link>
                 ))}
             </nav>
-            <h1 className="mb-6 text-2xl font-bold text-bhg-gray-300">
-                Our Impact
-            </h1>
-            {data ? (
-                <Design data={data} />
-            ) : (
-                <section className="rounded-lg bg-white p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-bhg-gray-300">
-                        Housing data is temporarily unavailable
-                    </h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        Please check back later.
-                    </p>
-                </section>
-            )}
-            {data && (
-                <p className="mt-6 text-xs text-gray-500">
-                    Housing figures from Salesforce, as of {data.asOfDate}.
-                    Families are counted once.
-                </p>
-            )}
-            <EducationPreview />
+            <h1 className="mb-6 text-2xl font-bold text-bhg-gray-300">Our Impact</h1>
+            <Design items={getModels()} />
+            <p className="mt-8 text-xs text-gray-500">
+                Sample data.
+            </p>
         </main>
     );
 }
