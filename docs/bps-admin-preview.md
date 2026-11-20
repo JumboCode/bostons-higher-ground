@@ -10,7 +10,10 @@ The preview is **off by default**. Both the `/admin` panel and the API route are
 hidden (the route returns 404) unless `NEXT_PUBLIC_ENABLE_BPS_PREVIEW=true`. Leave
 it unset in production until a privacy-approved real importer replaces the mock
 directory. Because it is a `NEXT_PUBLIC_` variable, restart `pnpm dev` (or rebuild)
-after changing it.
+after changing it. Set it for both the build and the running server: the admin
+panel reads it at build time, and the API route reads it at runtime. When it is
+off, the panel's code is not loaded on `/admin` (it is a separate, dynamically
+imported chunk).
 
 ## Run the upload demo
 
@@ -48,10 +51,14 @@ Additional columns are ignored. Synthetic student IDs may be text like
 The mock directory includes numeric test student `1001`. Text `"1001"` and
 numeric `1001` match identically; text `"001001"` stays distinct and unmatched.
 Zeros are never stripped or guessed from a display format. Longer numeric cells,
-fractions, negatives and formulas are errors; long text IDs are preserved.
+fractions and negatives are errors; long text IDs are preserved.
 Periods are `2025-fall` and `2026-spring`. At least one metric must
 be present per row. Selected metrics must be finite numbers from 0 to 100;
-zero is valid, missing is not zero, and formula/error cells are rejected.
+zero is valid and missing is not zero. Excel error values (such as `#DIV/0!`)
+are read as empty cells.
+
+The header must be row 1, starting in column A. Blank rows (including rows of
+only spaces) are skipped, and issue row numbers are the real Excel row numbers.
 
 All occurrences of a duplicate student/period key are errors. The same student
 in two different periods is valid. Unknown mock IDs count as unmatched. An ID
@@ -59,12 +66,32 @@ with multiple directory matches counts as an error. Invalid structure rejects
 the whole workbook; malformed data rows are excluded from matched counts.
 
 Limits: 1 MiB compressed file, request size capped by actual streamed bytes,
-8 MiB expanded ZIP data, 100 archive entries, 1,000 data rows, 30 columns,
+8 MiB expanded ZIP data, 100 archive entries, data within the first 1,000 rows
+below the header and the first 30 columns (blank rows count toward that range),
 50 displayed issues. Reject encrypted files, macros and external-link parts.
-Any formula in any worksheet rejects the whole workbook ("paste as values"):
-the parser returns a formula's cached result, or an empty cell when none is
-cached, so formulas are detected in the worksheet XML during the archive scan.
-Excel error values (such as `#DIV/0!`) are read as empty cells.
+
+**Archive handling.** `yauzl` decompresses every entry once, enforcing the limits
+on actual inflated bytes. Each XML part is inspected, non-XML parts (images,
+thumbnails) are dropped, and only the inspected bytes are repacked (with
+`fflate`) for `read-excel-file`. The parser unzips with a different library that
+reads local file headers rather than the central directory, so without repacking
+a crafted ZIP could show it hidden or renamed entries that were never checked.
+
+**Formulas.** Any formula in any cell rejects the whole workbook ("paste as
+values"): the parser returns a formula's cached result, or an empty cell when
+none is cached, so formulas cannot be detected after parsing. The parser reads
+every `<c>` cell in a sheet document (even outside `<sheetData>`), so every
+part is scanned, wherever the workbook's relationships place its sheets.
+Formulas that are not cell values, such as data-validation lists or conditional
+formatting, are allowed.
+
+**Malformed XML.** The inspection is a single linear pass that skips comments,
+CDATA and processing instructions as an XML parser does, and respects quoted
+attribute values. It refuses unterminated constructs, `<` inside a tag, nested
+cells, cell/row references beyond the limits, more than 100 attributes on a
+tag, and more than 200,000 tags in a part. These keep crafted input away from
+the parser, which is very slow on some malformed XML.
+
 All responses containing preview results use `Cache-Control: no-store`.
 There are no Salesforce imports, database writes, file persistence, or raw-data
 logs in this feature. Confirmation and mock ID formats help prevent accidental
@@ -85,6 +112,11 @@ pnpm exec tsc --noEmit
 Parser tests use in-memory synthetic XLSX workbooks. They cover sample counts,
 missing/duplicate headers, duplicate IDs by period, malformed values, formulas,
 zero/blank handling, invalid/encrypted files, size/row limits, and bounded output.
+Archive-hardening tests craft ZIPs and sheet XML directly: formulas with
+namespace prefixes, shared formulas, cells outside `<sheetData>`, fake close tags
+in comments/CDATA/PIs, relocated or renamed sheet parts, entries hidden from the
+central directory (including one that would exceed the expansion limit), sparse
+references, and pathological XML that must be refused quickly.
 Handler tests cover auth rejection before body parsing, cross-origin rejection,
 confirmation, wrong file types, multiple files, and streaming size enforcement.
 

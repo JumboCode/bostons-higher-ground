@@ -1,5 +1,6 @@
 import readExcelFile from "read-excel-file/node";
 import { fromBuffer } from "yauzl";
+import { zipSync } from "fflate";
 
 // Narrowed with typeof checks below; the parser's own cell typings vary by version.
 type CellValue = unknown;
@@ -49,76 +50,167 @@ const mockMatches = new Map([
     ["MOCK-0092", 1] as [string, number],
 ]);
 
-// Worksheet parts, and a formula element (<f>, optionally namespace-prefixed).
-const WORKSHEET_PART = /^xl\/worksheets\/[^/]+\.xml$/i;
-const FORMULA_ELEMENT = /<(?:[A-Za-z_][\w.-]*:)?f[\s/>]/;
+const MAX_COLUMNS = 30;
+const MAX_TAGS_PER_PART = 200_000;
+const MAX_ATTRIBUTES_PER_TAG = 100;
+// Element name after "<" or "</", with an optional namespace prefix (e.g. x:c).
+const TAG_NAME = /^(\/?)(?:[A-Za-z_][\w.-]*:)?([A-Za-z_][\w.-]*)/;
+// r="AD5" on a <c> or r="5" on a <row>, within a single (bounded) tag.
+const REF_ATTRIBUTE = /\sr\s*=\s*(["'])([A-Za-z]*)(\d+)\1/;
+const FORMULA_MESSAGE = "Formulas are not supported. Copy the cells and paste them as values, then upload again.";
+const LIMITS_MESSAGE = `Keep data within the first ${MAX_ROWS.toLocaleString("en-US")} rows below the header and the first ${MAX_COLUMNS} columns.`;
 
-/** Bound both ZIP metadata and actual inflated bytes before the parser loads XML.
- * Also rejects formulas: read-excel-file returns a formula's cached result (or
- * empty when none is cached), so they cannot be detected after parsing.
+function columnNumber(letters: string) {
+    let n = 0;
+    for (const ch of letters.toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+    return n;
+}
+
+/** Inspect every part's cell data before parsing. read-excel-file returns a
+ * formula's cached result (or empty when none is cached), so formulas must be
+ * found here. It reads every <c> cell in a sheet document, even outside
+ * <sheetData>, so any <f> inside any cell is refused; formulas outside cells
+ * (e.g. <xm:f> in a data-validation list under <extLst>) are not cell values.
+ * Sparse references far beyond the limits are refused because the parser would
+ * otherwise allocate every row/column up to them.
+ *
+ * A single linear pass (no backtracking regexes over the whole part, which a
+ * crafted 8 MiB part could make quadratic). Comments, CDATA and processing
+ * instructions are skipped as an XML parser would, tag ends respect quoted
+ * attribute values, and anything left unterminated rejects the workbook.
  */
-async function validateArchive(buffer: Buffer): Promise<void> {
+function inspectCellData(xml: string) {
+    const malformed = () => new PreviewError("Workbook is invalid, encrypted, or exceeds the preview limits.");
+    let inCell = false;
+    let cells = 0;
+    let rows = 0;
+    let tags = 0;
+    let i = 0;
+    while ((i = xml.indexOf("<", i)) !== -1) {
+        const skipTo = (opener: string, closer: string) => {
+            const end = xml.indexOf(closer, i + opener.length);
+            if (end === -1) throw malformed();
+            return end + closer.length;
+        };
+        if (xml.startsWith("<!--", i)) { i = skipTo("<!--", "-->"); continue; }
+        if (xml.startsWith("<![CDATA[", i)) { i = skipTo("<![CDATA[", "]]>"); continue; }
+        if (xml.startsWith("<?", i)) { i = skipTo("<?", "?>"); continue; }
+        // Find the tag's closing ">" outside quoted attribute values. "<" is never
+        // legal inside a tag or attribute value; refusing it here also keeps
+        // malformed input away from the parser, which is very slow on it.
+        // The parser slows down sharply on tags with very many attributes and on
+        // millions of elements, so both are capped far above real workbooks (a full
+        // 1,000 x 30 sheet is ~60k tags; real tags have well under 30 attributes).
+        if (++tags > MAX_TAGS_PER_PART) throw malformed();
+        let end = i + 1;
+        let quote = "";
+        let attributes = 0;
+        for (; end < xml.length; end++) {
+            const ch = xml[end];
+            if (ch === "<") throw malformed();
+            if (quote) { if (ch === quote) quote = ""; }
+            else if (ch === '"' || ch === "'") quote = ch;
+            else if (ch === "=" && ++attributes > MAX_ATTRIBUTES_PER_TAG) throw malformed();
+            else if (ch === ">") break;
+        }
+        if (end >= xml.length) throw malformed();
+        const tag = xml.slice(i + 1, end);
+        i = end + 1;
+        const name = TAG_NAME.exec(tag);
+        if (!name) continue; // <!DOCTYPE ...> and similar declarations.
+        const [, closing, local] = name;
+        if (local === "c" || local === "row") {
+            if (closing) { if (local === "c") inCell = false; continue; }
+            // Cells cannot nest, and no valid preview sheet needs more cells or
+            // rows than the row/column limits allow (plus the header row).
+            if (local === "c" && (inCell || ++cells > (MAX_ROWS + 1) * MAX_COLUMNS)) throw malformed();
+            if (local === "row" && ++rows > MAX_ROWS + 1) throw new PreviewError(LIMITS_MESSAGE);
+            const ref = REF_ATTRIBUTE.exec(tag);
+            if (ref && (Number(ref[3]) > MAX_ROWS + 1 || columnNumber(ref[2]) > MAX_COLUMNS))
+                throw new PreviewError(LIMITS_MESSAGE);
+            if (local === "c") inCell = !tag.endsWith("/");
+        } else if (local === "f" && !closing && inCell) {
+            throw new PreviewError(FORMULA_MESSAGE);
+        }
+    }
+}
+
+/** Decompress every entry once with yauzl (bounding entries and real inflated
+ * bytes), inspect them, and return a freshly packed archive of exactly those
+ * bytes. The parser unzips with a different library that reads local headers
+ * rather than the central directory; repacking means it can only ever see the
+ * entries that were checked here, never hidden or renamed ones.
+ */
+async function extractCheckedArchive(buffer: Buffer): Promise<Buffer> {
     if (!buffer.length || buffer.length > MAX_FILE_BYTES)
         throw new PreviewError("Choose an .xlsx file no larger than 1 MiB.");
-    await new Promise<void>((resolve, reject) => {
+    const files = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
         fromBuffer(buffer, { lazyEntries: true, validateEntrySizes: true }, (error, zip) => {
             if (error || !zip) return reject(new PreviewError("Use an unencrypted, valid .xlsx mock workbook."));
             let bytes = 0;
             let declared = 0;
             let entries = 0;
             let finished = false;
-            const names = new Set<string>();
-            const fail = (message = "Workbook is invalid, encrypted, or exceeds the preview limits.") => {
+            const files: Record<string, Uint8Array> = {};
+            const fail = (failure: unknown = null) => {
                 if (finished) return;
                 finished = true;
                 zip.close();
-                reject(new PreviewError(message));
+                reject(failure instanceof PreviewError ? failure
+                    : new PreviewError("Workbook is invalid, encrypted, or exceeds the preview limits."));
             };
             zip.on("error", () => fail());
             zip.on("entry", entry => {
                 declared += entry.uncompressedSize;
                 if (++entries > 100 || declared > MAX_EXPANDED_BYTES ||
-                    (entry.generalPurposeBitFlag & 1) || names.has(entry.fileName) ||
+                    (entry.generalPurposeBitFlag & 1) || Object.hasOwn(files, entry.fileName) ||
                     /vbaProject|externalLinks/i.test(entry.fileName)) return fail();
-                names.add(entry.fileName);
-                const worksheet = WORKSHEET_PART.test(entry.fileName);
-                let tail = "";
+                if (entry.fileName.endsWith("/")) return zip.readEntry(); // Directory entry.
                 zip.openReadStream(entry, (streamError, stream) => {
                     if (streamError || !stream) return fail();
+                    const chunks: Buffer[] = [];
                     stream.on("error", () => fail());
                     stream.on("data", (chunk: Buffer) => {
                         bytes += chunk.length;
                         if (bytes > MAX_EXPANDED_BYTES) { stream.destroy(); return fail(); }
-                        if (!worksheet) return;
-                        // Carry a short tail so a tag split across chunks is still seen.
-                        const text = tail + chunk.toString("utf8");
-                        if (FORMULA_ELEMENT.test(text)) {
-                            stream.destroy();
-                            return fail("Formulas are not supported. Copy the cells and paste them as values, then upload again.");
-                        }
-                        tail = text.slice(-64);
+                        chunks.push(chunk);
                     });
-                    stream.on("end", () => { if (!finished) zip.readEntry(); });
+                    stream.on("end", () => {
+                        if (finished) return;
+                        const data = Buffer.concat(chunks);
+                        const text = data.toString("utf8");
+                        // The parser only needs XML parts. Non-XML parts (images,
+                        // thumbnails) are left out of the repacked archive rather than
+                        // scanned; a sheet disguised as one is then simply not found.
+                        // (\s also matches a leading byte-order mark.)
+                        if (/^\s*</.test(text)) {
+                            try { inspectCellData(text); } catch (e) { return fail(e); }
+                            files[entry.fileName] = data;
+                        }
+                        zip.readEntry();
+                    });
                 });
             });
             zip.on("end", () => {
                 if (finished) return;
-                if (!names.has("xl/workbook.xml")) return fail();
+                if (!Object.hasOwn(files, "xl/workbook.xml")) return fail();
                 finished = true;
                 zip.close();
-                resolve();
+                resolve(files);
             });
             zip.readEntry();
         });
     });
+    // Stored (level 0): the contents are already bounded to 8 MiB in total.
+    return Buffer.from(zipSync(files, { level: 0 }));
 }
 
 export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
-    await validateArchive(buffer);
+    const checked = await extractCheckedArchive(buffer);
     let sheets: { sheet: string; data: readonly (readonly CellValue[])[] }[];
     try {
         // trim: false keeps cell text exactly as stored; IDs are trimmed by normalizeStudentId.
-        sheets = await readExcelFile(buffer, { trim: false });
+        sheets = await readExcelFile(checked, { trim: false });
     } catch {
         throw new PreviewError("Could not parse the mock workbook. Use an unencrypted .xlsx file.");
     }
@@ -126,8 +218,9 @@ export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
         throw new PreviewError('Use one worksheet named "Mock BPS". Real BPS workbooks are not supported yet.');
     // data[i] is Excel row i + 1; blank rows in the middle are kept, trailing ones dropped.
     const data = sheets[0].data;
-    if (data.length > MAX_ROWS + 1 || data.some(row => row.length > 30))
-        throw new PreviewError("Preview supports at most 1,000 data rows and 30 columns.");
+    // Backstop for cells without r= references, which the pre-scan cannot see.
+    if (data.length > MAX_ROWS + 1 || data.some(row => row.length > MAX_COLUMNS))
+        throw new PreviewError(LIMITS_MESSAGE);
     const header = [...(data[0] ?? [])];
     while (header.length && (header.at(-1) === null || header.at(-1) === "")) header.pop();
     const names = header.map(value => {
@@ -141,7 +234,8 @@ export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
 
     const rows: { row: number; values: CellValue[] }[] = [];
     data.forEach((cells, index) => {
-        if (index === 0 || cells.every(value => value === null || value === "")) return;
+        // Whitespace-only cells count as blank, so a row of spaces is skipped.
+        if (index === 0 || cells.every(value => value === null || (typeof value === "string" && !value.trim()))) return;
         rows.push({ row: index + 1, values: HEADERS.map(name => cells[names.indexOf(name)] ?? null) });
     });
     // Count before validating metric values: conflicting duplicates are all errors.
@@ -177,7 +271,7 @@ export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
         const metrics = [grade, attendance];
         const present = metrics.filter(v => v !== null && v !== "");
         if (!present.length || present.some(v => typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 100)) {
-            issue(row, "Supply at least one numeric metric from 0 to 100; formulas and errors are not allowed."); continue;
+            issue(row, "Supply at least one numeric metric from 0 to 100."); continue;
         }
         const matches = mockMatches.get(id) ?? 0;
         if (!matches) { issue(row, "No matching student in the mock directory.", true); continue; }

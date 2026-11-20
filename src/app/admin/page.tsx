@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import SyncStatusBanner, { type SyncLogRow } from "@/components/SyncStatusBanner";
 import BaselineSettings from "@/components/BaselineSettings";
-import BpsUploadPreview from "@/components/BpsUploadPreview";
+import dynamic from "next/dynamic";
 import { BPS_PREVIEW_ENABLED } from "@/lib/bps-preview-flag";
 import NavBar from "../../components/navbar";
 import InviteCard from "../../components/onboarding/inviteCard";
@@ -35,6 +35,10 @@ import {
     Trash2,
     X,
 } from "lucide-react";
+
+// Loaded only when the BPS preview flag is on, so the disabled feature's code is
+// not part of the admin page bundle that every admin downloads.
+const BpsUploadPreview = dynamic(() => import("@/components/BpsUploadPreview"));
 
 type User = {
     id: string;
