@@ -8,6 +8,22 @@ const HEADERS = ["student_id", "period", "math_grade", "attendance_pct"];
 const PERIODS = new Set(["2025-fall", "2026-spring"]);
 
 export class PreviewError extends Error {}
+
+/** Preserve text IDs verbatim except outer whitespace. Numeric Excel cells
+ * are usable when they are whole, nonnegative, and within Excel's 15-digit
+ * precision. Never infer missing leading zeros from number formatting.
+ */
+export function normalizeStudentId(value: unknown): string | null {
+    if (typeof value === "number") {
+        return Number.isSafeInteger(value) && value >= 0 && value <= 999_999_999_999_999
+            ? String(value) : null;
+    }
+    if (typeof value === "string") {
+        const text = value.trim();
+        return /^(?:MOCK-\d{4}|\d+)$/.test(text) ? text : null;
+    }
+    return null;
+}
 export type PreviewIssue = { row: number; reason: string };
 export type BpsPreview = {
     mockOnly: true;
@@ -21,6 +37,7 @@ export type BpsPreview = {
 
 // These are synthetic directory entries, not Salesforce records.
 const mockMatches = new Map([
+    ["1001", 1] as [string, number], // Synthetic numeric-ID test student.
     ...Array.from({ length: 18 }, (_, i): [string, number] => [
         `MOCK-${String(i + 1).padStart(4, "0")}`, 1,
     ]),
@@ -106,9 +123,10 @@ export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
     });
     // Count before validating metric values: conflicting duplicates are all errors.
     const keys = new Map<string, number>();
-    for (const { values: [id, period] } of rows) {
-        if (typeof id === "string" && typeof period === "string") {
-            const key = JSON.stringify([id.trim(), period]);
+    for (const { values: [rawId, period] } of rows) {
+        const id = normalizeStudentId(rawId);
+        if (id !== null && typeof period === "string") {
+            const key = JSON.stringify([id, period]);
             keys.set(key, (keys.get(key) ?? 0) + 1);
         }
     }
@@ -123,10 +141,10 @@ export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
         else result.issuesTruncated = true;
     };
     for (const { row, values: [rawId, period, grade, attendance] } of rows) {
-        if (typeof rawId !== "string" || !/^MOCK-\d{4}$/.test(rawId.trim())) {
-            issue(row, "Student ID must be synthetic text in MOCK-0001 format."); continue;
+        const id = normalizeStudentId(rawId);
+        if (id === null) {
+            issue(row, "Use a mock text ID or a nonnegative whole-number ID with at most 15 digits."); continue;
         }
-        const id = rawId.trim();
         if (typeof period !== "string" || !PERIODS.has(period)) {
             issue(row, "Period must be 2025-fall or 2026-spring."); continue;
         }

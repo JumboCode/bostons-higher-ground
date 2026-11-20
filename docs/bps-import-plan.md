@@ -2,7 +2,7 @@
 
 ## Implemented scope
 
-Built on `main-devops` (base `65d5e1c`) in branch `feat/bps-data-import-plan`.
+Built on `main-devops` (base `65d5e1c`) in branch `feat/bps-data-import`.
 The admin page now has a synthetic Excel upload preview backed by
 `POST /api/admin/bps-preview`. Both the page's existing middleware and the API's
 session/admin check restrict access. The API checks authorization before reading
@@ -16,11 +16,22 @@ validation, request limits, and unauthorized requests. The existing Python mock
 still demonstrates repeat-safe imports and before/after aggregates in memory.
 Run instructions are in `docs/bps-admin-preview.md`.
 
-Validation: 12 upload parser/API tests and 13 Python mock tests pass, along with
+Validation: 15 upload parser/API tests and 13 historical Python mock tests pass, along with
 TypeScript and targeted lint checks. A local browser harness checked the upload
 flow and mobile layout with synthetic data. Production compilation succeeded;
 full build completion remains blocked by missing application database configuration
 in the isolated worktree. No real login or Salesforce sandbox integration was tested.
+
+## Implementation language
+
+Use **TypeScript for the real importer**, extending `src/lib/bps-preview.ts` and
+the existing Next.js admin API. This keeps authentication, validation, Salesforce
+integration, and deployment in the application's current stack, without a Python
+runtime or subprocess in the upload route. The Python code in `scripts/bps_import/`
+is a frozen historical demonstration of in-memory upserts and aggregates, not a
+second production importer. Its older text-only ID rule is superseded by the
+TypeScript policy below. Port any approved aggregation/upsert behavior into tested
+TypeScript modules before implementing sandbox writes.
 
 ## Source workbooks and current limits
 
@@ -58,7 +69,7 @@ academic fields and object are proposals, not verified/deployed Salesforce schem
 
 | Mock Excel column | Destination | Rule |
 | --- | --- | --- |
-| `student_id` | Match `Contact.Student_ID__c` (candidate); use resolved Contact ID in proposed result `Student__c` lookup | Text; trim outer whitespace, retain zeros; require exactly one match |
+| `student_id` | Match `Contact.Student_ID__c` (candidate); use resolved Contact ID in proposed result `Student__c` lookup | Normalize text or valid whole-number cells to text; retain text zeros; require exactly one match |
 | `period` | Proposed academic result `Period__c` | Required; mock accepts `2025-fall`, `2026-spring` |
 | `math_grade` | Proposed academic result `Math_Grade__c` | Optional selected value; mock numeric range 0–100 |
 | `attendance_pct` | Proposed academic result `Attendance_Pct__c` | Optional selected value; mock numeric range 0–100 |
@@ -67,7 +78,8 @@ academic fields and object are proposals, not verified/deployed Salesforce schem
 Both metric headers are required in this preview, but one value may be blank.
 At least one valid metric must be present on each row. Blank is not zero and
 must not erase a prior result. Zero is valid. Formulas, Excel errors, booleans,
-numeric-looking text, out-of-range values, and unsupported periods are errors.
+numeric-looking text in metric cells, out-of-range metric values, and unsupported
+periods are errors. Digit-only text is valid for student IDs.
 
 For the real multi-workbook import, preserve academic history in related result
 records rather than repeatedly overwriting fields on Contact. Proposed dimensions
@@ -91,8 +103,16 @@ pending approved headers; we will not invent it from filenames.
 ## ID matching, duplicates, unmatched IDs, and retries
 
 1. Validate workbook structure and selected columns before preparing writes.
-2. Keep IDs as text. Reject numeric cells that may have lost leading zeros;
-   do not pad or reconstruct identifiers without BHG's approved format rule.
+2. Normalize IDs to text. Accept nonnegative whole-number cells up to 15 digits,
+   converting the stored value to a decimal string. Reject fractions, negatives,
+   non-finite/unsafe numbers, and numeric cells longer than 15 digits. Trim text
+   IDs without parsing or removing zeros. Thus numeric `1001` and text `"1001"`
+   share a match/duplicate key, but text `"001001"` remains distinct. Never infer
+   digits from Excel display formats, pad an ID, or recover rounded/truncated data.
+   Numeric IDs are not intrinsically invalid; their interpretation still needs
+   BHG's confirmation if the source identifier has a fixed width or leading zeros.
+   Excel has [15 digits of numeric precision](https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers);
+   longer identifiers must arrive as text from the authoritative source.
 3. Match exactly against the authoritative Salesforce ID field. Never fuzzy-match
    names or automatically create students for unmatched IDs.
 4. Zero matches: skip and count as unmatched. More than one match: skip and count

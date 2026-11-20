@@ -2,8 +2,10 @@
 
 Issue: https://github.com/JumboCode/bostons-higher-ground/issues/104
 
-Implemented on `feat/bps-data-import-plan`, based on `origin/main-devops` at
-`65d5e1c`. The existing offline Python mock remains under `scripts/bps_import/`.
+Implemented on `feat/bps-data-import`, based on `origin/main-devops` at
+`65d5e1c`. TypeScript is the selected implementation for the real importer.
+The offline Python mock under `scripts/bps_import/` is a frozen historical demo;
+its older ID rules are not the current production design.
 
 ## Run the upload demo
 
@@ -35,8 +37,13 @@ its own check because middleware excludes API routes.
 
 The prototype accepts exactly one unencrypted worksheet named `Mock BPS` with
 required headers `student_id`, `period`, `math_grade`, and `attendance_pct`.
-Additional columns are ignored. Student IDs must be synthetic text like
-`MOCK-0001`; periods are `2025-fall` and `2026-spring`. At least one metric must
+Additional columns are ignored. Synthetic student IDs may be text like
+`MOCK-0001`, digit-only text, or nonnegative whole-number cells up to 15 digits.
+The mock directory includes numeric test student `1001`. Text `"1001"` and
+numeric `1001` match identically; text `"001001"` stays distinct and unmatched.
+Zeros are never stripped or guessed from a display format. Longer numeric cells,
+fractions, negatives and formulas are errors; long text IDs are preserved.
+Periods are `2025-fall` and `2026-spring`. At least one metric must
 be present per row. Selected metrics must be finite numbers from 0 to 100;
 zero is valid, missing is not zero, and formula/error cells are rejected.
 
@@ -75,7 +82,7 @@ See `docs/bps-import-plan.md` for mappings, aggregate methodology, and BHG quest
 
 ## Validation performed
 
-- 12 parser/API tests, 4 existing baseline-handler tests, and 13 Python mock tests passed.
+- 15 parser/API tests, 4 existing baseline-handler tests, and 13 historical Python mock tests passed.
 - TypeScript and targeted ESLint checks passed.
 - A temporary browser harness exercised this component with the real multipart
   handler and synthetic fixture: expected counts, disabled/confirmation states,

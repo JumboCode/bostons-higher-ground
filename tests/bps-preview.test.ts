@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import ExcelJS from "exceljs";
-import { MAX_FILE_BYTES, previewBpsWorkbook } from "../src/lib/bps-preview";
+import { MAX_FILE_BYTES, normalizeStudentId, previewBpsWorkbook } from "../src/lib/bps-preview";
 import { createBpsPreviewHandler } from "../src/lib/bps-preview-handler";
 
 const headers = ["student_id", "period", "math_grade", "attendance_pct"];
@@ -56,7 +56,7 @@ test("duplicates exclude all occurrences, but same student in another period is 
 
 test("malformed IDs, periods, values, and formulas are row errors without raw-data disclosure", async () => {
     const result = await previewBpsWorkbook(await workbook([
-        [123, "2025-fall", 70, 85],
+        [123.5, "2025-fall", 70, 85],
         ["REAL-SECRET", "2025-fall", 70, 85],
         ["MOCK-0001", "unknown", 70, 85],
         ["MOCK-0002", "2025-fall", -1, 85],
@@ -134,4 +134,43 @@ test("stream limit is enforced without trusting Content-Length", async () => {
         body: new Uint8Array(MAX_FILE_BYTES + 65537),
     });
     assert.equal((await post(req)).status, 413);
+});
+
+test("normalizes safe numeric IDs without guessing leading zeros or parsing text numbers", () => {
+    assert.equal(normalizeStudentId(1001), "1001");
+    assert.equal(normalizeStudentId(" 1001 "), "1001");
+    assert.equal(normalizeStudentId("001001"), "001001");
+    assert.equal(normalizeStudentId(0), "0");
+    assert.equal(normalizeStudentId(999_999_999_999_999), "999999999999999");
+    assert.equal(normalizeStudentId("12345678901234567890"), "12345678901234567890");
+    for (const value of [NaN, Infinity, -1, 1.5, 1_000_000_000_000_000,
+        Number.MAX_SAFE_INTEGER + 1, true, null, "", "1e3", "1001.0", "1,001",
+        { formula: "1001", result: 1001 }]) {
+        assert.equal(normalizeStudentId(value), null);
+    }
+});
+
+test("numeric and text IDs match identically and are duplicates in the same period", async () => {
+    const matched = await previewBpsWorkbook(await workbook([
+        [1001, "2025-fall", 70, 85], ["1001", "2026-spring", 80, 90],
+        ["001001", "2025-fall", 70, 85],
+    ]));
+    assert.equal(matched.matchedRows, 2);
+    assert.equal(matched.unmatchedRows, 1); // Never strip or guess leading zeros.
+    assert.equal(matched.errorRows, 0);
+    const duplicates = await previewBpsWorkbook(await workbook([
+        [1001, "2025-fall", 70, 85], [" 1001 ", "2025-fall", 80, 90],
+    ]));
+    assert.equal(duplicates.errorRows, 2);
+    assert.equal(duplicates.matchedRows, 0);
+});
+
+test("numeric Excel formatting is not used to invent identifier digits", async () => {
+    const book = new ExcelJS.Workbook();
+    const sheet = book.addWorksheet("Mock BPS");
+    sheet.addRow(headers);
+    sheet.addRow([1001, "2025-fall", 70, 85]);
+    sheet.getCell("A2").numFmt = "000000";
+    const result = await previewBpsWorkbook(Buffer.from(await book.xlsx.writeBuffer()));
+    assert.equal(result.matchedRows, 1); // Stored 1001, not displayed 001001.
 });

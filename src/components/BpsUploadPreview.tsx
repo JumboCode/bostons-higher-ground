@@ -35,7 +35,7 @@ export default function BpsUploadPreview() {
                 <label className="block text-sm font-medium" htmlFor="bps-file">Mock Excel workbook (.xlsx, up to 1 MiB)</label>
                 <input id="bps-file" type="file" accept=".xlsx" disabled={busy} className="block max-w-full text-sm"
                     onChange={event => { setFile(event.target.files?.[0] ?? null); setPreview(null); setError(null); setConfirmed(false); }} />
-                <p className="text-xs text-gray-600">Use the “Mock BPS” sheet with student_id, period, math_grade, and attendance_pct columns. The sample uses 2025-fall and 2026-spring.</p>
+                <p className="text-xs text-gray-600">Use the “Mock BPS” sheet with student_id, period, math_grade, and attendance_pct columns. The sample uses 2025-fall and 2026-spring. Synthetic IDs can be text or whole numbers; keep leading zeros as text.</p>
                 <label className="flex items-start gap-2 text-sm">
                     <input type="checkbox" checked={confirmed} disabled={busy} onChange={event => setConfirmed(event.target.checked)} />
                     This workbook contains synthetic data only, with no real student information.

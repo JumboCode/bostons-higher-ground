@@ -1,5 +1,11 @@
 # Mock BPS importer
 
+**Historical demo only.** TypeScript is the selected language for the real importer.
+Use the admin upload and `src/lib/bps-preview.ts` for current parsing and validation.
+This Python demo is frozen; its text-only ID rule has been superseded by the
+TypeScript normalization policy in `docs/bps-import-plan.md`. It is not called by
+the application and will not be extended into a production importer.
+
 Offline prototype for the BPS import ticket. It uses only the bundled synthetic
 Excel workbook and mock student directory. No Salesforce credentials, network,
 application database, or web route is used.
