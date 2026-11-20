@@ -55,7 +55,8 @@ test("a sparse month coarsens the entire release to quarters and keeps the usefu
         false,
         "2025-04-30"
     );
-    assert.equal(result.familiesHousedToDate, 131);
+    // CI test only: intentionally wrong (should be 131). Do not merge.
+    assert.equal(result.familiesHousedToDate, 999);
     assert.equal(result.housingGranularity, "quarter");
     assert.deepEqual(result.housingOverTime, [
         {
