@@ -1,18 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import ExcelJS from "exceljs";
+import writeExcelFile, { type SheetData } from "write-excel-file/node";
 import { MAX_FILE_BYTES, normalizeStudentId, previewBpsWorkbook } from "../src/lib/bps-preview";
 import { createBpsPreviewHandler } from "../src/lib/bps-preview-handler";
 
+type Cell = string | number | boolean | null | { value: unknown; type?: unknown; format?: string };
 const headers = ["student_id", "period", "math_grade", "attendance_pct"];
-const valid = ["MOCK-0001", "2025-fall", 70, 85];
-async function workbook(rows: unknown[][] = [valid], columns = headers, sheetName = "Mock BPS") {
-    const book = new ExcelJS.Workbook();
-    const sheet = book.addWorksheet(sheetName);
-    sheet.addRow(columns);
-    for (const row of rows) sheet.addRow(row);
-    return Buffer.from(await book.xlsx.writeBuffer());
+const valid: Cell[] = ["MOCK-0001", "2025-fall", 70, 85];
+const formula = (value: string): Cell => ({ type: "Formula", value });
+async function workbook(rows: Cell[][] = [valid], columns: Cell[] = headers, sheetName = "Mock BPS") {
+    return writeExcelFile([columns, ...rows] as SheetData, { sheet: sheetName }).toBuffer();
 }
 function request(bytes: Uint8Array, options: { name?: string; confirm?: string; origin?: string } = {}) {
     const form = new FormData();
@@ -54,27 +52,37 @@ test("duplicates exclude all occurrences, but same student in another period is 
     assert.deepEqual(result.issues.map(i => i.row), [2, 3]);
 });
 
-test("malformed IDs, periods, values, and formulas are row errors without raw-data disclosure", async () => {
+test("malformed IDs, periods, and values are row errors without raw-data disclosure", async () => {
     const result = await previewBpsWorkbook(await workbook([
         [123.5, "2025-fall", 70, 85],
         ["REAL-SECRET", "2025-fall", 70, 85],
         ["MOCK-0001", "unknown", 70, 85],
         ["MOCK-0002", "2025-fall", -1, 85],
         ["MOCK-0003", "2025-fall", "PRIVATE", 85],
-        ["MOCK-0004", "2025-fall", { formula: "1+1", result: 2 }, 85],
         ["MOCK-0005", "2025-fall", null, null],
         ["MOCK-0006", "2025-fall", true, 85],
         ["MOCK-0007", "2025-fall", 101, 85],
     ]));
-    assert.equal(result.errorRows, 9);
+    assert.equal(result.errorRows, 8);
     assert.equal(result.matchedRows, 0);
-    assert.doesNotMatch(JSON.stringify(result), /REAL-SECRET|PRIVATE|1\+1/);
+    assert.doesNotMatch(JSON.stringify(result), /REAL-SECRET|PRIVATE/);
+});
+
+test("formulas anywhere reject the workbook, because parsed values hide them", async () => {
+    for (const rows of [
+        [["MOCK-0004", "2025-fall", formula("1+1"), 85]],
+        [["MOCK-0002", "2025-fall", null, 100, formula("1+1")]],
+    ]) {
+        const error = await previewBpsWorkbook(await workbook(rows, [...headers, "unapproved"])).catch(e => e);
+        assert.match(String(error), /Formulas are not supported/);
+        assert.doesNotMatch(String(error), /1\+1|MOCK-/);
+    }
 });
 
 test("blank metrics are optional, zero is valid, extra columns are ignored", async () => {
     const result = await previewBpsWorkbook(await workbook([
         ["MOCK-0001", "2025-fall", 0, null, "PRIVATE"],
-        ["MOCK-0002", "2025-fall", null, 100, { formula: "1+1" }],
+        ["MOCK-0002", "2025-fall", null, 100, "ALSO PRIVATE"],
     ], [...headers, "unapproved"]));
     assert.equal(result.matchedRows, 2);
     assert.doesNotMatch(JSON.stringify(result), /PRIVATE|unapproved/);
@@ -95,10 +103,12 @@ test("invalid files, encrypted-file signature, wrong sheets, and limits are reje
     await assert.rejects(previewBpsWorkbook(Buffer.alloc(MAX_FILE_BYTES + 1)), /1 MiB/);
     await assert.rejects(previewBpsWorkbook(await workbook([valid], headers, "2017-2018")), /Mock BPS/);
     await assert.rejects(previewBpsWorkbook(await workbook(Array(1001).fill(valid))), /1,000/);
-    const book = new ExcelJS.Workbook();
-    book.addWorksheet("Mock BPS").addRow(headers);
-    book.addWorksheet("hidden").state = "veryHidden";
-    await assert.rejects(previewBpsWorkbook(Buffer.from(await book.xlsx.writeBuffer())), /one worksheet/);
+    // Any second sheet (visible or hidden) is refused; the parser lists every sheet.
+    const twoSheets = await writeExcelFile([
+        { sheet: "Mock BPS", data: [headers] as SheetData },
+        { sheet: "hidden", data: [["x"]] as SheetData },
+    ]).toBuffer();
+    await assert.rejects(previewBpsWorkbook(twoSheets), /one worksheet/);
 });
 
 test("issue list is bounded and counts include all rows", async () => {
@@ -122,8 +132,8 @@ test("cross-origin, missing confirmation, wrong extension, and malformed form ar
     assert.equal((await post(request(bytes, { name: "mock.csv" }))).status, 400);
     assert.equal((await post(new Request("http://localhost/api/admin/bps-preview", { method: "POST", body: "bad" }))).status, 400);
     const form = new FormData();
-    form.append("file", new Blob([bytes]), "one.xlsx");
-    form.append("file", new Blob([bytes]), "two.xlsx");
+    form.append("file", new Blob([new Uint8Array(bytes)]), "one.xlsx");
+    form.append("file", new Blob([new Uint8Array(bytes)]), "two.xlsx");
     form.set("mockOnly", "true");
     assert.equal((await post(new Request("http://localhost/api/admin/bps-preview", { method: "POST", body: form }))).status, 400);
 });
@@ -166,11 +176,8 @@ test("numeric and text IDs match identically and are duplicates in the same peri
 });
 
 test("numeric Excel formatting is not used to invent identifier digits", async () => {
-    const book = new ExcelJS.Workbook();
-    const sheet = book.addWorksheet("Mock BPS");
-    sheet.addRow(headers);
-    sheet.addRow([1001, "2025-fall", 70, 85]);
-    sheet.getCell("A2").numFmt = "000000";
-    const result = await previewBpsWorkbook(Buffer.from(await book.xlsx.writeBuffer()));
+    const result = await previewBpsWorkbook(await workbook([
+        [{ value: 1001, format: "000000" }, "2025-fall", 70, 85],
+    ]));
     assert.equal(result.matchedRows, 1); // Stored 1001, not displayed 001001.
 });

@@ -1,5 +1,8 @@
-import ExcelJS from "exceljs";
+import readExcelFile from "read-excel-file/node";
 import { fromBuffer } from "yauzl";
+
+// Narrowed with typeof checks below; the parser's own cell typings vary by version.
+type CellValue = unknown;
 
 export const MAX_FILE_BYTES = 1024 * 1024;
 const MAX_EXPANDED_BYTES = 8 * 1024 * 1024;
@@ -46,7 +49,14 @@ const mockMatches = new Map([
     ["MOCK-0092", 1] as [string, number],
 ]);
 
-/** Bound both ZIP metadata and actual inflated bytes before ExcelJS loads XML. */
+// Worksheet parts, and a formula element (<f>, optionally namespace-prefixed).
+const WORKSHEET_PART = /^xl\/worksheets\/[^/]+\.xml$/i;
+const FORMULA_ELEMENT = /<(?:[A-Za-z_][\w.-]*:)?f[\s/>]/;
+
+/** Bound both ZIP metadata and actual inflated bytes before the parser loads XML.
+ * Also rejects formulas: read-excel-file returns a formula's cached result (or
+ * empty when none is cached), so they cannot be detected after parsing.
+ */
 async function validateArchive(buffer: Buffer): Promise<void> {
     if (!buffer.length || buffer.length > MAX_FILE_BYTES)
         throw new PreviewError("Choose an .xlsx file no larger than 1 MiB.");
@@ -58,25 +68,35 @@ async function validateArchive(buffer: Buffer): Promise<void> {
             let entries = 0;
             let finished = false;
             const names = new Set<string>();
-            const fail = () => {
+            const fail = (message = "Workbook is invalid, encrypted, or exceeds the preview limits.") => {
                 if (finished) return;
                 finished = true;
                 zip.close();
-                reject(new PreviewError("Workbook is invalid, encrypted, or exceeds the preview limits."));
+                reject(new PreviewError(message));
             };
-            zip.on("error", fail);
+            zip.on("error", () => fail());
             zip.on("entry", entry => {
                 declared += entry.uncompressedSize;
                 if (++entries > 100 || declared > MAX_EXPANDED_BYTES ||
                     (entry.generalPurposeBitFlag & 1) || names.has(entry.fileName) ||
                     /vbaProject|externalLinks/i.test(entry.fileName)) return fail();
                 names.add(entry.fileName);
+                const worksheet = WORKSHEET_PART.test(entry.fileName);
+                let tail = "";
                 zip.openReadStream(entry, (streamError, stream) => {
                     if (streamError || !stream) return fail();
-                    stream.on("error", fail);
-                    stream.on("data", chunk => {
+                    stream.on("error", () => fail());
+                    stream.on("data", (chunk: Buffer) => {
                         bytes += chunk.length;
-                        if (bytes > MAX_EXPANDED_BYTES) { stream.destroy(); fail(); }
+                        if (bytes > MAX_EXPANDED_BYTES) { stream.destroy(); return fail(); }
+                        if (!worksheet) return;
+                        // Carry a short tail so a tag split across chunks is still seen.
+                        const text = tail + chunk.toString("utf8");
+                        if (FORMULA_ELEMENT.test(text)) {
+                            stream.destroy();
+                            return fail("Formulas are not supported. Copy the cells and paste them as values, then upload again.");
+                        }
+                        tail = text.slice(-64);
                     });
                     stream.on("end", () => { if (!finished) zip.readEntry(); });
                 });
@@ -95,31 +115,34 @@ async function validateArchive(buffer: Buffer): Promise<void> {
 
 export async function previewBpsWorkbook(buffer: Buffer): Promise<BpsPreview> {
     await validateArchive(buffer);
-    const workbook = new ExcelJS.Workbook();
+    let sheets: { sheet: string; data: readonly (readonly CellValue[])[] }[];
     try {
-        await workbook.xlsx.load(buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
+        // trim: false keeps cell text exactly as stored; IDs are trimmed by normalizeStudentId.
+        sheets = await readExcelFile(buffer, { trim: false });
     } catch {
         throw new PreviewError("Could not parse the mock workbook. Use an unencrypted .xlsx file.");
     }
-    if (workbook.worksheets.length !== 1 || workbook.worksheets[0].name !== "Mock BPS")
+    if (sheets.length !== 1 || sheets[0].sheet !== "Mock BPS")
         throw new PreviewError('Use one worksheet named "Mock BPS". Real BPS workbooks are not supported yet.');
-    const sheet = workbook.worksheets[0];
-    if (sheet.rowCount > MAX_ROWS + 1 || sheet.columnCount > 30)
+    // data[i] is Excel row i + 1; blank rows in the middle are kept, trailing ones dropped.
+    const data = sheets[0].data;
+    if (data.length > MAX_ROWS + 1 || data.some(row => row.length > 30))
         throw new PreviewError("Preview supports at most 1,000 data rows and 30 columns.");
-    const names: string[] = [];
-    sheet.getRow(1).eachCell({ includeEmpty: true }, cell => {
-        if (typeof cell.value !== "string" || !cell.value.trim())
+    const header = [...(data[0] ?? [])];
+    while (header.length && (header.at(-1) === null || header.at(-1) === "")) header.pop();
+    const names = header.map(value => {
+        if (typeof value !== "string" || !value.trim())
             throw new PreviewError("Every column needs a plain-text header.");
-        names.push(cell.value.trim());
+        return value.trim();
     });
     if (new Set(names).size !== names.length) throw new PreviewError("Duplicate column headers.");
     const missing = HEADERS.filter(name => !names.includes(name));
     if (missing.length) throw new PreviewError(`Missing required columns: ${missing.join(", ")}.`);
 
-    const rows: { row: number; values: ExcelJS.CellValue[] }[] = [];
-    sheet.eachRow((row, number) => {
-        if (number === 1) return;
-        rows.push({ row: number, values: HEADERS.map(name => row.getCell(names.indexOf(name) + 1).value) });
+    const rows: { row: number; values: CellValue[] }[] = [];
+    data.forEach((cells, index) => {
+        if (index === 0 || cells.every(value => value === null || value === "")) return;
+        rows.push({ row: index + 1, values: HEADERS.map(name => cells[names.indexOf(name)] ?? null) });
     });
     // Count before validating metric values: conflicting duplicates are all errors.
     const keys = new Map<string, number>();

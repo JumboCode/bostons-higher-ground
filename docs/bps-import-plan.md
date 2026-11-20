@@ -12,11 +12,11 @@ values, persist uploaded files, log raw rows, or write to Salesforce or the app 
 
 The sample yields 41 rows: 36 matched, 1 unmatched, 4 errors (one ambiguous ID,
 two duplicate student/period rows, one invalid grade). Tests cover parsing,
-validation, request limits, and unauthorized requests. The existing Python mock
-still demonstrates repeat-safe imports and before/after aggregates in memory.
-Run instructions are in `docs/bps-admin-preview.md`.
+validation, request limits, and unauthorized requests. The preview is disabled
+unless `NEXT_PUBLIC_ENABLE_BPS_PREVIEW=true`. Run instructions are in
+`docs/bps-admin-preview.md`.
 
-Validation: 15 upload parser/API tests and 13 historical Python mock tests pass, along with
+Validation: 16 upload parser/API tests pass, along with
 TypeScript and targeted lint checks. A local browser harness checked the upload
 flow and mobile layout with synthetic data. Production compilation succeeded;
 full build completion remains blocked by missing application database configuration
@@ -27,11 +27,9 @@ in the isolated worktree. No real login or Salesforce sandbox integration was te
 Use **TypeScript for the real importer**, extending `src/lib/bps-preview.ts` and
 the existing Next.js admin API. This keeps authentication, validation, Salesforce
 integration, and deployment in the application's current stack, without a Python
-runtime or subprocess in the upload route. The Python code in `scripts/bps_import/`
-is a frozen historical demonstration of in-memory upserts and aggregates, not a
-second production importer. Its older text-only ID rule is superseded by the
-TypeScript policy below. Port any approved aggregation/upsert behavior into tested
-TypeScript modules before implementing sandbox writes.
+runtime or subprocess in the upload route. An earlier Python prototype of
+in-memory upserts and aggregates was removed; implement any approved
+aggregation/upsert behavior as tested TypeScript modules before sandbox writes.
 
 ## Source workbooks and current limits
 
@@ -124,7 +122,7 @@ pending approved headers; we will not invent it from filenames.
 6. Later, upsert result records by an approved unique result key, updating corrected
    selected values without duplicating results. Store job status and per-record
    errors privately and retry only failed records. The preview currently performs
-   no writes, and the Python mock only models this behavior in memory.
+   no writes.
 
 ## Aggregate calculation
 
@@ -141,7 +139,7 @@ and scale. Graduation requires eligibility and follow-up definitions. Report
 descriptive associations, not causal claims. School closures or other changes
 to reporting coverage must be considered when interpreting 2019–2020 results.
 
-The Python demo uses a provisional minimum group size of five; BHG must approve
+The app's public charts use a minimum group size of 10; BHG must approve
 the actual disclosure policy and align it with public-dashboard requirements.
 Suppress small counts and associated statistics, check complementary/overlapping
 groups and repeated filter releases, and generate all public summaries on the

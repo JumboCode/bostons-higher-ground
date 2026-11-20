@@ -1,11 +1,14 @@
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/checkPermissions";
 import { createBpsPreviewHandler } from "@/lib/bps-preview-handler";
+import { BPS_PREVIEW_ENABLED } from "@/lib/bps-preview-flag";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const POST = createBpsPreviewHandler(async request => {
+    // Disabled routes look absent, before any session lookup or body read.
+    if (!BPS_PREVIEW_ENABLED) return new Response(null, { status: 404 });
     const session = await auth.api.getSession({ headers: request.headers });
     if (!session) return Response.json({ error: "Sign in to continue." }, { status: 401 });
     if (!(await isAdmin(session.user.id)))

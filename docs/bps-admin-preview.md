@@ -4,15 +4,21 @@ Issue: https://github.com/JumboCode/bostons-higher-ground/issues/104
 
 Implemented on `feat/bps-data-import`, based on `origin/main-devops` at
 `65d5e1c`. TypeScript is the selected implementation for the real importer.
-The offline Python mock under `scripts/bps_import/` is a frozen historical demo;
-its older ID rules are not the current production design.
+Workbooks are parsed with `read-excel-file` after a `yauzl` archive pre-scan.
+
+The preview is **off by default**. Both the `/admin` panel and the API route are
+hidden (the route returns 404) unless `NEXT_PUBLIC_ENABLE_BPS_PREVIEW=true`. Leave
+it unset in production until a privacy-approved real importer replaces the mock
+directory. Because it is a `NEXT_PUBLIC_` variable, restart `pnpm dev` (or rebuild)
+after changing it.
 
 ## Run the upload demo
 
-1. Run `pnpm install --frozen-lockfile` in this worktree.
+1. Run `pnpm install --frozen-lockfile`.
 2. Configure the usual application database/auth environment for your development
-   environment. The preview does not need Salesforce credentials. Do not connect
-   development to production just to test this feature.
+   environment, and add `NEXT_PUBLIC_ENABLE_BPS_PREVIEW=true` to `.env.local`. The
+   preview does not need Salesforce credentials. Do not connect development to
+   production just to test this feature.
 3. Run `pnpm dev`, sign in with an existing development admin, and open `/admin`.
 4. In **BPS upload preview**, download the sample workbook.
 5. Choose that workbook, confirm it contains synthetic data, and select
@@ -55,6 +61,10 @@ the whole workbook; malformed data rows are excluded from matched counts.
 Limits: 1 MiB compressed file, request size capped by actual streamed bytes,
 8 MiB expanded ZIP data, 100 archive entries, 1,000 data rows, 30 columns,
 50 displayed issues. Reject encrypted files, macros and external-link parts.
+Any formula in any worksheet rejects the whole workbook ("paste as values"):
+the parser returns a formula's cached result, or an empty cell when none is
+cached, so formulas are detected in the worksheet XML during the archive scan.
+Excel error values (such as `#DIV/0!`) are read as empty cells.
 All responses containing preview results use `Cache-Control: no-store`.
 There are no Salesforce imports, database writes, file persistence, or raw-data
 logs in this feature. Confirmation and mock ID formats help prevent accidental
@@ -82,7 +92,7 @@ See `docs/bps-import-plan.md` for mappings, aggregate methodology, and BHG quest
 
 ## Validation performed
 
-- 15 parser/API tests, 4 existing baseline-handler tests, and 13 historical Python mock tests passed.
+- 16 parser/API tests and 4 existing baseline-handler tests passed.
 - TypeScript and targeted ESLint checks passed.
 - A temporary browser harness exercised this component with the real multipart
   handler and synthetic fixture: expected counts, disabled/confirmation states,
