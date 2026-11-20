@@ -59,7 +59,7 @@ test("a sparse month coarsens the entire release to quarters and keeps the usefu
     assert.equal(result.housingGranularity, "quarter");
     assert.deepEqual(result.housingOverTime, [
         {
-            periodStart: "2025-02-01",
+            periodStart: "2025-01-01",
             periodEnd: "2025-03-31",
             label: "Q1 2025",
             familiesHoused: 11,
@@ -86,7 +86,7 @@ test("ten singleton months publish one year of ten without any monthly values", 
     assert.equal(result.housingGranularity, "year");
     assert.deepEqual(result.housingOverTime, [
         {
-            periodStart: "2025-02-01",
+            periodStart: "2025-01-01",
             periodEnd: "2025-11-30",
             label: "2025",
             familiesHoused: 10,
@@ -187,7 +187,7 @@ test("partial period boundaries and invalid dates never become invented housing"
     assert.equal(result.familiesHousedToDate, 10);
     assert.deepEqual(result.housingOverTime, [
         {
-            periodStart: "2025-02-10",
+            periodStart: "2025-02-01",
             periodEnd: "2025-02-15",
             label: "Feb 2025",
             familiesHoused: 10,

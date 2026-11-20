@@ -19,6 +19,12 @@ let records: Record<string, unknown>[] = [];
 let queries: string[] = [];
 // Error thrown by the separate skipped-ID write (e.g. column missing before 0006).
 let skippedWriteError: unknown = null;
+// Which table each INSERT used and which columns each SELECT asked for, so tests
+// can check that no query touches the 0006 column through the route.
+let insertTables: unknown[] = [];
+let selectColumns: (Record<string, unknown> | undefined)[] = [];
+// Result of the separate skipped-ID read (GET), or an error to throw from it.
+let skippedRead: () => Promise<unknown[]> = async () => [];
 const db = {
     update: () => ({
         set: (value: Record<string, unknown>) => ({
@@ -29,7 +35,7 @@ const db = {
         }),
     }),
     delete: () => ({ operation: "delete" }),
-    insert: () => ({
+    insert: (table: unknown) => (insertTables.push(table), {
         values: (
             value: Record<string, unknown> | Record<string, unknown>[]
         ) => {
@@ -45,12 +51,15 @@ const db = {
     batch: async () => {
         if (failBatch) throw Error("batch failed");
     },
-    select: () => ({
+    select: (columns?: Record<string, unknown>) => (selectColumns.push(columns), {
         from: () => ({
             where: () => ({
                 orderBy: () => ({
                     limit: async () => selections.shift() ?? [],
                 }),
+                // Awaited directly by the skipped-ID read (no orderBy/limit).
+                then: (ok: (v: unknown) => unknown, fail: (e: unknown) => unknown) =>
+                    skippedRead().then(ok, fail),
             }),
         }),
     }),
@@ -94,9 +103,14 @@ loader._load = function (id, ...args) {
 const { runSalesforceSync } = load(
     "../src/lib/salesforce/sync"
 ) as typeof import("../src/lib/salesforce/sync");
-const { POST } = load(
+const { GET, POST } = load(
     "../src/app/api/admin/sync/route"
 ) as typeof import("../src/app/api/admin/sync/route");
+// Same cached module instances the route uses (loaded above with the mocked db).
+const { syncLogPre0006, syncLogBaseColumns } = load(
+    "../src/lib/sync-log"
+) as typeof import("../src/lib/sync-log");
+const { syncLog } = load("../src/lib/schema") as typeof import("../src/lib/schema");
 loader._load = originalLoad;
 
 function reset() {
@@ -108,6 +122,9 @@ function reset() {
     failBatch = false;
     queries = [];
     skippedWriteError = null;
+    insertTables = [];
+    selectColumns = [];
+    skippedRead = async () => [];
     records = [
         { Family_Id__c: " A " },
         { Id: "001000000000001AAA", Family_Id__c: null, Name: "Do not persist" },
@@ -183,4 +200,56 @@ test("an insert conflict from a concurrent click returns 409 without scheduling 
     assert.equal(response.status, 409);
     assert.equal((await response.json()).log.id, "other-run");
     assert.equal(callbacks.length, 0);
+});
+
+// --- Deploy-before-migration-0006: no sync_log query may reference the new column. ---
+const MISSING_COLUMN = Object.assign(new Error("query failed"), {
+    cause: Object.assign(new Error('column "skipped_record_ids" does not exist'), { code: "42703" }),
+});
+test("route sync_log queries never select or insert the 0006 column", async () => {
+    reset();
+    conflict = true; // Exercises the running-check read, the insert and the conflict read.
+    selections = [[], [{ id: "other-run", status: "running", startedAt: new Date() }]];
+    await POST(new Request("http://localhost/api/admin/sync", { method: "POST" }));
+    assert.deepEqual(insertTables, [syncLogPre0006]);
+    assert.equal(selectColumns.length, 2);
+    for (const columns of selectColumns) {
+        assert.ok(columns, "select() without explicit columns selects every column");
+        assert.equal("skippedRecordIds" in columns, false);
+    }
+});
+test("GET shows sync status with or without the 0006 column", async () => {
+    const latest = { id: "run-2", status: "success", startedAt: new Date() };
+    reset();
+    selections = [[latest], [latest]];
+    skippedRead = async () => [{ id: "run-2", skippedRecordIds: ["001000000000001AAA"] }];
+    let body = await (await GET(new Request("http://localhost/api/admin/sync"))).json();
+    assert.deepEqual(body.latestSuccess.skippedRecordIds, ["001000000000001AAA"]);
+    // The two status reads use explicit columns without the 0006 column; only the
+    // separate, error-tolerant skipped-ID read (last) may name it.
+    assert.equal(selectColumns.length, 3);
+    for (const columns of selectColumns.slice(0, 2)) {
+        assert.ok(columns, "select() without explicit columns selects every column");
+        assert.equal("skippedRecordIds" in columns, false);
+    }
+    assert.deepEqual(Object.keys(selectColumns[2] ?? {}), ["id", "skippedRecordIds"]);
+    reset();
+    selections = [[latest], [latest]];
+    skippedRead = async () => { throw MISSING_COLUMN; };
+    const response = await GET(new Request("http://localhost/api/admin/sync"));
+    assert.equal(response.status, 200);
+    body = await response.json();
+    assert.equal(body.latestSuccess.status, "success");
+    assert.equal(body.latestSuccess.skippedRecordIds, null);
+});
+test("generated SQL for the base select and the pre-0006 insert omits skipped_record_ids", () => {
+    const { drizzle } = load("drizzle-orm/neon-http") as typeof import("drizzle-orm/neon-http");
+    const sqlDb = drizzle.mock();
+    const insertSql = (table: typeof syncLog | typeof syncLogPre0006) =>
+        sqlDb.insert(table).values({ source: "salesforce", status: "running" }).onConflictDoNothing().returning().toSQL().sql;
+    const selectSql = sqlDb.select(syncLogBaseColumns).from(syncLog).toSQL().sql;
+    assert.doesNotMatch(insertSql(syncLogPre0006), /skipped_record_ids/);
+    assert.doesNotMatch(selectSql, /skipped_record_ids/);
+    // Guard that this test can fail: Drizzle lists every declared column in an INSERT.
+    assert.match(insertSql(syncLog), /skipped_record_ids/);
 });

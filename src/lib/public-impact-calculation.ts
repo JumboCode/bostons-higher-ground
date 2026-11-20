@@ -48,7 +48,9 @@ function periods(
     if (granularity === "allTime")
         return [
             {
-                periodStart: start,
+                // Calendar boundary, not the exact series start: with a
+                // provisional baseline that start is one family's intake date.
+                periodStart: `${start.slice(0, 4)}-01-01`,
                 periodEnd: end,
                 label:
                     start.slice(0, 4) === end.slice(0, 4)
@@ -82,7 +84,9 @@ function periods(
                   ? `Q${Math.floor(cursor.getUTCMonth() / 3) + 1} ${cursor.getUTCFullYear()}`
                   : String(cursor.getUTCFullYear());
         result.push({
-            periodStart: key < start ? start : key,
+            // Always the calendar period start (see allTime above). The first
+            // period still counts only families housed after the baseline cutoff.
+            periodStart: key,
             periodEnd: final > end ? end : final,
             label,
             familiesHoused: counts.get(key) ?? 0,

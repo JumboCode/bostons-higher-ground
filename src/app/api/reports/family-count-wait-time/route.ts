@@ -20,13 +20,15 @@ export async function POST(request: Request) {
         typeof body?.filters === "string" ? body.filters : null
     );
 
-    const filtered = filterRecords(canonicalFamilies(await getAllData()), {
+    // Filter records first, then merge each family's in-window records, so a
+    // family that returned for a new intake in the window is still counted.
+    const filtered = canonicalFamilies(filterRecords(await getAllData(), {
         selectedLocations: parsed.selectedLocations ?? [],
         selectedSchools: parsed.selectedSchools ?? [],
         timeframe: parsed.timeframe ?? "allTime",
         fiscalYear: parsed.fiscalYear,
         customRange: parsed.customRange as DateRange | undefined,
-    });
+    }));
 
     // Intake and housing from the same record (never across two intake episodes).
     const waitTimes = filtered

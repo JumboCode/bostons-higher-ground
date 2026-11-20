@@ -132,7 +132,7 @@ test("baseline writes invalidate public/report data only after authorized succes
     assert.deepEqual(tags, ["report-data"]);
     tags = [];
 });
-test("family counter canonicalizes before filtering and does not read data without auth", async () => {
+test("family counter counts each family once, including families that returned in the window, and does not read data without auth", async () => {
     const request = (filters: object) =>
         new Request("http://localhost/api/reports/family-count-wait-time", {
             method: "POST",
@@ -158,8 +158,11 @@ test("family counter canonicalizes before filtering and does not read data witho
             },
         })
     );
+    // Family A was first seen in 2020 and returned in 2024: it is counted in a
+    // 2024 window, with that episode's own 31-day wait (merging all records
+    // first would have filtered A out on its 2020 intake).
     assert.deepEqual(await filtered.json(), {
-        totalFamilies: 1,
-        averageWaitDays: null,
+        totalFamilies: 2,
+        averageWaitDays: 31,
     });
 });

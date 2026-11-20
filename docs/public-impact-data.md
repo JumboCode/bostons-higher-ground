@@ -46,10 +46,13 @@ families. The team should decide which definition public figures use before
 this loader replaces or sits alongside #116's counts.
 
 The series contains **newly housed families since the baseline cutoff**, not
-cumulative totals. Its first date is the day after that cutoff; its last date
-is the current Boston day. Historical baseline families have no invented
-housing dates. The current period may be partial. Its sum therefore excludes
-the historical baseline while the headline includes it.
+cumulative totals. It counts families housed from the day after that cutoff
+through the current Boston day. Periods are reported with calendar boundaries
+(e.g. a quarter starts on its first day), so the first and current periods may
+be partial; the exact series start is not published, because with a
+provisional baseline it would be one family's intake date. Historical baseline
+families have no invented housing dates. The series sum therefore excludes the
+historical baseline while the headline includes it.
 
 Try one uniform calendar granularity at a time: month, quarter, year, then one
 all-time period. Publish the finest complete series in which every nonzero
@@ -87,23 +90,36 @@ repeat intakes; others have identical mapped fields, consistent with duplicate
 entry. **Staff must confirm which before any source records are merged or
 deleted.** No source records were modified.
 
-Family metrics therefore group by trimmed, nonempty `family_id` before applying
-report filters (`canonicalFamilies` in `src/lib/family-metrics.ts`):
+Family metrics therefore count each trimmed, nonempty `family_id` once
+(`canonicalFamilies` in `src/lib/family-metrics.ts`), using these rules:
 
-- Earliest valid intake date and earliest valid housing date per family.
-- Categorical fields (city, school, source of housing, status) come from the
-  record with the latest valid intake date; ties resolve deterministically.
-- A family counts as housed if any of its records is housed, so a family that
-  was housed and later returned for a new intake is not dropped from housing
-  outcome charts.
-- Days to house uses intake and housing dates from the **same record**, so a
+- **Date windows.** Report filters (timeframe, city, school) are applied to a
+  family's individual records first. A family appears in a window if any of its
+  records falls in it, and is then merged from only those in-window records. A
+  family that returned for a new intake this period therefore appears in this
+  period with its current details, while earlier windows still see its earlier
+  episodes. (Merging all records first and filtering on the earliest intake
+  would hide returning families from recent windows, including the default
+  "past two years" view.)
+- **Time series** (family intake, families housed) count distinct families per
+  period: several records in one period count once, and a family that returns
+  in a later period also counts in that later period.
+- **Current details.** Within the merged records, categorical fields (city,
+  school, status) come from the record with the latest valid intake date; ties
+  resolve deterministically. The location chart's active/housed split uses this
+  current status, so a family housed earlier that has since returned counts as
+  **active**.
+- **Housing source** comes from the family's housed record, so a family housed
+  earlier that has since returned is still counted in the housing-sources chart.
+- **Days to house** uses intake and housing dates from the **same record**, so a
   wait is never computed across two different intake episodes (which could be
   negative or inflated).
 
 This covers family intake, families housed, days to house, active/housed
 families by location, housing sources, partner-school and city family/student
-counts, and the overview family counter/wait time. Raw synced rows remain
-available for authorized investigation.
+counts, and the overview family counter/wait time. The public loader uses all
+of a family's records (it takes no filters). Raw synced rows remain available
+for authorized investigation.
 
 `scripts/audit-impact-data.ts` re-runs the read-only audit
 (`node --import tsx scripts/audit-impact-data.ts`). It prints only metadata and

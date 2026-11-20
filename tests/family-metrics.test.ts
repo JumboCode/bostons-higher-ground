@@ -39,43 +39,50 @@ test("canonical families trim IDs, ignore blank IDs, keep earliest dates and lat
     assert.deepEqual(canonicalFamilies([...records].reverse()), families);
     assert.equal(records[0].familyId, " A ");
 });
-test("family charts count each family once and canonicalize before date filtering", () => {
+const sum = (model: ReturnType<typeof buildChartModel>) =>
+    model.type === "horizontal-bar"
+        ? model.data.flatMap((p) => p.series).reduce((n, s) => n + s.value, 0)
+        : model.data.reduce((n, p) => n + p.value, 0);
+const in2024 = { timeframe: "custom" as const, customRange: { from: new Date(2024, 0, 1), to: new Date(2024, 11, 31) } };
+
+test("family charts count a family once per period, and once per window for non-time charts", () => {
     const records = [
         row("A", "2020-01-01", "2020-02-01"),
         row("A", "2024-01-01", "2024-02-01"),
+        row("A", "2024-06-01", null), // Second 2024 intake: still one family in 2024.
         row("B", "2024-01-01", "2024-02-01"),
     ];
-    for (const key of [
-        "family-intake-bar",
-        "families-housed-line",
-        "housing-sources-donut",
-    ] as const) {
-        const model = buildChartModel(key, records, { timeframe: "allTime" });
-        assert.equal(
-            model.type === "horizontal-bar"
-                ? 0
-                : model.data.reduce((n, p) => n + p.value, 0),
-            2,
-            key
-        );
-    }
-    const model = buildChartModel("families-housed-line", records, {
-        timeframe: "custom",
-        customRange: { from: new Date(2024, 0, 1), to: new Date(2024, 11, 31) },
-    });
-    assert.equal(
-        model.type === "line" && model.data.reduce((n, p) => n + p.value, 0),
-        1
+    const allTime = { timeframe: "allTime" as const };
+    // Yearly periods: 2020 = {A}, 2024 = {A, B}.
+    assert.equal(sum(buildChartModel("family-intake-bar", records, allTime)), 3);
+    assert.equal(sum(buildChartModel("families-housed-line", records, allTime)), 3);
+    // Non-time charts: each family once in the window.
+    assert.equal(sum(buildChartModel("housing-sources-donut", records, allTime)), 2);
+    assert.equal(sum(buildChartModel("location-bar", records, allTime)), 2);
+    // A returned in 2024, so it is counted in a 2024 window.
+    assert.equal(sum(buildChartModel("families-housed-line", records, in2024)), 2);
+    assert.equal(sum(buildChartModel("location-bar", records, in2024)), 2);
+});
+test("families that return for a new intake are not hidden from recent windows", () => {
+    // Each family was housed in 2023 and is active again from a Nov 2026 intake.
+    const records = ["F1", "F2", "F3"].flatMap((id) => [
+        row(id, "2023-01-05", "2023-03-01"),
+        row(id, "2026-11-02", null, "Cambridge"),
+    ]);
+    const nov2026 = { timeframe: "custom" as const, customRange: { from: new Date(2026, 10, 1), to: new Date(2026, 10, 30) } };
+    const location = buildChartModel("location-bar", records, nov2026);
+    assert.deepEqual(
+        location.type === "horizontal-bar" && location.data.map((d) => [d.category, d.series.map((s) => s.value)]),
+        [["Cambridge", [3, 0]]] // 3 active, 0 housed: current status of the in-window episode.
     );
-    const location = buildChartModel("location-bar", records, {
-        timeframe: "allTime",
-    });
-    assert.equal(
-        location.type === "horizontal-bar" &&
-            location.data
-                .flatMap((p) => p.series)
-                .reduce((n, p) => n + p.value, 0),
-        2
+    assert.equal(sum(buildChartModel("family-intake-bar", records, nov2026)), 3);
+    // The earlier window still sees the earlier, housed episode.
+    const in2023 = { timeframe: "custom" as const, customRange: { from: new Date(2023, 0, 1), to: new Date(2023, 11, 31) } };
+    assert.deepEqual(
+        (({ data, type }) => type === "horizontal-bar" && data.map((d) => [d.category, d.series.map((s) => s.value)]))(
+            buildChartModel("location-bar", records, in2023)
+        ),
+        [["Boston", [0, 3]]]
     );
 });
 test("days to house uses intake and housing from the same record, never across episodes", () => {
