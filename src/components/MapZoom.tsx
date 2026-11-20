@@ -9,7 +9,14 @@ const MAX = 8;
 // Zoom = widen the inner box; pan = native scroll on the overflow container.
 // Pinch: trackpad (ctrl+wheel) and two-finger touch, anchored under the fingers/cursor.
 // ponytail: Safari desktop trackpad pinch sends GestureEvents, not ctrl+wheel; add if needed.
-export default function MapZoom({ children }: { children: React.ReactNode }) {
+export default function MapZoom({
+    children,
+    aspect = "4 / 3",
+}: {
+    children: React.ReactNode;
+    /** CSS aspect-ratio of the visible box; match the SVG viewBox so nothing is cropped. */
+    aspect?: string;
+}) {
     const [z, setZ] = useState(MIN);
     const zRef = useRef(MIN);
     const ref = useRef<HTMLDivElement>(null);
@@ -41,14 +48,24 @@ export default function MapZoom({ children }: { children: React.ReactNode }) {
         };
         const pinch = (e: TouchEvent) => {
             const [a, b] = [e.touches[0], e.touches[1]];
-            const [x, y] = local((a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
-            return { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x, y };
+            const [x, y] = local(
+                (a.clientX + b.clientX) / 2,
+                (a.clientY + b.clientY) / 2
+            );
+            return {
+                d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+                x,
+                y,
+            };
         };
 
         const onWheel = (e: WheelEvent) => {
             if (!e.ctrlKey) return; // plain wheel = normal scroll/pan
             e.preventDefault();
-            zoomAt(zRef.current * Math.exp(-e.deltaY * 0.01), ...local(e.clientX, e.clientY));
+            zoomAt(
+                zRef.current * Math.exp(-e.deltaY * 0.01),
+                ...local(e.clientX, e.clientY)
+            );
         };
         const onStart = (e: TouchEvent) => {
             if (e.touches.length === 2) dist = pinch(e).d;
@@ -86,7 +103,11 @@ export default function MapZoom({ children }: { children: React.ReactNode }) {
     return (
         <div className="relative">
             {/* pan-x pan-y: keep one-finger scroll, stop the browser zooming the whole page */}
-            <div ref={ref} className="aspect-[4/3] touch-pan-x touch-pan-y overflow-auto">
+            <div
+                ref={ref}
+                className="touch-pan-x touch-pan-y overflow-auto"
+                style={{ aspectRatio: aspect }}
+            >
                 <div ref={inner} style={{ width: `${z * 100}%` }}>
                     {children}
                 </div>

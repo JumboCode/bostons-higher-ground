@@ -2,27 +2,42 @@
     Author: Alex Vu
     Date: 10/23/26
 
-    Purpose: public-facing summary of BHG's impact. Everything is computed here on
-    the server; the browser only receives percentages, finished chart models and
-    map paths. Public filters live in the URL (?town=&timeframe=).
+    Purpose: public-facing summary of BHG's impact, next to community need.
+    Everything is computed here on the server; the browser only receives
+    percentages, finished chart models and map paths.
+    Public filters live in the URL (?town=&timeframe=&layer=).
 */
 
 import { ChartRenderer } from "@/components/charts";
-import ImpactMap, { type PlaceShare } from "@/components/ImpactMap";
+import ImpactMap, {
+    formatPct,
+    MapLegend,
+    type MapArea,
+    type MapLayers,
+    type MapView,
+} from "@/components/ImpactMap";
 import {
     buildChartModel,
     filterCommonRecords,
     MIN_GROUP_SIZE,
-    type ChartDataSource,
     type ChartFilters,
-    type HousingChartRecord,
     type GeneratedChartModel,
+    type HousingChartRecord,
 } from "@/lib/chart-definitions";
 import type { Timeframe } from "@/lib/filterStore";
 import { getAllData } from "@/lib/getAllData";
 import { getEducationData } from "@/lib/getEducationData";
+import { averageNeed, SAMPLE_NEED } from "@/lib/impact/need";
+import {
+    BOSTON,
+    BOSTON_NEIGHBORHOODS,
+    isNeighborhood,
+    MA_TOWNS,
+    placeOf,
+    type Place,
+} from "@/lib/impact/places";
 
-import FilterSelect from "./FilterSelect";
+import FilterSelect, { type SelectItem } from "./FilterSelect";
 
 // Filters read searchParams so the route is dynamic; caching lives in the loaders.
 
@@ -31,22 +46,17 @@ const TIMEFRAMES: { value: Timeframe; label: string }[] = [
     { value: "pastTwoYears", label: "Past 2 years" },
     { value: "thisFY", label: "This fiscal year" },
 ];
+const LAYERS = [
+    { value: "both", label: "Both" },
+    { value: "impact", label: "Our impact" },
+    { value: "need", label: "Community need" },
+] as const;
+type Layer = (typeof LAYERS)[number]["value"];
+
 const ALL = "all";
 const DAY = 86_400_000;
-
-// Salesforce city is free text: fix case/typos, drop non-places.
-const CITY_FIXES: Record<string, string | null> = {
-    dorcheseter: "Dorchester",
-    rosindale: "Roslindale",
-    "confidential address": null,
-    "west broadway": null,
-};
-function cleanCity(city: string | null) {
-    const k = city?.trim().toLowerCase();
-    if (!k) return null;
-    if (k in CITY_FIXES) return CITY_FIXES[k];
-    return k.replace(/\b\w/g, (c) => c.toUpperCase());
-}
+const NEED = SAMPLE_NEED;
+const NEED_LABEL = `${NEED.shortLabel}${NEED.isSample ? " (sample)" : ""}`;
 
 // null = too small to publish. Both sides must clear the threshold: "1 of 11"
 // shows as 9% and would reveal a single family. This also hides 0% and 100%.
@@ -54,6 +64,7 @@ const pct = (part: number, whole: number) =>
     [whole, part, whole - part].some((n) => n < MIN_GROUP_SIZE)
         ? null
         : Math.round((part / whole) * 100);
+const asPct = (v: number | null) => (v === null ? null : `${v}%`);
 
 // Many families are housed without a dateHoused in Salesforce, so the status counts too.
 const isHoused = (h: HousingChartRecord) =>
@@ -95,23 +106,36 @@ function toShares(
 function Stat({
     value,
     label,
+    detail,
     className,
 }: {
-    value: number | null;
+    value: string | null;
     label: string;
+    detail?: React.ReactNode;
     className: string;
 }) {
     return (
         <div className={`rounded-lg p-5 ${className}`}>
             <p className="text-4xl font-bold text-bhg-gray-300">
-                {value === null ? "—" : `${value}%`}
+                {value ?? "—"}
             </p>
             <p className="mt-1 text-sm text-bhg-gray-300">
                 {value === null
                     ? "Not enough data in this selection to share a figure without identifying families."
                     : label}
             </p>
+            {detail && (
+                <p className="mt-2 text-xs text-bhg-gray-300">{detail}</p>
+            )}
         </div>
+    );
+}
+
+function SampleTag() {
+    return (
+        <span className="rounded bg-bhg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-bhg-gray-300">
+            Sample data
+        </span>
     );
 }
 
@@ -174,10 +198,45 @@ function Row({
     );
 }
 
+// Map layer switch. Links, not buttons, so it works without JS and in the iframe.
+function LayerToggle({
+    layer,
+    hrefFor,
+}: {
+    layer: Layer;
+    hrefFor: (layer: Layer) => string;
+}) {
+    return (
+        <nav
+            aria-label="Map layers"
+            className="mb-3 inline-flex rounded-md border border-bhg-gray-200 bg-white p-0.5 text-sm"
+        >
+            {LAYERS.map((l) => (
+                <a
+                    key={l.value}
+                    href={hrefFor(l.value)}
+                    aria-current={l.value === layer ? "true" : undefined}
+                    className={`rounded px-3 py-1.5 font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-bhg-gray-300 ${
+                        l.value === layer
+                            ? "bg-bhg-gray-300 text-white"
+                            : "text-bhg-gray-300 hover:bg-bhg-gray-100"
+                    }`}
+                >
+                    {l.label}
+                </a>
+            ))}
+        </nav>
+    );
+}
+
 export default async function Impact({
     searchParams,
 }: {
-    searchParams: Promise<{ town?: string; timeframe?: string }>;
+    searchParams: Promise<{
+        town?: string;
+        timeframe?: string;
+        layer?: string;
+    }>;
 }) {
     const params = await searchParams;
     // Both loaders are unstable_cache'd (5 min). Raw rows stay on the server.
@@ -185,38 +244,62 @@ export default async function Impact({
         getAllData() as Promise<HousingChartRecord[]>,
         getEducationData(),
     ]);
-    const housing = rawHousing.map((h) => ({ ...h, city: cleanCity(h.city) }));
+    const housing = rawHousing.map((h) => ({
+        ...h,
+        ...placeOf(h.city, h.zipCode),
+    }));
     const students = education.students.map((s) => ({
         ...s,
-        city: cleanCity(s.city) ?? "",
+        ...placeOf(s.city, s.zip),
     }));
-    const source: ChartDataSource = { ...education, housing, students };
 
-    // Only towns big enough to publish are selectable, so a filter can't single out a few families.
-    const towns = [...countBy(housing, (h) => h.city)]
-        .filter(([, n]) => n >= MIN_GROUP_SIZE)
+    // Places outside the map (e.g. other states) are still selectable once big enough.
+    const mapped = new Set([...MA_TOWNS, ...BOSTON_NEIGHBORHOODS]);
+    const otherPlaces = [...countBy(housing, (h) => h.town)]
+        .filter(([t, n]) => !mapped.has(t) && n >= MIN_GROUP_SIZE)
         .map(([t]) => t)
         .sort();
+
     // Untrusted URL input: anything unknown falls back to the default.
-    const town = towns.includes(params.town ?? "") ? params.town! : ALL;
+    const selectable = new Set([...mapped, ...otherPlaces]);
+    const place = selectable.has(params.town ?? "") ? params.town! : ALL;
     const timeframe =
         TIMEFRAMES.find((t) => t.value === params.timeframe)?.value ??
         "allTime";
+    const layer: Layer =
+        LAYERS.find((l) => l.value === params.layer)?.value ?? "both";
+    const layers: MapLayers = {
+        impact: layer !== "need",
+        need: layer !== "impact",
+    };
 
+    const selectedHood = place !== ALL && isNeighborhood(place);
+    const view: MapView = place === BOSTON || selectedHood ? "boston" : "state";
+    const inArea = (p: Place) =>
+        place === ALL ||
+        (selectedHood ? p.neighborhood === place : p.town === place);
+
+    const href = (next: { town?: string; layer?: Layer }) => {
+        const q = new URLSearchParams();
+        const t = next.town ?? place;
+        const l = next.layer ?? layer;
+        if (t !== ALL) q.set("town", t);
+        if (timeframe !== "allTime") q.set("timeframe", timeframe);
+        if (l !== "both") q.set("layer", l);
+        const s = q.toString();
+        return s ? `/impact?${s}` : "/impact";
+    };
+
+    // ---- Housing ----------------------------------------------------------
     const filters: ChartFilters = {
-        selectedLocations: town === ALL ? [] : [town],
+        selectedLocations: [],
         selectedSchools: [],
         timeframe,
     };
-
-    // Housing. Town filtered here, not via filters: the shared location filter
-    // lets records with no city through, and most real records have none.
-    const inTimeframe = filterCommonRecords(housing, {
-        ...filters,
-        selectedLocations: [],
-    });
-    const families =
-        town === ALL ? inTimeframe : inTimeframe.filter((h) => h.city === town);
+    // filterCommonRecords returns the same objects, so a Set keeps our place fields.
+    const keep = new Set(filterCommonRecords(housing, filters));
+    const inTimeframe = housing.filter((h) => keep.has(h));
+    const families = inTimeframe.filter(inArea);
     const recorded = families.filter(hasOutcome);
     const housed = recorded.filter(isHoused);
     // Time to housing needs both dates; missing or reversed dates are left out
@@ -228,24 +311,68 @@ export default async function Impact({
     });
     const housedFast = housingDays.filter((d) => d <= 183);
 
-    // Map: share of families with a known town, in the selected timeframe.
-    const byTown = countBy(inTimeframe, (h) => h.city);
-    const known = [...byTown.values()].reduce((a, n) => a + n, 0);
-    const shares: PlaceShare[] = [...byTown]
-        .filter(([, n]) => n >= MIN_GROUP_SIZE)
-        .map(([place, n]) => ({ place, pct: Math.round((n / known) * 100) }))
-        .sort((a, b) => b.pct - a.pct);
-    const hrefFor = (place: string) =>
-        `/impact?${new URLSearchParams({ town: place, timeframe })}`;
+    // ---- Map areas --------------------------------------------------------
+    // State view: share of families with a known town.
+    // Boston view: share of Boston families with a known neighborhood.
+    const counts =
+        view === "state"
+            ? countBy(inTimeframe, (h) => h.town)
+            : countBy(
+                  inTimeframe.filter((h) => h.town === BOSTON),
+                  (h) => h.neighborhood
+              );
+    const known = [...counts.values()].reduce((a, n) => a + n, 0);
+    const shapes = view === "state" ? MA_TOWNS : BOSTON_NEIGHBORHOODS;
+    const areas: MapArea[] = shapes.map((name) => {
+        const n = counts.get(name) ?? 0;
+        const big = n >= MIN_GROUP_SIZE;
+        const need = NEED.valueFor(name);
+        const clickable =
+            (layers.impact && big) ||
+            (layers.need && need !== null) ||
+            (view === "state" && name === BOSTON);
+        return {
+            place: name,
+            impactPct: big ? (n / known) * 100 : null,
+            impactSmall: n > 0 && !big,
+            need,
+            href: clickable ? href({ town: name }) : null,
+        };
+    });
+    const shareOf =
+        view === "state"
+            ? "families with a known town"
+            : "Boston families with a known neighborhood";
 
-    // Education (no dates on student rows, so timeframe doesn't apply)
-    const townStudents = students.filter(
-        (s) => town === ALL || s.city === town
-    );
-    const studentIds = new Set(townStudents.map((s) => s.studentId));
+    // Ranked list under the map: top areas on the main visible layer.
+    const ranked = [...areas]
+        .filter((a) => (layers.impact ? a.impactPct !== null : a.need !== null))
+        .sort((a, b) =>
+            layers.impact
+                ? b.impactPct! - a.impactPct!
+                : (b.need ?? 0) - (a.need ?? 0)
+        )
+        .slice(0, 10);
+
+    // ---- Community need ---------------------------------------------------
+    // Compare a neighborhood with Boston, anything else with the state.
+    const needHere = place === ALL ? null : NEED.valueFor(place);
+    const needBaseline = selectedHood
+        ? {
+              label: "Boston average",
+              value: averageNeed(NEED, BOSTON_NEIGHBORHOODS),
+          }
+        : {
+              label: "Massachusetts average",
+              value: averageNeed(NEED, MA_TOWNS),
+          };
+
+    // ---- Education (no dates on student rows, so timeframe doesn't apply) --
+    const areaStudents = students.filter(inArea);
+    const studentIds = new Set(areaStudents.map((s) => s.studentId));
     // One figure per student: average ADA across their attendance rows.
     const adaByStudent = new Map<number, number[]>();
-    for (const a of source.attendance ?? []) {
+    for (const a of education.attendance) {
         const ada = Number(a.ada);
         if (!studentIds.has(a.studentId) || !Number.isFinite(ada)) continue;
         adaByStudent.set(a.studentId, [
@@ -259,12 +386,74 @@ export default async function Impact({
     const regular = studentAda.filter((ada) => ada >= 0.9);
     // Chart counts student rows per school, so the total is the same row count.
     const schoolShares = toShares(
-        buildChartModel("students-per-school-bar", source, filters),
+        buildChartModel(
+            "students-per-school-bar",
+            { ...education, housing: [], students: areaStudents },
+            filters
+        ),
         "% of students",
-        townStudents.length
+        areaStudents.length
     );
 
-    const where = town === ALL ? "" : ` in ${town}`;
+    const where = place === ALL ? "" : ` in ${place}`;
+    const placeOptions: SelectItem[] = [
+        { value: ALL, label: "All of Massachusetts" },
+        {
+            group: "Boston neighborhoods",
+            options: BOSTON_NEIGHBORHOODS.map((n) => ({ value: n, label: n })),
+        },
+        {
+            group: "Massachusetts towns",
+            options: MA_TOWNS.map((t) => ({ value: t, label: t })),
+        },
+        ...(otherPlaces.length
+            ? [
+                  {
+                      group: "Other places",
+                      options: otherPlaces.map((t) => ({ value: t, label: t })),
+                  },
+              ]
+            : []),
+    ];
+
+    const needStat = (
+        <Stat
+            value={
+                place === ALL
+                    ? String(needBaseline.value ?? "—")
+                    : needHere === null
+                      ? null
+                      : String(needHere)
+            }
+            label={
+                place === ALL
+                    ? `average ${NEED.label.toLowerCase()} across Massachusetts towns.`
+                    : `${NEED.label.toLowerCase()} in ${place} (0–100, higher = more need).`
+            }
+            detail={
+                <>
+                    {place !== ALL &&
+                        `${needBaseline.label}: ${needBaseline.value ?? "—"}. `}
+                    {NEED.isSample && <SampleTag />}
+                </>
+            }
+            className="bg-[#E3EAF4]"
+        />
+    );
+    const impactStats = (
+        <>
+            <Stat
+                value={asPct(pct(housed.length, recorded.length))}
+                label={`of families we've worked with${where} have moved into stable housing.`}
+                className="bg-bhg-pink-100"
+            />
+            <Stat
+                value={asPct(pct(housedFast.length, housingDays.length))}
+                label="of housed families found a home within 6 months."
+                className="bg-bhg-mint-100"
+            />
+        </>
+    );
 
     return (
         <main className="min-h-screen bg-[#F5F5F5] p-4 md:p-8">
@@ -275,27 +464,30 @@ export default async function Impact({
             <div className="space-y-10">
                 <Row
                     heading="Housing"
+                    note={
+                        layers.need && layers.impact
+                            ? "The need in each community, and how we've responded."
+                            : undefined
+                    }
                     stats={
+                        // Need first, then our response.
                         <>
-                            <Stat
-                                value={pct(housed.length, recorded.length)}
-                                label={`of families we've worked with${where} have moved into stable housing.`}
-                                className="bg-bhg-pink-100"
-                            />
-                            <Stat
-                                value={pct(
-                                    housedFast.length,
-                                    housingDays.length
-                                )}
-                                label="of housed families found a home within 6 months."
-                                className="bg-bhg-mint-100"
-                            />
+                            {layers.need && needStat}
+                            {layers.impact && impactStats}
                         </>
                     }
                 >
                     <Card
-                        title="Where we've helped families"
-                        caption="Share of families with a known town. Click a town to filter."
+                        title={
+                            view === "state"
+                                ? "Where we work across Massachusetts"
+                                : "Where we work in Boston"
+                        }
+                        caption={
+                            view === "state"
+                                ? "Click a town to see its figures. Click Boston to see its neighborhoods."
+                                : "Click a neighborhood to see its figures."
+                        }
                         action={
                             <form
                                 method="get"
@@ -303,15 +495,9 @@ export default async function Impact({
                             >
                                 <FilterSelect
                                     name="town"
-                                    label="Town"
-                                    value={town}
-                                    options={[
-                                        { value: ALL, label: "All towns" },
-                                        ...towns.map((t) => ({
-                                            value: t,
-                                            label: t,
-                                        })),
-                                    ]}
+                                    label="Place"
+                                    value={place}
+                                    options={placeOptions}
                                 />
                                 <FilterSelect
                                     name="timeframe"
@@ -319,6 +505,13 @@ export default async function Impact({
                                     value={timeframe}
                                     options={TIMEFRAMES}
                                 />
+                                {layer !== "both" && (
+                                    <input
+                                        type="hidden"
+                                        name="layer"
+                                        value={layer}
+                                    />
+                                )}
                                 <noscript>
                                     <button className="rounded-md bg-bhg-gray-300 px-3 py-2 text-sm text-white">
                                         Apply
@@ -327,44 +520,92 @@ export default async function Impact({
                             </form>
                         }
                     >
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                            <ImpactMap
-                                shares={shares}
-                                selected={town}
-                                hrefFor={hrefFor}
-                            />
-                            <ol className="space-y-2 text-sm">
-                                {shares.map((s) => (
-                                    <li key={s.place}>
-                                        <a
-                                            href={hrefFor(s.place)}
-                                            className="block"
-                                        >
-                                            <div className="flex justify-between">
-                                                <span
-                                                    className={
-                                                        s.place === town
-                                                            ? "font-bold"
-                                                            : ""
-                                                    }
-                                                >
-                                                    {s.place}
-                                                </span>
-                                                <span>{s.pct}%</span>
-                                            </div>
-                                            <div className="h-1.5 rounded bg-bhg-gray-100">
-                                                <div
-                                                    className="h-1.5 rounded bg-bhg-pink"
-                                                    style={{
-                                                        width: `${s.pct}%`,
-                                                    }}
-                                                />
-                                            </div>
-                                        </a>
-                                    </li>
-                                ))}
-                            </ol>
-                        </div>
+                        <LayerToggle
+                            layer={layer}
+                            hrefFor={(l) => href({ layer: l })}
+                        />
+                        <ImpactMap
+                            view={view}
+                            layers={layers}
+                            areas={areas}
+                            selected={place}
+                            needLabel={NEED_LABEL}
+                            shareOf={shareOf}
+                            backHref={href({ town: ALL })}
+                        />
+                        <MapLegend
+                            layers={layers}
+                            needTitle={`Community need: ${NEED.label.toLowerCase()}`}
+                            needIsSample={NEED.isSample}
+                        />
+                        {layers.impact && (
+                            <p className="mt-2 text-xs text-gray-600">
+                                Our impact shows each{" "}
+                                {view === "state" ? "town" : "neighborhood"}
+                                &apos;s share of {shareOf}.
+                            </p>
+                        )}
+
+                        {ranked.length > 0 && (
+                            <div className="mt-4">
+                                <h4 className="mb-2 text-sm font-semibold text-bhg-gray-300">
+                                    {view === "state"
+                                        ? "Top towns"
+                                        : "Top neighborhoods"}
+                                    {layers.impact
+                                        ? " by share of families"
+                                        : ` by ${NEED_LABEL}`}
+                                </h4>
+                                <ol className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                                    {ranked.map((a) => (
+                                        <li key={a.place}>
+                                            <a
+                                                href={href({ town: a.place })}
+                                                className="block rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-bhg-gray-300"
+                                            >
+                                                <div className="flex justify-between gap-2">
+                                                    <span
+                                                        className={
+                                                            a.place === place
+                                                                ? "font-bold"
+                                                                : ""
+                                                        }
+                                                    >
+                                                        {a.place}
+                                                    </span>
+                                                    <span className="tabular-nums">
+                                                        {layers.impact &&
+                                                            formatPct(
+                                                                a.impactPct!
+                                                            )}
+                                                        {layers.impact &&
+                                                            layers.need &&
+                                                            " · "}
+                                                        {layers.need &&
+                                                            a.need !== null &&
+                                                            `need ${a.need}`}
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 rounded bg-bhg-gray-100">
+                                                    <div
+                                                        className={`h-1.5 rounded ${layers.impact ? "bg-bhg-pink" : "bg-[#56779F]"}`}
+                                                        style={{
+                                                            width: `${Math.max(
+                                                                2,
+                                                                layers.impact
+                                                                    ? a.impactPct!
+                                                                    : (a.need ??
+                                                                          0)
+                                                            )}%`,
+                                                        }}
+                                                    />
+                                                </div>
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                        )}
                     </Card>
                 </Row>
 
@@ -373,7 +614,9 @@ export default async function Impact({
                     note="Current school-year data. The time period filter applies to housing only."
                     stats={
                         <Stat
-                            value={pct(regular.length, studentAda.length)}
+                            value={asPct(
+                                pct(regular.length, studentAda.length)
+                            )}
                             label={`of students we support${where} attend school at least 90% of days.`}
                             className="bg-bhg-yellow-100"
                         />
@@ -390,6 +633,8 @@ export default async function Impact({
 
             <p className="mt-8 text-xs text-gray-500">
                 Groups under {MIN_GROUP_SIZE} are hidden to protect privacy.
+                {NEED.isSample &&
+                    ` Community need figures are sample data for layout only. ${NEED.source}`}
             </p>
         </main>
     );
