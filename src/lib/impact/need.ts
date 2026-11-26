@@ -18,13 +18,22 @@ type Shapes = ExtendedFeatureCollection<
     ExtendedFeature<GeoGeometryObjects, { name: string }>
 >;
 
+/** BHG figures a need metric can be paired with on one shared track. */
+export type PairableStat = "housed" | "attendance";
+
 export type NeedMetric = {
     key: string;
     label: string;
     /** Short form for tooltips and list headers. */
     shortLabel: string;
-    /** Shown after the value, e.g. "%" or "" for an index. */
+    /** Shown after the value, e.g. "%" or "" for an index. Values are 0-100. */
     unit: string;
+    /**
+     * Set only when this metric answers the same question, in the same unit, as
+     * a BHG figure (e.g. area attendance rate vs BHG students' attendance). The
+     * stats column then draws them on one track. Leave unset for anything else.
+     */
+    pairsWith?: PairableStat;
     /** Sample metrics are labeled "Sample data" everywhere they appear. */
     isSample: boolean;
     source: string;
