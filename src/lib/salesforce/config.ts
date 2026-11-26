@@ -56,10 +56,11 @@ export const SF_SOBJECT = envOr("SALESFORCE_SOBJECT", "Account");
 
 /**
  * Optional SOQL `WHERE` filter (without the leading "WHERE") to scope which
- * Account records we pull. Example: `RecordType.DeveloperName = 'Family'`.
- * Leave empty to pull every Account.
+ * Account records we pull. Default verified against BHG's org on 2026-11-08.
+ * An explicitly blank override pulls every Account; reserve that for audits.
  */
-export const SF_QUERY_FILTER = envOrNull("SALESFORCE_QUERY_FILTER", null);
+export const SF_QUERY_FILTER = envOrNull("SALESFORCE_QUERY_FILTER",
+    SF_SOBJECT === "Account" ? "RecordType.DeveloperName = 'FLSI_Household'" : null);
 
 export const FIELD_MAPPINGS: FieldMapping[] = [
     {

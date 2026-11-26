@@ -75,6 +75,7 @@ export function getMockImpactData(): ChartDataSource {
         const housed = rand() < 0.8 ? new Date(intake.getTime() + (30 + rand() * 200) * day) : null;
         return {
             id: i + 1,
+            familyId: `mock-family-${i + 1}`,
             intakeDate: iso(intake),
             dateHoused: housed && housed.getTime() < now ? iso(housed) : null,
             currentStatus: housed ? "housed" : "active",

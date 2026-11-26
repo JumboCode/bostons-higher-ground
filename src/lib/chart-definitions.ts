@@ -1,4 +1,5 @@
 import type { FilterableRecord } from "@/lib/applyFilters";
+import { canonicalFamilies } from "./family-metrics";
 import type { Timeframe } from "@/lib/filterStore";
 import type {
     DonutDatum,
@@ -53,6 +54,8 @@ export type GradeRecord = {
 };
 
 export type StudentRecord = {
+    /** Row's serial key. student_id isn't unique; the highest id is the current row. */
+    id?: number;
     studentId: number;
     schoolName: string;
     gradeLevel: string;
@@ -308,7 +311,7 @@ function getPreferredRecordDate(record: HousingChartRecord) {
     return parseDate(record.intakeDate) ?? parseDate(record.dateHoused);
 }
 
-function filterCommonRecords(
+export function filterCommonRecords(
     records: HousingChartRecord[],
     filters: ChartFilters
 ) {
@@ -395,21 +398,34 @@ function buildTimeSeries(
     if (!range) return [];
 
     const buckets = buildTimeBuckets(range);
-    const counts = new Map(buckets.map((bucket) => [bucket.key, 0]));
+    // Distinct families per period: a family with several records in one
+    // period counts once there, and a family that returns in a later period
+    // also counts in that later period.
+    const families = new Map(buckets.map((bucket) => [bucket.key, new Set<string>()]));
     const granularity = buckets[0]?.granularity ?? "month";
 
     categoryFilteredRecords.forEach((record) => {
+        const family = record.familyId?.trim();
+        if (!family) return;
         const date = getRecordDate(record, field);
         if (!date || !dateInRange(date, range)) return;
 
-        const key = bucketKey(date, granularity);
-        counts.set(key, (counts.get(key) ?? 0) + 1);
+        families.get(bucketKey(date, granularity))?.add(family);
     });
 
     return buckets.map((bucket) => ({
         label: bucket.label,
-        value: counts.get(bucket.key) ?? 0,
+        value: families.get(bucket.key)?.size ?? 0,
     }));
+}
+
+/** Families with at least one record in the filter window, each merged from
+ * only its in-window records. A family that returned for a new intake in this
+ * window appears here with this window's details; earlier windows still see its
+ * earlier episodes. (Merging all records first and then filtering on the
+ * family's earliest intake would hide returning families from recent windows.) */
+function familiesInWindow(records: HousingChartRecord[], filters: ChartFilters) {
+    return canonicalFamilies(filterCommonRecords(records, filters));
 }
 
 function familyIntakeSeries(
@@ -432,13 +448,10 @@ function daysToHouseSeries(
 ): VerticalBarDatum[] {
     const totals = new Map<string, { totalDays: number; count: number }>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
-        if (!record.intakeDate || !record.dateHoused) return;
-
-        const start = new Date(record.intakeDate);
-        const end = new Date(record.dateHoused);
-        const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-        if (!Number.isFinite(days)) return;
+    familiesInWindow(records, filters).forEach((record) => {
+        // Intake and housing from the same record; see FamilyOutcome.daysToHouse.
+        const days = record.daysToHouse;
+        if (days === null) return;
 
         const school = record.school ?? "Unknown";
         const current = totals.get(school) ?? { totalDays: 0, count: 0 };
@@ -462,7 +475,7 @@ function locationSeries(
 ): HorizontalBarDatum[] {
     const cityCounts = new Map<string, { active: number; housed: number }>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    familiesInWindow(records, filters).forEach((record) => {
         if (!record.city) return;
 
         const existing = cityCounts.get(record.city) ?? {
@@ -500,7 +513,7 @@ function partnerSchoolsSeries(
 ): HorizontalBarDatum[] {
     const schoolCounts = new Map<string, { active: number; housed: number }>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    familiesInWindow(records, filters).forEach((record) => {
         if (!record.school || !record.studentCount) return;
 
         const existing = schoolCounts.get(record.school) ?? {
@@ -538,7 +551,7 @@ function schoolsByCitySeries(
 ): HorizontalBarDatum[] {
     const citySchools = new Map<string, Set<string>>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    familiesInWindow(records, filters).forEach((record) => {
         if (!record.city || !record.school) return;
         const current = citySchools.get(record.city) ?? new Set<string>();
         current.add(record.school);
@@ -559,7 +572,7 @@ function studentsByCitySeries(
 ): HorizontalBarDatum[] {
     const cityTotals = new Map<string, number>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
+    familiesInWindow(records, filters).forEach((record) => {
         if (!record.city || !record.studentCount) return;
         const current = cityTotals.get(record.city) ?? 0;
         cityTotals.set(record.city, current + record.studentCount);
@@ -579,10 +592,11 @@ function housingSourcesSeries(
 ): DonutDatum[] {
     const counts = new Map<string, number>();
 
-    filterCommonRecords(records, filters).forEach((record) => {
-        if (record.currentStatus !== "housed" || !record.sourceOfHousing) return;
-        const current = counts.get(record.sourceOfHousing) ?? 0;
-        counts.set(record.sourceOfHousing, current + 1);
+    familiesInWindow(records, filters).forEach((record) => {
+        // From the family's housed record, even if a newer intake is still active.
+        const source = record.housedSource;
+        if (!source) return;
+        counts.set(source, (counts.get(source) ?? 0) + 1);
     });
 
     return Array.from(counts.entries())
