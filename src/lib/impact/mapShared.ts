@@ -1,5 +1,12 @@
-// Map palette + formatting, shared by the server-rendered map and the client legend.
-// No geo/d3 imports here so it stays cheap to bundle on the client.
+// Map palette + formatting, shared by the server-rendered map, the client legend
+// and the stats column. No geo/d3 imports here so it stays cheap to bundle on the client.
+//
+// Two hues, two meanings, everywhere on /impact: pink = BHG's impact (BHG
+// families), blue = community need (the whole area, not BHG families).
+// The ramps share lightness step for step, so neither layer outweighs the other,
+// and step [3] of each is the identity color used for bars and swatches. That
+// pair (#C2405D / #3D6FB0) passes the dataviz palette validator, including CVD
+// separation; the old mid blue (#56779F) read as gray next to the pink.
 
 export const IMPACT = {
     colors: ["#FBD9E0", "#F4A9B8", "#E76C82", "#C2405D", "#86203A"],
@@ -7,9 +14,14 @@ export const IMPACT = {
     cuts: [2, 5, 10, 25],
 };
 export const NEED = {
-    colors: ["#DCE5F1", "#B3C6E0", "#83A1C8", "#56779F", "#33506F"],
+    colors: ["#DAE2F4", "#ACBFE6", "#6F97D7", "#3D6FB0", "#214B7D"],
     cuts: [20, 40, 60, 80],
 };
+/** Identity colors: the bar/swatch color for each side in the stats column. */
+export const SIDE_COLOR = {
+    impact: IMPACT.colors[3],
+    need: NEED.colors[3],
+} as const;
 /** Hatch for areas with some families, but fewer than MIN_GROUP_SIZE. */
 export const HATCH = IMPACT.colors[2];
 // Per-layer opacity: lower when both layers share the map so neither hides the other.

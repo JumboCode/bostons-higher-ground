@@ -44,7 +44,7 @@ export default async function Impact({
 
     // Sample need data never reaches production; without it the map is impact-only.
     const need = publicNeedMetric(SAMPLE_NEED);
-    const { place, timeframe, view, areas, shareOf, otherPlaces, stats } =
+    const { place, timeframe, view, areas, shareOf, otherPlaces, sections } =
         buildImpactView(housing, education, params, need);
     const layer: Layer = !need
         ? "impact"
@@ -90,7 +90,7 @@ export default async function Impact({
                 needEnabled={need !== null}
                 needIsSample={need?.isSample ?? false}
                 minGroupSize={MIN_GROUP_SIZE}
-                stats={stats}
+                sections={sections}
             >
                 <ImpactMap
                     view={view}

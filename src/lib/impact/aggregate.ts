@@ -11,7 +11,6 @@
 //     recover the exact total and every count from the ratios between them.
 // Server-only (places/need import the map shapes).
 
-import type { Bar, ImpactStats } from "@/app/impact/ImpactExplorer";
 import type { MapArea, MapView } from "@/components/ImpactMap";
 import {
     filterCommonRecords,
@@ -24,7 +23,7 @@ import {
 import { canonicalFamilies } from "@/lib/family-metrics";
 import type { Timeframe } from "@/lib/filterStore";
 
-import { averageNeed, type NeedMetric } from "./need";
+import { averageNeed, type NeedMetric, type PairableStat } from "./need";
 import {
     BOSTON,
     BOSTON_NEIGHBORHOODS,
@@ -33,6 +32,7 @@ import {
     placeOf,
     type Place,
 } from "./places";
+import type { MeterRow, StatRow, StatSection } from "./stats";
 
 export const ALL = "all";
 export const TIMEFRAMES: { value: Timeframe; label: string }[] = [
@@ -42,6 +42,8 @@ export const TIMEFRAMES: { value: Timeframe; label: string }[] = [
 ];
 /** "Housed within 6 months". */
 const FAST_DAYS = 183;
+/** Under a suppressed BHG figure. */
+const TOO_FEW = "Too few to show";
 
 /**
  * Whole-number share of `whole`, or null when it is too small to publish.
@@ -87,8 +89,14 @@ export function buildImpactView(
     rawHousing: HousingChartRecord[],
     education: EducationRows,
     query: ImpactQuery,
-    /** null when the need layer is turned off (e.g. sample data in production). */
-    need: NeedMetric | null
+    /** The map's need layer; null when it is turned off (e.g. sample data in production). */
+    need: NeedMetric | null,
+    /**
+     * Area metrics that answer the same question as a BHG figure (`pairsWith`).
+     * Each turns that figure's row into a need/impact pair. Pass only metrics
+     * cleared for publishing (see publicNeedMetric).
+     */
+    pairs: NeedMetric[] = []
 ) {
     const housing = rawHousing.map((h) => ({
         ...h,
@@ -175,19 +183,11 @@ export function buildImpactView(
         view === "state"
             ? "families with a known town"
             : "Boston families with a known neighborhood";
-    const topPlaces: Bar[] = areas
+    const topPlaces = areas
         .filter((a) => a.impactPct !== null)
         .sort((a, b) => b.impactPct! - a.impactPct!)
         .slice(0, 5)
-        .map((a) => ({ name: a.place, pct: a.impactPct! }));
-
-    // ---- Community need ---------------------------------------------------
-    // Compare a neighborhood with Boston, anything else with the state.
-    const needAvg =
-        need &&
-        (selectedHood
-            ? `Boston avg ${averageNeed(need, BOSTON_NEIGHBORHOODS) ?? "—"}`
-            : `MA avg ${averageNeed(need, MA_TOWNS) ?? "—"}`);
+        .map((a) => ({ name: a.place, pct: a.impactPct!, need: a.need }));
 
     // ---- Education (no dates on student rows, so timeframe doesn't apply) --
     const areaStudents = students.filter(inArea);
@@ -208,30 +208,121 @@ export function buildImpactView(
     const regular = studentAda.filter((ada) => ada >= 0.9);
     // Same both-sides rule as the headline stats: a school is listed only if
     // it and the students at other schools each clear the threshold.
-    const schools: Bar[] = [
-        ...countBy(areaStudents, (s) => s.schoolName).entries(),
-    ]
+    const schools = [...countBy(areaStudents, (s) => s.schoolName).entries()]
         .flatMap(([name, n]) => {
             const p = publishablePct(n, areaStudents.length);
-            return p === null ? [] : [{ name, pct: p }];
+            return p === null ? [] : [{ name, pct: p, need: null }];
         })
         .sort((a, b) => b.pct - a.pct)
         .slice(0, 5);
 
-    const stats: ImpactStats = {
-        housed: publishablePct(housed.length, recorded.length),
-        housedFast: publishablePct(housedFast.length, housingDays.length),
-        need: !need
-            ? null
-            : place === ALL
-              ? averageNeed(need, MA_TOWNS)
-              : need.valueFor(place),
-        needLabel:
-            place === ALL ? "Need index (MA avg)" : `Need index (${needAvg})`,
-        attendance: publishablePct(regular.length, studentAda.length),
-        topPlaces,
-        schools,
+    // ---- Stats column -----------------------------------------------------
+    const needOf = (m: NeedMetric) =>
+        place === ALL ? averageNeed(m, MA_TOWNS) : m.valueFor(place);
+    // BHG figure, or a need/impact pair when a metric answers the same question.
+    const impactOrPair = (
+        stat: PairableStat,
+        label: string,
+        value: number | null
+    ): StatRow => {
+        const metric = pairs.find((m) => m.pairsWith === stat);
+        return metric
+            ? {
+                  kind: "pair",
+                  id: stat,
+                  label,
+                  unit: "%",
+                  need: needOf(metric),
+                  impact: value,
+                  needLabel: place === ALL ? "MA" : "Area",
+                  impactLabel: "BHG",
+                  emptyText: TOO_FEW,
+                  sample: metric.isSample,
+              }
+            : ({
+                  kind: "meter",
+                  id: stat,
+                  label,
+                  side: "impact",
+                  value,
+                  unit: "%",
+                  emptyText: TOO_FEW,
+              } satisfies MeterRow);
     };
+
+    const housingRows: StatRow[] = [];
+    if (need) {
+        // A neighborhood compares with Boston, anything else with the state.
+        // With all of MA selected the bar already is the average: no tick.
+        const avg = selectedHood
+            ? {
+                  label: "Boston avg",
+                  value: averageNeed(need, BOSTON_NEIGHBORHOODS),
+              }
+            : { label: "MA avg", value: averageNeed(need, MA_TOWNS) };
+        housingRows.push({
+            kind: "meter",
+            id: "need",
+            label: place === ALL ? `${need.label}, MA average` : need.label,
+            side: "need",
+            value: needOf(need),
+            unit: need.unit,
+            ref:
+                place !== ALL && avg.value !== null
+                    ? { label: avg.label, value: avg.value }
+                    : undefined,
+            emptyText: "No data",
+            sample: need.isSample,
+        });
+    }
+    housingRows.push(
+        impactOrPair(
+            "housed",
+            "Families housed",
+            publishablePct(housed.length, recorded.length)
+        ),
+        {
+            kind: "meter",
+            id: "housedFast",
+            label: "Housed within 6 months",
+            note: "of housed",
+            side: "impact",
+            value: publishablePct(housedFast.length, housingDays.length),
+            unit: "%",
+            nested: true,
+            emptyText: TOO_FEW,
+        },
+        {
+            kind: "list",
+            id: "topPlaces",
+            title: "Where BHG families live",
+            items: topPlaces,
+            selectable: true,
+            showNeed: need !== null,
+        }
+    );
+
+    const sections: StatSection[] = [
+        { title: "Housing", rows: housingRows },
+        {
+            title: "Education",
+            rows: [
+                impactOrPair(
+                    "attendance",
+                    "Students at 90%+ attendance",
+                    publishablePct(regular.length, studentAda.length)
+                ),
+                {
+                    kind: "list",
+                    id: "schools",
+                    title: "Students by school",
+                    items: schools,
+                    selectable: false,
+                    showNeed: false,
+                },
+            ],
+        },
+    ];
 
     return {
         place,
@@ -240,6 +331,6 @@ export function buildImpactView(
         areas,
         shareOf,
         otherPlaces,
-        stats,
+        sections,
     };
 }

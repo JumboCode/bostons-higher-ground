@@ -6,15 +6,7 @@
 // history.replaceState); place/timeframe changes router.replace so the server
 // recomputes stats without a full page reload.
 
-import {
-    ArrowLeft,
-    Clock,
-    Gauge,
-    GraduationCap,
-    House,
-    Layers,
-    X,
-} from "lucide-react";
+import { ArrowLeft, Layers, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
     useOptimistic,
@@ -37,8 +29,10 @@ import {
     tint,
     type Layer,
 } from "@/lib/impact/mapShared";
+import type { StatSection } from "@/lib/impact/stats";
 
 import FilterSelect, { type SelectItem } from "./FilterSelect";
+import { SampleBadge, StatKey, StatSectionCard } from "./StatRows";
 
 const LAYER_LABEL: Record<Layer, string> = {
     both: "Both",
@@ -47,133 +41,9 @@ const LAYER_LABEL: Record<Layer, string> = {
 };
 const ALL = "all";
 
-export type Bar = { name: string; pct: number };
-export type ImpactStats = {
-    housed: number | null;
-    housedFast: number | null;
-    need: number | null;
-    /** e.g. "Need index (MA avg 54)" */
-    needLabel: string;
-    attendance: number | null;
-    /** Top places in the current map view, by share of families. */
-    topPlaces: Bar[];
-    schools: Bar[];
-};
-
 type Card = { place: string; x: number; y: number };
 
 const panel = "rounded-lg bg-white/90 shadow-md backdrop-blur-sm";
-
-function SampleBadge() {
-    return (
-        <span className="rounded bg-bhg-yellow-100 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-bhg-gray-300 ring-1 ring-bhg-yellow">
-            Sample
-        </span>
-    );
-}
-
-function Stat({
-    value,
-    label,
-    icon: Icon,
-    className,
-    badge,
-    emptyText = "Too few to show",
-}: {
-    value: string | null;
-    label: string;
-    icon: typeof House;
-    className: string;
-    badge?: React.ReactNode;
-    /** Shown under "—" when value is null. */
-    emptyText?: string;
-}) {
-    return (
-        <div className={`relative rounded-xl p-4 ${className}`}>
-            <Icon
-                size={18}
-                aria-hidden
-                className="absolute right-3 top-3 opacity-50"
-            />
-            <p className="text-3xl font-bold tabular-nums md:text-4xl">
-                {value ?? "—"}
-            </p>
-            <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-medium">
-                {label}
-                {badge}
-            </p>
-            {value === null && (
-                <p className="mt-0.5 text-[11px] opacity-70">{emptyText}</p>
-            )}
-        </div>
-    );
-}
-
-function Bars({
-    title,
-    bars,
-    color,
-    selected,
-    onSelect,
-}: {
-    title: string;
-    bars: Bar[];
-    color: string;
-    selected?: string;
-    onSelect?: (name: string) => void;
-}) {
-    if (!bars.length) return null;
-    const max = Math.max(...bars.map((b) => b.pct));
-    return (
-        <div className="col-span-2 rounded-xl bg-white p-4">
-            <h3 className="mb-2 text-xs font-semibold">{title}</h3>
-            <ol className="space-y-1.5 text-xs">
-                {bars.map((b) => {
-                    const body = (
-                        <>
-                            <span className="flex justify-between gap-2">
-                                <span
-                                    className={`truncate ${b.name === selected ? "font-bold" : ""}`}
-                                >
-                                    {b.name}
-                                </span>
-                                <span className="tabular-nums">
-                                    {formatPct(b.pct)}
-                                </span>
-                            </span>
-                            <span className="mt-0.5 block h-2 rounded-full bg-bhg-gray-100">
-                                <span
-                                    className="block h-2 rounded-full transition-[width] duration-300"
-                                    // Scaled to the largest bar so small shares stay visible.
-                                    style={{
-                                        width: `${Math.max(3, (b.pct / max) * 100)}%`,
-                                        background: color,
-                                    }}
-                                />
-                            </span>
-                        </>
-                    );
-                    return (
-                        <li key={b.name}>
-                            {onSelect ? (
-                                <button
-                                    type="button"
-                                    onClick={() => onSelect(b.name)}
-                                    aria-pressed={b.name === selected}
-                                    className="block w-full rounded text-left hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-bhg-gray-300"
-                                >
-                                    {body}
-                                </button>
-                            ) : (
-                                body
-                            )}
-                        </li>
-                    );
-                })}
-            </ol>
-        </div>
-    );
-}
 
 function GradientRow({
     title,
@@ -222,7 +92,7 @@ export default function ImpactExplorer({
     needEnabled,
     needIsSample,
     minGroupSize,
-    stats,
+    sections,
 }: {
     /** The server-rendered <ImpactMap> SVG. */
     children: React.ReactNode;
@@ -243,7 +113,8 @@ export default function ImpactExplorer({
     needIsSample: boolean;
     /** Privacy threshold (MIN_GROUP_SIZE), for the "Under N families" labels. */
     minGroupSize: number;
-    stats: ImpactStats;
+    /** The stats column: Housing (beside the map), then Education (below it on phones). */
+    sections: StatSection[];
 }) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
@@ -345,7 +216,11 @@ export default function ImpactExplorer({
             }
           : {};
 
-    const statsGrid = `grid grid-cols-2 content-start gap-3 transition-opacity ${pending ? "opacity-60" : ""}`;
+    const statsCol = `flex flex-col gap-4 transition-opacity ${pending ? "opacity-60" : ""}`;
+    const selectPlace = (name: string) => go({ place: name });
+    const [housing, ...rest] = sections;
+    const timeframeLabel =
+        timeframes.find((t) => t.value === shown.timeframe)?.label ?? "";
 
     const filters = (
         <div className="flex gap-2">
@@ -379,53 +254,43 @@ export default function ImpactExplorer({
             {/* ---- Stats column. Phones: housing above the map, education below. ---- */}
             <section
                 aria-busy={pending}
-                className={`${statsGrid} lg:col-start-2 lg:row-start-1`}
+                aria-label="Statistics"
+                className={`${statsCol} lg:col-start-2 lg:row-start-1`}
             >
-                {shown.place !== ALL && (
-                    <button
-                        type="button"
-                        onClick={() => go({ place: ALL })}
-                        aria-label={`Clear ${shown.place}, show all of Massachusetts`}
-                        className="col-span-2 inline-flex items-center gap-1 justify-self-start rounded-full bg-bhg-gray-300 py-1 pl-3 pr-2 text-xs font-semibold text-white hover:bg-black"
-                    >
-                        {shown.place}
-                        <X size={14} aria-hidden />
-                    </button>
-                )}
-                <h2 className="col-span-2 text-xl font-semibold">Housing</h2>
-                {needEnabled && (
-                    <Stat
-                        value={stats.need === null ? null : String(stats.need)}
-                        label={stats.needLabel}
-                        icon={Gauge}
-                        badge={needIsSample && <SampleBadge />}
-                        emptyText="No data"
-                        className="col-span-2 bg-[#E3EAF4]"
+                {/* Which place and period every number below describes, and the
+                    color key that ties the column to the map. */}
+                <header className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="text-base font-semibold">
+                            {shown.place === ALL
+                                ? "All of Massachusetts"
+                                : shown.place}
+                            <span className="font-normal text-gray-600">
+                                {" "}
+                                · {timeframeLabel}
+                            </span>
+                        </p>
+                        {shown.place !== ALL && (
+                            <button
+                                type="button"
+                                onClick={() => go({ place: ALL })}
+                                aria-label={`Clear ${shown.place}, show all of Massachusetts`}
+                                className="rounded-full p-1 hover:bg-bhg-gray-100"
+                            >
+                                <X size={16} aria-hidden />
+                            </button>
+                        )}
+                    </div>
+                    {/* One series needs no key: with need off, every bar is BHG's. */}
+                    {needEnabled && <StatKey />}
+                </header>
+                {housing && (
+                    <StatSectionCard
+                        section={housing}
+                        selected={shown.place}
+                        onSelect={selectPlace}
                     />
                 )}
-                <Stat
-                    value={stats.housed === null ? null : `${stats.housed}%`}
-                    label="Families housed"
-                    icon={House}
-                    className="bg-bhg-pink-100"
-                />
-                <Stat
-                    value={
-                        stats.housedFast === null
-                            ? null
-                            : `${stats.housedFast}%`
-                    }
-                    label="Housed within 6 months"
-                    icon={Clock}
-                    className="bg-bhg-mint-100"
-                />
-                <Bars
-                    title="Where families live"
-                    bars={stats.topPlaces}
-                    color={IMPACT.colors[2]}
-                    selected={shown.place}
-                    onSelect={(name) => go({ place: name })}
-                />
             </section>
 
             {/* ---- Map ---- */}
@@ -579,24 +444,17 @@ export default function ImpactExplorer({
 
             <section
                 aria-busy={pending}
-                className={`${statsGrid} lg:col-start-2 lg:row-start-2`}
+                aria-label="More statistics"
+                className={`${statsCol} lg:col-start-2 lg:row-start-2`}
             >
-                <h2 className="col-span-2 text-xl font-semibold">Education</h2>
-                <Stat
-                    value={
-                        stats.attendance === null
-                            ? null
-                            : `${stats.attendance}%`
-                    }
-                    label="Students at 90%+ attendance"
-                    icon={GraduationCap}
-                    className="col-span-2 bg-bhg-yellow-100"
-                />
-                <Bars
-                    title="Students by school"
-                    bars={stats.schools}
-                    color="#F5CB6A"
-                />
+                {rest.map((section) => (
+                    <StatSectionCard
+                        key={section.title}
+                        section={section}
+                        selected={shown.place}
+                        onSelect={selectPlace}
+                    />
+                ))}
             </section>
         </div>
     );
