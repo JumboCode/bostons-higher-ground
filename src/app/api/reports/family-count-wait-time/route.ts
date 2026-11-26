@@ -4,6 +4,7 @@ import { filterRecords } from "@/lib/applyFilters";
 import { auth } from "@/lib/auth";
 import { parseFilters } from "@/lib/generateChart";
 import { getAllData } from "@/lib/getAllData";
+import { canonicalFamilies } from "@/lib/family-metrics";
 
 // Filtered family count + average intake-to-housed wait time for the overview, computed server-side so raw housing rows stay off the client.
 export async function POST(request: Request) {
@@ -19,23 +20,19 @@ export async function POST(request: Request) {
         typeof body?.filters === "string" ? body.filters : null
     );
 
-    const filtered = filterRecords(await getAllData(), {
+    // Filter records first, then merge each family's in-window records, so a
+    // family that returned for a new intake in the window is still counted.
+    const filtered = canonicalFamilies(filterRecords(await getAllData(), {
         selectedLocations: parsed.selectedLocations ?? [],
         selectedSchools: parsed.selectedSchools ?? [],
         timeframe: parsed.timeframe ?? "allTime",
         fiscalYear: parsed.fiscalYear,
         customRange: parsed.customRange as DateRange | undefined,
-    });
+    }));
 
+    // Intake and housing from the same record (never across two intake episodes).
     const waitTimes = filtered
-        .map((record) => {
-            if (!record.intakeDate || !record.dateHoused) return null;
-            const days =
-                (new Date(record.dateHoused).getTime() -
-                    new Date(record.intakeDate).getTime()) /
-                (1000 * 60 * 60 * 24);
-            return Number.isFinite(days) ? days : null;
-        })
+        .map((record) => record.daysToHouse)
         .filter((days): days is number => days !== null);
 
     return Response.json({

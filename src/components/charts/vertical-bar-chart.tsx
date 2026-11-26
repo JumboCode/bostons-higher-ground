@@ -111,7 +111,7 @@ export function VerticalBarChart({
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                     dataKey="value"
-                    fill="var(--color-value)"
+                    fill={barColor}
                     radius={[chartTheme.barRadius, chartTheme.barRadius, 0, 0]}
                 />
             </BarChart>

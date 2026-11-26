@@ -18,6 +18,7 @@
 
 import { db } from "@/lib/db";
 import { housingRecords, syncLog } from "@/lib/schema";
+import { isMissingColumnError } from "@/lib/sync-log";
 import type { BatchItem } from "drizzle-orm/batch";
 import { eq } from "drizzle-orm";
 import { getSalesforceConnection } from "./client";
@@ -35,6 +36,7 @@ type ResolvedMapping = FieldMapping & { sfField: string };
 export type SyncOutcome = {
     rowsSynced: number;
     rowsSkipped: number;
+    skippedRecordIds: string[];
     missingFields: string[];
 };
 
@@ -56,6 +58,21 @@ export async function runSalesforceSync(logId: string): Promise<SyncOutcome> {
                 missingFields: outcome.missingFields,
             })
             .where(eq(syncLog.id, logId));
+        // Separate, best-effort write: the skipped-ID list is diagnostics only.
+        // Before migration 0006 the column does not exist, and no failure here
+        // may turn an already-recorded successful sync into a failed one.
+        try {
+            await db
+                .update(syncLog)
+                .set({ skippedRecordIds: outcome.skippedRecordIds })
+                .where(eq(syncLog.id, logId));
+        } catch (err) {
+            console.warn(
+                isMissingColumnError(err)
+                    ? "[salesforce sync] skipped_record_ids column missing; apply migration 0006"
+                    : "[salesforce sync] could not record skipped Salesforce IDs"
+            );
+        }
         return outcome;
     } catch (err) {
         const message =
@@ -113,7 +130,7 @@ async function doSync(): Promise<SyncOutcome> {
     }
 
     // 2. Build & run the SOQL query (paged).
-    const projection = resolvedMappings.map((m) => m.sfField).join(", ");
+    const projection = [...new Set(["Id", ...resolvedMappings.map((m) => m.sfField)])].join(", ");
     const where = SF_QUERY_FILTER ? ` WHERE ${SF_QUERY_FILTER}` : "";
     const soql = `SELECT ${projection} FROM ${SF_SOBJECT}${where}`;
 
@@ -130,9 +147,15 @@ async function doSync(): Promise<SyncOutcome> {
     // 3. Coerce SF records → housing_records rows. Skip records missing the
     //    required familyId (otherwise the NOT NULL insert will fail and tank
     //    the whole sync).
-    const rows = records
-        .map((r) => mapSfRecord(r, resolvedMappings))
-        .filter((row): row is HousingRow => row !== null);
+    const rows: HousingRow[] = [];
+    const skippedRecordIds: string[] = [];
+    for (const record of records) {
+        const row = mapSfRecord(record, resolvedMappings);
+        if (row) rows.push(row);
+        else if (typeof record.Id === "string" && /^[a-zA-Z0-9]{15}(?:[a-zA-Z0-9]{3})?$/.test(record.Id)) {
+            skippedRecordIds.push(record.Id);
+        }
+    }
 
     // 4. Truncate + bulk insert atomically.
     //    neon-http does not support interactive transactions (db.transaction);
@@ -153,6 +176,7 @@ async function doSync(): Promise<SyncOutcome> {
     return {
         rowsSynced: rows.length,
         rowsSkipped: records.length - rows.length,
+        skippedRecordIds: [...new Set(skippedRecordIds)],
         missingFields,
     };
 }
