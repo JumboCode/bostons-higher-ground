@@ -1,5 +1,6 @@
-// Map palette + formatting, shared by the server-rendered map, the client legend
-// and the stats column. No geo/d3 imports here so it stays cheap to bundle on the client.
+// Map types, palette + formatting, shared by the server aggregation, the map,
+// the client legend and the stats column. No geo/d3 imports here (and no map
+// geometry: that's mapGeometry.ts) so it stays cheap to bundle on the client.
 //
 // Two hues, two meanings, everywhere on /impact: pink = BHG's impact (BHG
 // families), blue = community need (the whole area, not BHG families).
@@ -7,7 +8,20 @@
 // swatches. That pair (#C2405D / #3D6FB0) passes the dataviz palette validator,
 // including CVD separation; the old mid blue (#56779F) read as gray next to the pink.
 
-import type { MapView } from "@/components/ImpactMap";
+export type MapView = "state" | "boston";
+/** One map area's published figures. Built on the server (aggregate.ts). */
+export type MapArea = {
+    place: string;
+    /** Share of families as a whole-number percent, or null if not published. */
+    impactPct: number | null;
+    /** Fewer than MIN_GROUP_SIZE families: a small hollow ring, never a number. */
+    impactSmall: boolean;
+    /** Enough families, but too few elsewhere to publish a share: no fill. */
+    impactHidden: boolean;
+    need: number | null;
+    /** Filter link, or null if the area can't be selected. */
+    href: string | null;
+};
 
 /** The "All of Massachusetts" place value, in the URL and the place filter. */
 export const ALL = "all";

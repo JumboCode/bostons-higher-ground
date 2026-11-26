@@ -1,6 +1,6 @@
 "use client";
 
-// Interactive shell around the server-rendered map: layer toggle, filters, legend,
+// Interactive shell around the map: layer toggle, filters, legend,
 // hover card and the infographic stats column. All numbers arrive pre-aggregated
 // (and privacy-suppressed) from page.tsx. Layer switching is client-only (URL via
 // history.replaceState); place/timeframe changes router.replace so the server
@@ -17,8 +17,9 @@ import {
     type PointerEvent,
 } from "react";
 
-import type { MapArea, MapView } from "@/components/ImpactMap";
+import ImpactMap from "@/components/ImpactMap";
 import MapZoom from "@/components/MapZoom";
+import { BOSTON_ORIGIN, mapAspect } from "@/lib/impact/mapGeometry";
 import {
     ALL,
     BOSTON,
@@ -28,6 +29,8 @@ import {
     NEED,
     SIDE_COLOR,
     type Layer,
+    type MapArea,
+    type MapView,
 } from "@/lib/impact/mapShared";
 import type { StatSection } from "@/lib/impact/stats";
 
@@ -112,10 +115,7 @@ function ImpactLegend({ minGroupSize }: { minGroupSize: number }) {
 }
 
 export default function ImpactExplorer({
-    children,
     view,
-    aspect,
-    bostonOrigin,
     neighborhoods,
     place,
     timeframe,
@@ -127,14 +127,10 @@ export default function ImpactExplorer({
     needIsSample,
     minGroupSize,
     sections,
+    needLabel,
+    shareOf,
 }: {
-    /** The server-rendered <ImpactMap> SVG. */
-    children: React.ReactNode;
     view: MapView;
-    /** CSS aspect-ratio of the map's viewBox. */
-    aspect: string;
-    /** Boston's position on the state map, as a transform-origin. */
-    bostonOrigin: string;
     neighborhoods: string[];
     place: string;
     timeframe: string;
@@ -149,6 +145,10 @@ export default function ImpactExplorer({
     minGroupSize: number;
     /** The stats column: Housing (beside the map), then Education (below it on phones). */
     sections: StatSection[];
+    /** Need metric name for the map's screen-reader text, e.g. "need index (sample)". */
+    needLabel: string;
+    /** What the map's impact shares are of, e.g. "families with a known town". */
+    shareOf: string;
 }) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
@@ -242,14 +242,14 @@ export default function ImpactExplorer({
             ? {
                   transform: view === "state" ? "scale(3)" : "scale(0.6)",
                   opacity: 0.3,
-                  transformOrigin: view === "state" ? bostonOrigin : "50% 50%",
+                  transformOrigin: view === "state" ? BOSTON_ORIGIN : "50% 50%",
                   transition: "transform 400ms ease-in, opacity 400ms",
               }
             : phase === "enter"
               ? {
                     animation: `impact-map-in-${view} 450ms ease-out`,
                     transformOrigin:
-                        view === "state" ? bostonOrigin : "50% 50%",
+                        view === "state" ? BOSTON_ORIGIN : "50% 50%",
                 }
               : {};
 
@@ -281,13 +281,6 @@ export default function ImpactExplorer({
             data-layer={layer}
             className="impact-anim grid grid-cols-1 gap-4 text-bhg-gray-300 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr]"
         >
-            {shown.place !== ALL && (
-                // Selection outline, drawn client-side so it appears instantly.
-                // "Other places" come from free-text Salesforce cities, so escape
-                // "<" (CSS \3c) as well as quotes: the name can't close the tag.
-                <style>{`.impact-map .hit[data-place=${JSON.stringify(shown.place).replace(/</g, "\\3c ")}] use { stroke: #111; stroke-width: 3px; }`}</style>
-            )}
-
             {/* ---- Stats column. Phones: housing above the map, education below. ---- */}
             <section
                 aria-busy={pending}
@@ -345,10 +338,19 @@ export default function ImpactExplorer({
                     onBlur={() => setCard(null)}
                     onClick={onClick}
                 >
-                    <MapZoom key={view} aspect={aspect}>
+                    <MapZoom key={view} aspect={mapAspect(view)}>
                         {/* overflow-hidden: the drill zoom must not add scrollbars */}
                         <div className="overflow-hidden">
-                            <div style={mapStyle}>{children}</div>
+                            <div style={mapStyle}>
+                                <ImpactMap
+                                    view={view}
+                                    areas={areas}
+                                    selected={shown.place}
+                                    needLabel={needLabel}
+                                    shareOf={shareOf}
+                                    minGroupSize={minGroupSize}
+                                />
+                            </div>
                         </div>
                     </MapZoom>
 

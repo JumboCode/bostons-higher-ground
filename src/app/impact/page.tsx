@@ -4,11 +4,10 @@
     Purpose: public-facing summary of BHG's impact, next to community need.
     Everything is computed on the server (src/lib/impact/aggregate.ts), where
     the privacy rules live; the browser only receives whole-number percentages
-    and map paths. ImpactExplorer (client) handles layers, hover and selection.
+    (map paths ship once, in the client bundle). ImpactExplorer (client) handles layers, hover and selection.
     Public filters live in the URL (?town=&timeframe=&layer=).
 */
 
-import ImpactMap, { BOSTON_ORIGIN, mapAspect } from "@/components/ImpactMap";
 import {
     MIN_GROUP_SIZE,
     type HousingChartRecord,
@@ -77,8 +76,6 @@ export default async function Impact({
 
             <ImpactExplorer
                 view={view}
-                aspect={mapAspect(view)}
-                bostonOrigin={BOSTON_ORIGIN}
                 neighborhoods={BOSTON_NEIGHBORHOODS}
                 place={place}
                 timeframe={timeframe}
@@ -90,19 +87,13 @@ export default async function Impact({
                 needIsSample={need?.isSample ?? false}
                 minGroupSize={MIN_GROUP_SIZE}
                 sections={sections}
-            >
-                <ImpactMap
-                    view={view}
-                    areas={areas}
-                    selected={place}
-                    needLabel={
-                        need
-                            ? `${need.shortLabel}${need.isSample ? " (sample)" : ""}`
-                            : ""
-                    }
-                    shareOf={shareOf}
-                />
-            </ImpactExplorer>
+                needLabel={
+                    need
+                        ? `${need.shortLabel}${need.isSample ? " (sample)" : ""}`
+                        : ""
+                }
+                shareOf={shareOf}
+            />
 
             {/* Wording pending BHG sign-off (the hollow ring reveals that 1–9 families live there). */}
             <p className="mt-6 text-xs text-gray-500">

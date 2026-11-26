@@ -6,7 +6,8 @@
 // Sources (public ArcGIS feature services):
 //   - MassGIS "Massachusetts Municipalities with Generalized Coast": all 351 towns.
 //   - Boston Planning Dept. "BPDA Neighborhoods": 26 areas, folded into 23 below.
-// Output: src/lib/geo/ma-towns.json, src/lib/geo/boston-neighborhoods.json
+// Output: src/lib/geo/ma-towns.json, src/lib/geo/boston-neighborhoods.json,
+// then src/lib/geo/map-paths.json (projected paths for the map; see build-map-paths.mjs).
 //
 // d3-geo wants polygon rings wound the opposite way to RFC 7946 GeoJSON. A ring
 // wound the wrong way renders as "the whole globe minus this town", so every
@@ -137,3 +138,6 @@ mapshaper([
     "precision=0.0001",
 ]);
 finish(hoodsOut, "boston-neighborhoods.json");
+
+// The map draws pre-projected paths, so rebuild them from the new shapes.
+await import("./build-map-paths.mjs");

@@ -13,7 +13,6 @@
 //     recover the exact total and every count from the ratios between them.
 // Server-only (places/need import the map shapes).
 
-import type { MapArea, MapView } from "@/components/ImpactMap";
 import {
     filterCommonRecords,
     MIN_GROUP_SIZE,
@@ -25,7 +24,7 @@ import {
 import { canonicalFamilies } from "@/lib/family-metrics";
 import type { Timeframe } from "@/lib/filterStore";
 
-import { ALL, BOSTON } from "./mapShared";
+import { ALL, BOSTON, type MapArea, type MapView } from "./mapShared";
 import { averageNeed, type NeedMetric } from "./need";
 import {
     BOSTON_NEIGHBORHOODS,
