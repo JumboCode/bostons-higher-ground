@@ -7,6 +7,13 @@
 // swatches. That pair (#C2405D / #3D6FB0) passes the dataviz palette validator,
 // including CVD separation; the old mid blue (#56779F) read as gray next to the pink.
 
+import type { MapView } from "@/components/ImpactMap";
+
+/** The "All of Massachusetts" place value, in the URL and the place filter. */
+export const ALL = "all";
+/** The one town that drills down into neighborhoods. */
+export const BOSTON = "Boston";
+
 export const IMPACT = {
     colors: ["#FBD9E0", "#F4A9B8", "#E76C82", "#C2405D", "#86203A"],
 };
@@ -41,3 +48,21 @@ export const formatPct = (pct: number) =>
 
 export const LAYERS = ["both", "impact", "need"] as const;
 export type Layer = (typeof LAYERS)[number];
+
+/**
+ * Drill-down animation for the map (state <-> Boston).
+ * `leaving` is the view a click is moving away from (null if the click stays
+ * in the same view). While the server works, the old map zooms out ("exit");
+ * once the new view arrives it animates in ("enter"). If the new view never
+ * arrives (a newer click went back, or navigation failed), the exit ends with
+ * the transition, so the map can't get stuck zoomed out.
+ */
+export function drillPhase(
+    leaving: MapView | null,
+    view: MapView,
+    pending: boolean
+): "exit" | "enter" | null {
+    if (!leaving) return null;
+    if (leaving === view) return pending ? "exit" : null;
+    return "enter";
+}

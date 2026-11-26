@@ -20,6 +20,7 @@ import neighborhoodShapes from "@/lib/geo/boston-neighborhoods.json";
 import townShapes from "@/lib/geo/ma-towns.json";
 import { MIN_GROUP_SIZE } from "@/lib/chart-definitions";
 import {
+    BOSTON,
     formatPct,
     impactRadius,
     NEED,
@@ -49,7 +50,7 @@ export type MapArea = {
 const BORDER = "#3F3F3F";
 // Always labeled on the state map, spread across MA so visitors can orient themselves.
 const LANDMARKS = [
-    "Boston",
+    BOSTON,
     "Worcester",
     "Springfield",
     "Pittsfield",
@@ -115,7 +116,7 @@ export const mapAspect = (view: MapView) =>
 
 /** Boston's centre as a CSS transform-origin on the state map, for the drill-down zoom. */
 export const BOSTON_ORIGIN = (() => {
-    const b = GEOMETRY.state.find((s) => s.name === "Boston");
+    const b = GEOMETRY.state.find((s) => s.name === BOSTON);
     const { w, h } = VIEWS.state;
     return b
         ? `${((b.centroid[0] / w) * 100).toFixed(1)}% ${((b.centroid[1] / h) * 100).toFixed(1)}%`
@@ -254,7 +255,7 @@ export default function ImpactMap({
             {view === "state" && (
                 // Boston drills down, so give it a stronger outline.
                 <use
-                    href={`#${shapes.find((s) => s.name === "Boston")?.id}`}
+                    href={`#${shapes.find((s) => s.name === BOSTON)?.id}`}
                     fill="none"
                     stroke={BORDER}
                     strokeWidth={2}

@@ -1,7 +1,7 @@
 // The /impact stats column: one white card per section, every value on a
 // 0-100 track. Blue = community need (the whole area), pink = BHG families,
 // matching the map. Numbers stay in text color; the bar beside a number says
-// which side it belongs to, and pairs are also labeled ("Area" / "BHG") so
+// which side it belongs to, and every row's label names what it measures, so
 // identity never rests on color alone. Bars are aria-hidden: the label and the
 // number next to each one are real text.
 // Plain components (no hooks), rendered inside the client ImpactExplorer.
@@ -10,7 +10,6 @@ import { formatPct, SIDE_COLOR } from "@/lib/impact/mapShared";
 import type {
     ListRow,
     MeterRow,
-    PairRow,
     Side,
     StatRow,
     StatSection,
@@ -141,40 +140,6 @@ function Meter({ row }: { row: MeterRow }) {
     );
 }
 
-function Pair({ row }: { row: PairRow }) {
-    const lines = [
-        { side: "need" as const, label: row.needLabel, value: row.need },
-        { side: "impact" as const, label: row.impactLabel, value: row.impact },
-    ];
-    return (
-        <div>
-            <p className="mb-2 flex flex-wrap items-center gap-1.5 text-xs font-medium">
-                {row.label}
-                {row.sample && <SampleBadge />}
-            </p>
-            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_3rem] items-center gap-x-2 gap-y-2">
-                {lines.map((l) => (
-                    <div key={l.side} className="contents">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold">
-                            <Swatch side={l.side} round />
-                            {l.label}
-                        </span>
-                        <Track value={l.value} side={l.side} />
-                        <span className="text-right text-lg font-bold leading-none">
-                            {show(l.value, row.unit)}
-                        </span>
-                    </div>
-                ))}
-            </div>
-            {row.impact === null && (
-                <p className="mt-1.5 text-[11px] text-gray-600">
-                    {row.impactLabel}: {row.emptyText}
-                </p>
-            )}
-        </div>
-    );
-}
-
 function List({
     row,
     selected,
@@ -203,6 +168,11 @@ function List({
                     </span>
                 )}
             </div>
+            {row.note && (
+                <p className="-mt-1 mb-1.5 text-[11px] text-gray-600">
+                    {row.note}
+                </p>
+            )}
             <ol className="text-xs">
                 {row.items.map((item) => {
                     const isSelected = item.name === selected;
@@ -260,7 +230,6 @@ function Row(props: {
 }) {
     const { row } = props;
     if (row.kind === "meter") return <Meter row={row} />;
-    if (row.kind === "pair") return <Pair row={row} />;
     return <List {...props} row={row} />;
 }
 
@@ -276,7 +245,12 @@ export function StatSectionCard({
 }) {
     return (
         <div>
-            <h2 className="mb-2 text-xl font-semibold">{section.title}</h2>
+            <div className="mb-2">
+                <h2 className="text-xl font-semibold">{section.title}</h2>
+                {section.note && (
+                    <p className="text-xs text-gray-600">{section.note}</p>
+                )}
+            </div>
             <div className="space-y-5 rounded-xl bg-white p-4 shadow-sm">
                 {section.rows.map((row) => (
                     <Row

@@ -1,12 +1,11 @@
 /*
-    Author: Alex Vu
-    Date: 10/23/26
+    Original author: Alex Vu (later contributors: see git history)
 
     Purpose: public-facing summary of BHG's impact, next to community need.
-    Everything is computed on the server (src/lib/impact/aggregate.ts); the
-    browser only receives whole-number percentages and map paths. ImpactExplorer
-    (client) handles layers, hover and selection. Public filters live in the URL
-    (?town=&timeframe=&layer=).
+    Everything is computed on the server (src/lib/impact/aggregate.ts), where
+    the privacy rules live; the browser only receives whole-number percentages
+    and map paths. ImpactExplorer (client) handles layers, hover and selection.
+    Public filters live in the URL (?town=&timeframe=&layer=).
 */
 
 import ImpactMap, { BOSTON_ORIGIN, mapAspect } from "@/components/ImpactMap";
@@ -16,8 +15,8 @@ import {
 } from "@/lib/chart-definitions";
 import { getAllData } from "@/lib/getAllData";
 import { getEducationData } from "@/lib/getEducationData";
-import { ALL, buildImpactView, TIMEFRAMES } from "@/lib/impact/aggregate";
-import { LAYERS, type Layer } from "@/lib/impact/mapShared";
+import { buildImpactView, TIMEFRAMES } from "@/lib/impact/aggregate";
+import { ALL, LAYERS, type Layer } from "@/lib/impact/mapShared";
 import { publicNeedMetric, SAMPLE_NEED } from "@/lib/impact/need";
 import { BOSTON_NEIGHBORHOODS, MA_TOWNS } from "@/lib/impact/places";
 

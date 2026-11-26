@@ -9,6 +9,8 @@ export const getEducationData = unstable_cache(
         const [students, grades, attendance] = await Promise.all([
             db.query.students.findMany({
                 columns: {
+                    // Row key: picks a student's current row (see currentStudents).
+                    id: true,
                     studentId: true,
                     schoolName: true,
                     gradeLevel: true,

@@ -20,6 +20,9 @@ import {
 import type { MapArea, MapView } from "@/components/ImpactMap";
 import MapZoom from "@/components/MapZoom";
 import {
+    ALL,
+    BOSTON,
+    drillPhase,
     formatPct,
     LAYERS,
     NEED,
@@ -36,7 +39,6 @@ const LAYER_LABEL: Record<Layer, string> = {
     impact: "Impact",
     need: "Need",
 };
-const ALL = "all";
 
 type Card = { place: string; x: number; y: number };
 
@@ -162,7 +164,7 @@ export default function ImpactExplorer({
     const showNeed = needEnabled && layer !== "impact";
     const byPlace = new Map(areas.map((a) => [a.place, a]));
     const viewOf = (t: string): MapView =>
-        t === "Boston" || neighborhoods.includes(t) ? "boston" : "state";
+        t === BOSTON || neighborhoods.includes(t) ? "boston" : "state";
 
     const url = (q: URLSearchParams) =>
         `${window.location.pathname}${q.size ? `?${q}` : ""}`;
@@ -175,7 +177,9 @@ export default function ImpactExplorer({
         else q.set("town", p);
         if (t === "allTime") q.delete("timeframe");
         else q.set("timeframe", t);
-        if (viewOf(p) !== view) setLeaving(view);
+        // Clear it for a same-view click, so a drill-down superseded before the
+        // server answered (Boston, then straight back) doesn't animate again.
+        setLeaving(viewOf(p) !== view ? view : null);
         setCard(null);
         startTransition(() => {
             setShown({ place: p, timeframe: t });
@@ -232,20 +236,22 @@ export default function ImpactExplorer({
     const cardArea = card && byPlace.get(card.place);
 
     // Drill-down: zoom the old map toward its exit, animate the new one in.
-    const exiting = leaving === view;
-    const mapStyle: React.CSSProperties = exiting
-        ? {
-              transform: view === "state" ? "scale(3)" : "scale(0.6)",
-              opacity: 0.3,
-              transformOrigin: view === "state" ? bostonOrigin : "50% 50%",
-              transition: "transform 400ms ease-in, opacity 400ms",
-          }
-        : leaving
-          ? {
-                animation: `impact-map-in-${view} 450ms ease-out`,
-                transformOrigin: view === "state" ? bostonOrigin : "50% 50%",
-            }
-          : {};
+    const phase = drillPhase(leaving, view, pending);
+    const mapStyle: React.CSSProperties =
+        phase === "exit"
+            ? {
+                  transform: view === "state" ? "scale(3)" : "scale(0.6)",
+                  opacity: 0.3,
+                  transformOrigin: view === "state" ? bostonOrigin : "50% 50%",
+                  transition: "transform 400ms ease-in, opacity 400ms",
+              }
+            : phase === "enter"
+              ? {
+                    animation: `impact-map-in-${view} 450ms ease-out`,
+                    transformOrigin:
+                        view === "state" ? bostonOrigin : "50% 50%",
+                }
+              : {};
 
     const statsCol = `flex flex-col gap-4 transition-opacity ${pending ? "opacity-60" : ""}`;
     const selectPlace = (name: string) => go({ place: name });
@@ -288,8 +294,9 @@ export default function ImpactExplorer({
                 aria-label="Statistics"
                 className={`${statsCol} lg:col-start-2 lg:row-start-1`}
             >
-                {/* Which place and period every number below describes, and the
-                    color key that ties the column to the map. */}
+                {/* The selected place and period, and the color key that ties the
+                    column to the map. Rows whose scope differs (the places list,
+                    Education) say so with their own note. */}
                 <header className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                         <p className="text-base font-semibold">

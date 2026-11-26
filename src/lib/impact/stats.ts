@@ -4,9 +4,8 @@
 // Design rules (see the stats design plan):
 //   - side "need" is blue (the whole area), side "impact" is pink (BHG families);
 //   - every value sits on a 0-100 track so length can be compared before reading;
-//   - a need value and an impact value share a track ("pair") only when they
-//     answer the same question in the same unit; otherwise each gets its own
-//     meter, with a reference tick for context.
+//   - need and impact values each get their own meter (they answer different
+//     questions), with a reference tick for context.
 
 export type Side = "need" | "impact";
 
@@ -32,26 +31,13 @@ export type MeterRow = {
     sample?: boolean;
 };
 
-/** A need value and an impact value for the same question, on one shared track. */
-export type PairRow = {
-    kind: "pair";
-    id: string;
-    label: string;
-    unit: string;
-    need: number | null;
-    impact: number | null;
-    /** Row labels, so identity never rests on color alone. */
-    needLabel: string;
-    impactLabel: string;
-    emptyText: string;
-    sample?: boolean;
-};
-
 /** Ranked impact bars, optionally with each item's need value beside it. */
 export type ListRow = {
     kind: "list";
     id: string;
     title: string;
+    /** What the percentages are a share of, e.g. "Share of Boston families...". */
+    note?: string;
     items: { name: string; pct: number; need: number | null }[];
     /** Rows are places the reader can click to select. */
     selectable: boolean;
@@ -59,5 +45,10 @@ export type ListRow = {
     showNeed: boolean;
 };
 
-export type StatRow = MeterRow | PairRow | ListRow;
-export type StatSection = { title: "Housing" | "Education"; rows: StatRow[] };
+export type StatRow = MeterRow | ListRow;
+export type StatSection = {
+    title: "Housing" | "Education";
+    /** Shown under the title when the section's scope differs from the header's. */
+    note?: string;
+    rows: StatRow[];
+};

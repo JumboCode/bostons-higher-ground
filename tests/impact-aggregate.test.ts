@@ -4,9 +4,12 @@ import type {
     HousingChartRecord,
     StudentRecord,
 } from "../src/lib/chart-definitions";
-import { buildImpactView, publishablePct } from "../src/lib/impact/aggregate";
-import { SAMPLE_NEED, type NeedMetric } from "../src/lib/impact/need";
-import type { StatRow } from "../src/lib/impact/stats";
+import {
+    buildImpactView,
+    currentStudents,
+    publishablePct,
+} from "../src/lib/impact/aggregate";
+import { SAMPLE_NEED } from "../src/lib/impact/need";
 
 type View = ReturnType<typeof buildImpactView>;
 const rows = (v: View) => v.sections.flatMap((s) => s.rows);
@@ -219,20 +222,20 @@ test("need compares a neighborhood with Boston and a town with MA", () => {
     assert.ok(hood?.kind === "meter");
     assert.equal(hood.side, "need");
     assert.equal(hood.value, SAMPLE_NEED.valueFor("Roxbury"));
-    assert.equal(hood.ref?.label, "Boston avg");
+    assert.equal(hood.ref?.label, "Avg Boston neighborhood");
 
     const town = row(
         buildImpactView([], noEducation, { town: "Worcester" }, SAMPLE_NEED),
         "need"
     );
     assert.ok(town?.kind === "meter");
-    assert.equal(town.ref?.label, "MA avg");
+    assert.equal(town.ref?.label, "Avg MA town");
 
     // All of MA: the bar already is the average, so no tick.
     const all = row(buildImpactView([], noEducation, {}, SAMPLE_NEED), "need");
     assert.ok(all?.kind === "meter");
     assert.equal(all.ref, undefined);
-    assert.match(all.label, /MA average/);
+    assert.match(all.label, /average across MA towns/);
 });
 
 test("the places list carries each place's need value", () => {
@@ -250,32 +253,6 @@ test("the places list carries each place's need value", () => {
             ["Worcester", 50, SAMPLE_NEED.valueFor("Worcester")],
         ]
     );
-});
-
-test("a metric that pairs with a BHG figure turns its row into a pair", () => {
-    const attendance: NeedMetric = {
-        ...SAMPLE_NEED,
-        key: "area-attendance",
-        label: "Area students at 90%+ attendance",
-        unit: "%",
-        pairsWith: "attendance",
-        valueFor: () => 61,
-    };
-    const view = buildImpactView(
-        [],
-        noEducation,
-        { town: "Worcester" },
-        SAMPLE_NEED,
-        [attendance]
-    );
-    const pair = row(view, "attendance") as StatRow;
-    assert.equal(pair.kind, "pair");
-    if (pair.kind !== "pair") return;
-    assert.equal(pair.need, 61);
-    assert.equal(pair.impact, null); // no students: suppressed
-    assert.deepEqual([pair.needLabel, pair.impactLabel], ["Area", "BHG"]);
-    // Housing has no paired metric, so it stays a plain meter.
-    assert.equal(row(view, "housed")?.kind, "meter");
 });
 
 test("every published BHG value is a whole number or null", () => {
@@ -298,12 +275,81 @@ test("every published BHG value is a whole number or null", () => {
         SAMPLE_NEED
     );
     const values = rows(view).flatMap((r) =>
-        r.kind === "meter"
-            ? [r.value]
-            : r.kind === "pair"
-              ? [r.need, r.impact]
-              : r.items.map((i) => i.pct)
+        r.kind === "meter" ? [r.value] : r.items.map((i) => i.pct)
     );
     assert.ok(values.length > 0);
     assert.ok(values.every((v) => v === null || Number.isInteger(v)));
+});
+
+test("a student listed more than once counts once, at their current school", () => {
+    // 4 students with 3 rows each at School A: 12 rows, but only 4 students.
+    const repeated = Array.from({ length: 4 }, (_, i) =>
+        [1, 2, 3].map(
+            (n): StudentRecord => ({
+                id: i * 10 + n,
+                studentId: 9000 + i,
+                schoolName: "School A",
+                gradeLevel: "3",
+                city: "Worcester",
+                zip: 0,
+            })
+        )
+    ).flat();
+    const education = {
+        students: [...repeated, ...students(10, "Worcester", "School B")],
+        attendance: [],
+    };
+    const view = buildImpactView([], education, { town: "Worcester" }, null);
+    // 4 of 14 students: School A is under the threshold, so nothing is listed.
+    assert.deepEqual(list(view, "schools"), []);
+});
+
+test("a student's current row is the most recently inserted one", () => {
+    const row = (id: number, schoolName: string): StudentRecord => ({
+        id,
+        studentId: 1,
+        schoolName,
+        gradeLevel: "3",
+        city: "Worcester",
+        zip: 0,
+    });
+    // Insert order in the list doesn't matter; the highest id wins.
+    assert.deepEqual(
+        currentStudents([row(7, "New"), row(3, "Old")]).map(
+            (s) => s.schoolName
+        ),
+        ["New"]
+    );
+});
+
+test("the places list and Education say when they don't follow the header", () => {
+    const families20 = [
+        ...families(20, "Worcester"),
+        ...families(20, "Cambridge"),
+    ];
+    const note = (query: { town?: string }) => {
+        const r = row(
+            buildImpactView(families20, noEducation, query, null),
+            "topPlaces"
+        );
+        return r?.kind === "list" ? r.note : undefined;
+    };
+    assert.equal(note({}), "Share of families with a known town");
+    assert.equal(
+        note({ town: "Worcester" }),
+        "Share of families with a known town, across Massachusetts"
+    );
+    assert.equal(
+        note({ town: "Roxbury" }),
+        "Share of Boston families with a known neighborhood, across Boston"
+    );
+
+    const view = buildImpactView(
+        [],
+        noEducation,
+        { timeframe: "thisFY" },
+        null
+    );
+    const education = view.sections.find((s) => s.title === "Education");
+    assert.match(education?.note ?? "", /not filtered by time period/);
 });

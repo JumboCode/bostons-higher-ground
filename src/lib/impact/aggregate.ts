@@ -5,6 +5,8 @@
 // Privacy rules (MIN_GROUP_SIZE):
 //   - Housing counts are distinct families (canonicalFamilies), never Salesforce
 //     rows: one family with three intake records is one family.
+//   - Education counts are distinct students (currentStudents), never student
+//     rows: a student listed at two schools counts once, at their current one.
 //   - A share is published only if the group AND everyone else clear the
 //     threshold, so "12 of 14" can't reveal the other 2. This also hides 0%/100%.
 //   - Every percentage is a whole number. Unrounded shares would let anyone
@@ -23,18 +25,17 @@ import {
 import { canonicalFamilies } from "@/lib/family-metrics";
 import type { Timeframe } from "@/lib/filterStore";
 
-import { averageNeed, type NeedMetric, type PairableStat } from "./need";
+import { ALL, BOSTON } from "./mapShared";
+import { averageNeed, type NeedMetric } from "./need";
 import {
-    BOSTON,
     BOSTON_NEIGHBORHOODS,
     isNeighborhood,
     MA_TOWNS,
     placeOf,
     type Place,
 } from "./places";
-import type { MeterRow, StatRow, StatSection } from "./stats";
+import type { StatRow, StatSection } from "./stats";
 
-export const ALL = "all";
 export const TIMEFRAMES: { value: Timeframe; label: string }[] = [
     { value: "allTime", label: "All time" },
     { value: "pastTwoYears", label: "Past 2 years" },
@@ -72,6 +73,22 @@ function countBy<T>(items: T[], key: (t: T) => string | null) {
     return m;
 }
 
+/**
+ * One row per student: the student table has no unique student ID, so a
+ * student can appear more than once (re-imports, a school transfer). Keeps
+ * the current row, i.e. the most recently inserted (highest serial `id`);
+ * rows without an id fall back to the later one in the list.
+ */
+export function currentStudents<T extends StudentRecord>(rows: T[]) {
+    const byStudent = new Map<number, T>();
+    for (const s of rows) {
+        const prev = byStudent.get(s.studentId);
+        if (!prev || (s.id ?? Infinity) >= (prev.id ?? -Infinity))
+            byStudent.set(s.studentId, s);
+    }
+    return [...byStudent.values()];
+}
+
 /** Filter link for a map area or bar. Layer is client-only, so it's left out. */
 export function impactHref(place: string, timeframe: Timeframe) {
     const q = new URLSearchParams({ town: place });
@@ -90,19 +107,13 @@ export function buildImpactView(
     education: EducationRows,
     query: ImpactQuery,
     /** The map's need layer; null when it is turned off (e.g. sample data in production). */
-    need: NeedMetric | null,
-    /**
-     * Area metrics that answer the same question as a BHG figure (`pairsWith`).
-     * Each turns that figure's row into a need/impact pair. Pass only metrics
-     * cleared for publishing (see publicNeedMetric).
-     */
-    pairs: NeedMetric[] = []
+    need: NeedMetric | null
 ) {
     const housing = rawHousing.map((h) => ({
         ...h,
         ...placeOf(h.city, h.zipCode),
     }));
-    const students = education.students.map((s) => ({
+    const students = currentStudents(education.students).map((s) => ({
         ...s,
         ...placeOf(s.city, s.zip),
     }));
@@ -183,6 +194,14 @@ export function buildImpactView(
         view === "state"
             ? "families with a known town"
             : "Boston families with a known neighborhood";
+    // The list ranks every area on the map, not just the selected one, so say
+    // so whenever a single place is selected.
+    const listScope =
+        place === ALL || place === BOSTON
+            ? ""
+            : view === "state"
+              ? ", across Massachusetts"
+              : ", across Boston";
     const topPlaces = areas
         .filter((a) => a.impactPct !== null)
         .sort((a, b) => b.impactPct! - a.impactPct!)
@@ -219,51 +238,39 @@ export function buildImpactView(
     // ---- Stats column -----------------------------------------------------
     const needOf = (m: NeedMetric) =>
         place === ALL ? averageNeed(m, MA_TOWNS) : m.valueFor(place);
-    // BHG figure, or a need/impact pair when a metric answers the same question.
-    const impactOrPair = (
-        stat: PairableStat,
+    const impactMeter = (
+        id: string,
         label: string,
         value: number | null
-    ): StatRow => {
-        const metric = pairs.find((m) => m.pairsWith === stat);
-        return metric
-            ? {
-                  kind: "pair",
-                  id: stat,
-                  label,
-                  unit: "%",
-                  need: needOf(metric),
-                  impact: value,
-                  needLabel: place === ALL ? "MA" : "Area",
-                  impactLabel: "BHG",
-                  emptyText: TOO_FEW,
-                  sample: metric.isSample,
-              }
-            : ({
-                  kind: "meter",
-                  id: stat,
-                  label,
-                  side: "impact",
-                  value,
-                  unit: "%",
-                  emptyText: TOO_FEW,
-              } satisfies MeterRow);
-    };
+    ): StatRow => ({
+        kind: "meter",
+        id,
+        label,
+        side: "impact",
+        value,
+        unit: "%",
+        emptyText: TOO_FEW,
+    });
 
     const housingRows: StatRow[] = [];
     if (need) {
         // A neighborhood compares with Boston, anything else with the state.
         // With all of MA selected the bar already is the average: no tick.
+        // Averages are per area (every town counts once), not per resident,
+        // and the labels say so.
         const avg = selectedHood
             ? {
-                  label: "Boston avg",
+                  label: "Avg Boston neighborhood",
                   value: averageNeed(need, BOSTON_NEIGHBORHOODS),
               }
-            : { label: "MA avg", value: averageNeed(need, MA_TOWNS) };
+            : { label: "Avg MA town", value: averageNeed(need, MA_TOWNS) };
         housingRows.push({
             kind: "meter",
             id: "need",
-            label: place === ALL ? `${need.label}, MA average` : need.label,
+            label:
+                place === ALL
+                    ? `${need.label}, average across MA towns`
+                    : need.label,
             side: "need",
             value: needOf(need),
             unit: need.unit,
@@ -276,7 +283,7 @@ export function buildImpactView(
         });
     }
     housingRows.push(
-        impactOrPair(
+        impactMeter(
             "housed",
             "Families housed",
             publishablePct(housed.length, recorded.length)
@@ -296,6 +303,7 @@ export function buildImpactView(
             kind: "list",
             id: "topPlaces",
             title: "Where BHG families live",
+            note: `Share of ${shareOf}${listScope}`,
             items: topPlaces,
             selectable: true,
             showNeed: need !== null,
@@ -306,8 +314,10 @@ export function buildImpactView(
         { title: "Housing", rows: housingRows },
         {
             title: "Education",
+            // Student rows carry no dates, so the time period can't apply.
+            note: "All years · not filtered by time period",
             rows: [
-                impactOrPair(
+                impactMeter(
                     "attendance",
                     "Students at 90%+ attendance",
                     publishablePct(regular.length, studentAda.length)

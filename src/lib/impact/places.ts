@@ -5,9 +5,9 @@
 import neighborhoodShapes from "@/lib/geo/boston-neighborhoods.json";
 import townShapes from "@/lib/geo/ma-towns.json";
 
-export type Place = { town: string | null; neighborhood: string | null };
+import { BOSTON } from "./mapShared";
 
-export const BOSTON = "Boston";
+export type Place = { town: string | null; neighborhood: string | null };
 
 const namesOf = (fc: { features: { properties: { name: string } }[] }) =>
     fc.features.map((f) => f.properties.name).sort();

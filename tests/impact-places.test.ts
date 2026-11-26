@@ -5,6 +5,7 @@ import {
     MA_TOWNS,
     placeOf,
 } from "../src/lib/impact/places";
+import { drillPhase } from "../src/lib/impact/mapShared";
 import { publicNeedMetric, SAMPLE_NEED } from "../src/lib/impact/need";
 
 test("a trailing state name is stripped only after a comma or space", () => {
@@ -78,4 +79,16 @@ test("sample need data is hidden in production only", () => {
     );
     const real = { ...SAMPLE_NEED, isSample: false };
     assert.equal(publicNeedMetric(real, { VERCEL_ENV: "production" }), real);
+});
+
+test("the drill-down animation can't get stuck on the old map", () => {
+    // Click Boston on the state map: the state map zooms out while loading...
+    assert.equal(drillPhase("state", "state", true), "exit");
+    // ...then the Boston map animates in.
+    assert.equal(drillPhase("state", "boston", false), "enter");
+    // Superseded before the server answered (Boston, then straight back to
+    // all of MA): once loading ends, the state map is shown normally.
+    assert.equal(drillPhase("state", "state", false), null);
+    // A click that stays in the same view never animates.
+    assert.equal(drillPhase(null, "state", true), null);
 });
