@@ -54,6 +54,8 @@ export type GradeRecord = {
 };
 
 export type StudentRecord = {
+    /** Row's serial key. student_id isn't unique; the highest id is the current row. */
+    id?: number;
     studentId: number;
     schoolName: string;
     gradeLevel: string;
