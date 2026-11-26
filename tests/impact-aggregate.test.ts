@@ -353,3 +353,18 @@ test("the places list and Education say when they don't follow the header", () =
     const education = view.sections.find((s) => s.title === "Education");
     assert.match(education?.note ?? "", /not filtered by time period/);
 });
+
+test("every stat has a short tile label of at most 4 words", () => {
+    for (const query of [{}, { town: "Roxbury" }, { town: "Worcester" }]) {
+        const view = buildImpactView([], noEducation, query, SAMPLE_NEED);
+        for (const r of rows(view)) {
+            const words = r.short.trim().split(/\s+/).length;
+            assert.ok(r.short && words <= 4, `${r.id}: "${r.short}"`);
+        }
+    }
+    const view = buildImpactView([], noEducation, {}, null);
+    const attendance = row(view, "attendance");
+    assert.ok(attendance?.kind === "meter" && attendance.sentence);
+    const education = view.sections.find((s) => s.title === "Education");
+    assert.equal(education?.chip, "All years");
+});
