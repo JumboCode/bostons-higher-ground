@@ -1,6 +1,8 @@
 // Server-rendered SVG map for the public impact page: all 351 MA towns, or Boston's
-// 23 neighborhoods. Two semi-transparent choropleth layers ("our impact" in pink,
-// "community need" in blue) multiply where they overlap, so high-on-both reads purple.
+// 23 neighborhoods. Community need is an opaque blue choropleth; BHG's impact sits
+// ON TOP as solid pink circles (area ~ share of families), so the two never mix:
+// a big pink circle on dark blue reads as "BHG works where need is high".
+// Places with 1-9 families get a small hollow pink ring instead of a number.
 // Shapes come from src/lib/geo (built by scripts/build-map-geo.mjs, already wound for d3).
 // Each shape is defined once in <defs> and reused with <use>, which keeps the HTML small.
 // Both layers are always rendered; ImpactExplorer (client) shows/hides them via
@@ -19,10 +21,10 @@ import townShapes from "@/lib/geo/ma-towns.json";
 import { MIN_GROUP_SIZE } from "@/lib/chart-definitions";
 import {
     formatPct,
-    HATCH,
-    IMPACT,
+    impactRadius,
     NEED,
-    OPACITY,
+    SIDE_COLOR,
+    smallRadius,
     step,
 } from "@/lib/impact/mapShared";
 
@@ -35,7 +37,7 @@ export type MapArea = {
     place: string;
     /** Share of families as a whole-number percent, or null if not published. */
     impactPct: number | null;
-    /** Fewer than MIN_GROUP_SIZE families: shown as a hatch, never as a number. */
+    /** Fewer than MIN_GROUP_SIZE families: a small hollow ring, never a number. */
     impactSmall: boolean;
     /** Enough families, but too few elsewhere to publish a share: no fill. */
     impactHidden: boolean;
@@ -172,6 +174,21 @@ export default function ImpactMap({
         s.name === selected ||
         (view === "boston" ? s.size > 900 : labelled.has(s.name));
 
+    // Impact marks, largest first so small circles are drawn on top of big ones.
+    const marks = shapes
+        .flatMap((s) => {
+            const a = byPlace.get(s.name);
+            if (a?.impactPct != null)
+                return [
+                    { s, r: impactRadius(a.impactPct, view), small: false },
+                ];
+            if (a?.impactSmall)
+                return [{ s, r: smallRadius(view), small: true }];
+            return [];
+        })
+        .sort((a, b) => b.r - a.r);
+    const markRadius = new Map(marks.map((m) => [m.s.name, m.r]));
+
     return (
         <svg
             viewBox={`0 0 ${w} ${h}`}
@@ -186,8 +203,7 @@ export default function ImpactMap({
             {/* Layer visibility follows data-layer on an ancestor (set by ImpactExplorer). */}
             <style>{`
                 .impact-map use { transition: fill .2s; }
-                .impact-map .lyr { transition: opacity .2s; mix-blend-mode: multiply; }
-                [data-layer=both] .impact-map .lyr { opacity: ${OPACITY.both}; }
+                .impact-map .lyr { transition: opacity .2s; }
                 [data-layer=impact] .impact-map .lyr-need,
                 [data-layer=need] .impact-map .lyr-impact { opacity: 0; }
                 .hit use { fill: transparent; }
@@ -204,23 +220,6 @@ export default function ImpactMap({
                         vectorEffect="non-scaling-stroke"
                     />
                 ))}
-                <pattern
-                    id="few-families"
-                    width="6"
-                    height="6"
-                    patternUnits="userSpaceOnUse"
-                    patternTransform="rotate(45)"
-                >
-                    <rect width="6" height="6" fill="#fff" />
-                    <line
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="6"
-                        stroke={HATCH}
-                        strokeWidth="2.5"
-                    />
-                </pattern>
             </defs>
 
             <rect width={w} height={h} fill={OUTSIDE} />
@@ -232,7 +231,7 @@ export default function ImpactMap({
                 ))}
             </g>
 
-            {/* 2. community need */}
+            {/* 2. community need: opaque, so its blue is exactly the legend's */}
             <g className="lyr lyr-need">
                 {shapes.map((s) => {
                     const v = byPlace.get(s.name)?.need;
@@ -246,23 +245,7 @@ export default function ImpactMap({
                 })}
             </g>
 
-            {/* 3. our impact */}
-            <g className="lyr lyr-impact">
-                {shapes.map((s) => {
-                    const a = byPlace.get(s.name);
-                    const fill =
-                        a?.impactPct != null
-                            ? IMPACT.colors[step(a.impactPct, IMPACT.cuts)]
-                            : a?.impactSmall
-                              ? "url(#few-families)"
-                              : null;
-                    return fill ? (
-                        <use key={s.id} href={`#${s.id}`} fill={fill} />
-                    ) : null;
-                })}
-            </g>
-
-            {/* 4. borders, above the fills so they stay crisp */}
+            {/* 3. borders, above the fills so they stay crisp */}
             <g fill="none" stroke={BORDER} strokeWidth={0.6}>
                 {shapes.map((s) => (
                     <use key={s.id} href={`#${s.id}`} />
@@ -278,7 +261,7 @@ export default function ImpactMap({
                 />
             )}
 
-            {/* 5. hit targets. data-place drives the hover card and click handling. */}
+            {/* 4. hit targets. data-place drives the hover card and click handling. */}
             {shapes.map((s) => {
                 const a = byPlace.get(s.name);
                 return a?.href ? (
@@ -299,7 +282,26 @@ export default function ImpactMap({
                 );
             })}
 
-            {/* labels: white halo, no pointer events so they never block clicks */}
+            {/* 5. BHG's impact, the top data layer. A white ring separates each
+                circle from the blue and from its neighbours. No pointer events, so
+                hovering or clicking a circle reaches the place underneath. */}
+            <g className="lyr lyr-impact" pointerEvents="none">
+                {marks.map(({ s, r, small }) => (
+                    <circle
+                        key={s.id}
+                        cx={s.centroid[0]}
+                        cy={s.centroid[1]}
+                        r={r}
+                        fill={small ? "#fff" : SIDE_COLOR.impact}
+                        stroke={small ? SIDE_COLOR.impact : "#fff"}
+                        strokeWidth={small ? 2 : 1.5}
+                        vectorEffect="non-scaling-stroke"
+                    />
+                ))}
+            </g>
+
+            {/* labels: white halo, no pointer events so they never block clicks.
+                Under the circle when there is one, so the label doesn't hide it. */}
             <g
                 pointerEvents="none"
                 fontSize={font}
@@ -311,16 +313,19 @@ export default function ImpactMap({
                 paintOrder="stroke"
                 strokeLinejoin="round"
             >
-                {shapes.filter(showLabel).map((s) => (
-                    <text
-                        key={s.id}
-                        x={s.centroid[0]}
-                        y={s.centroid[1]}
-                        dy="0.35em"
-                    >
-                        {s.name}
-                    </text>
-                ))}
+                {shapes.filter(showLabel).map((s) => {
+                    const r = markRadius.get(s.name);
+                    return (
+                        <text
+                            key={s.id}
+                            x={s.centroid[0]}
+                            y={r ? s.centroid[1] + r + 2 : s.centroid[1]}
+                            dy={r ? "0.85em" : "0.35em"}
+                        >
+                            {s.name}
+                        </text>
+                    );
+                })}
             </g>
         </svg>
     );

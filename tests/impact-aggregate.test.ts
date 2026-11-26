@@ -121,7 +121,7 @@ test("housed and housed-within-6-months use distinct families", () => {
     assert.equal(meter(view, "housedFast"), 50);
 });
 
-test("a big group with too few others gets no share and no hatch", () => {
+test("a big group with too few others gets no share and no circle", () => {
     const housing = [...families(15, "Worcester"), ...families(5, "Lowell")];
     const { areas } = buildImpactView(housing, noEducation, {}, SAMPLE_NEED);
     const worcester = areas.find((a) => a.place === "Worcester")!;

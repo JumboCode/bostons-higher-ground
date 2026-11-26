@@ -105,11 +105,11 @@ export default async function Impact({
                 />
             </ImpactExplorer>
 
-            {/* Wording pending BHG sign-off (hatched places reveal that 1–9 families live there). */}
+            {/* Wording pending BHG sign-off (the hollow ring reveals that 1–9 families live there). */}
             <p className="mt-6 text-xs text-gray-500">
                 For privacy, no figure is shown for fewer than {MIN_GROUP_SIZE}{" "}
                 families or students. Places with 1–{MIN_GROUP_SIZE - 1}{" "}
-                families are hatched, without a number.
+                families are marked with a small ring, without a number.
             </p>
         </main>
     );

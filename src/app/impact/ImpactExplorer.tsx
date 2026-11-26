@@ -21,12 +21,9 @@ import type { MapArea, MapView } from "@/components/ImpactMap";
 import MapZoom from "@/components/MapZoom";
 import {
     formatPct,
-    HATCH,
-    IMPACT,
     LAYERS,
     NEED,
-    OPACITY,
-    tint,
+    SIDE_COLOR,
     type Layer,
 } from "@/lib/impact/mapShared";
 import type { StatSection } from "@/lib/impact/stats";
@@ -45,34 +42,69 @@ type Card = { place: string; x: number; y: number };
 
 const panel = "rounded-lg bg-white/90 shadow-md backdrop-blur-sm";
 
-function GradientRow({
-    title,
-    colors,
-    alpha,
-    badge,
-}: {
-    title: string;
-    colors: string[];
-    alpha: number;
-    badge?: React.ReactNode;
-}) {
+/** Need legend: the opaque blue ramp, low to high. */
+function NeedLegend({ badge }: { badge?: React.ReactNode }) {
     return (
         <div>
             <p className="mb-1 flex items-center gap-1.5 font-semibold">
-                {title}
+                Community need
                 {badge}
             </p>
             <span
                 aria-hidden
                 className="block h-2 w-32 rounded-full"
                 style={{
-                    background: `linear-gradient(to right, ${colors.map((c) => tint(c, alpha)).join(", ")})`,
+                    background: `linear-gradient(to right, ${NEED.colors.join(", ")})`,
                 }}
             />
             <span className="flex w-32 justify-between text-[10px] text-gray-600">
                 <span>Low</span>
                 <span>High</span>
             </span>
+        </div>
+    );
+}
+
+/**
+ * Impact legend: circle size = share of BHG families, plus the hollow ring for
+ * small groups. Sizes are illustrative (the map scales with the screen), so the
+ * legend says "smaller/larger" rather than printing percentages.
+ */
+function ImpactLegend({ minGroupSize }: { minGroupSize: number }) {
+    const circle = (r: number) => (
+        <svg aria-hidden width={r * 2 + 2} height={r * 2 + 2}>
+            <circle
+                cx={r + 1}
+                cy={r + 1}
+                r={r}
+                fill={SIDE_COLOR.impact}
+                stroke="#fff"
+                strokeWidth={1}
+            />
+        </svg>
+    );
+    return (
+        <div>
+            <p className="mb-1 font-semibold">BHG families</p>
+            <p className="flex items-center gap-1.5 text-[10px] text-gray-600">
+                {circle(3)}
+                {circle(5.5)}
+                {circle(8)}
+                <span>Larger circle = larger share</span>
+            </p>
+            <p className="mt-1 flex items-center gap-1.5 text-[10px] text-gray-600">
+                <svg aria-hidden width={10} height={10}>
+                    <circle
+                        cx={5}
+                        cy={5}
+                        r={3.5}
+                        fill="#fff"
+                        stroke={SIDE_COLOR.impact}
+                        strokeWidth={1.5}
+                    />
+                </svg>
+                Under {minGroupSize} families
+            </p>
         </div>
     );
 }
@@ -128,7 +160,6 @@ export default function ImpactExplorer({
 
     const showImpact = layer !== "need";
     const showNeed = needEnabled && layer !== "impact";
-    const alpha = layer === "both" ? OPACITY.both : OPACITY.single;
     const byPlace = new Map(areas.map((a) => [a.place, a]));
     const viewOf = (t: string): MapView =>
         t === "Boston" || neighborhoods.includes(t) ? "boston" : "state";
@@ -364,32 +395,14 @@ export default function ImpactExplorer({
                             id="map-legend"
                             className={`${panel} space-y-2 p-2.5 ${legendOpen ? "" : "hidden"} sm:block`}
                         >
+                            {/* Top of the map = top of the legend: BHG first. */}
                             {showImpact && (
-                                <GradientRow
-                                    title="Impact"
-                                    colors={IMPACT.colors}
-                                    alpha={alpha}
-                                />
+                                <ImpactLegend minGroupSize={minGroupSize} />
                             )}
                             {showNeed && (
-                                <GradientRow
-                                    title="Need"
-                                    colors={NEED.colors}
-                                    alpha={alpha}
+                                <NeedLegend
                                     badge={needIsSample && <SampleBadge />}
                                 />
-                            )}
-                            {showImpact && (
-                                <p className="flex items-center gap-1.5">
-                                    <span
-                                        aria-hidden
-                                        className="inline-block h-3 w-4 rounded-sm border border-black/20"
-                                        style={{
-                                            background: `repeating-linear-gradient(45deg, ${HATCH} 0 2px, #fff 2px 5px)`,
-                                        }}
-                                    />
-                                    Under {minGroupSize} families
-                                </p>
                             )}
                         </div>
                         <button

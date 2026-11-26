@@ -173,7 +173,7 @@ export function buildImpactView(
             place: name,
             impactPct,
             impactSmall: small,
-            // Big enough, but everyone else isn't: no number, no hatch.
+            // Big enough, but everyone else isn't: no number, no circle.
             impactHidden: impactPct === null && n >= MIN_GROUP_SIZE,
             need: needValue,
             href: clickable ? impactHref(name, timeframe) : null,
