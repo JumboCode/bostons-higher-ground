@@ -1,24 +1,21 @@
-// Server-rendered SVG map for the public impact page: all 351 MA towns, or Boston's
-// 23 neighborhoods. Community need is an opaque blue choropleth; BHG's impact sits
+"use client";
+
+// SVG map for the public impact page: all 351 MA towns, or Boston's 23
+// neighborhoods. Community need is an opaque blue choropleth; BHG's impact sits
 // ON TOP as solid pink circles (area ~ share of families), so the two never mix:
 // a big pink circle on dark blue reads as "BHG works where need is high".
 // Places with 1-9 families get a small hollow pink ring instead of a number.
-// Shapes come from src/lib/geo (built by scripts/build-map-geo.mjs, already wound for d3).
-// Each shape is defined once in <defs> and reused with <use>, which keeps the HTML small.
-// Both layers are always rendered; ImpactExplorer (client) shows/hides them via
-// data-layer, draws the hover card and the selection outline, and turns link clicks
-// into router.replace. Links still work without JS.
-import {
-    geoMercator,
-    geoPath,
-    type ExtendedFeature,
-    type ExtendedFeatureCollection,
-    type GeoGeometryObjects,
-} from "d3";
+//
+// A client component drawing pre-projected paths (mapGeometry.ts), so the
+// geometry reaches the browser once, as a cached JS chunk; filter changes only
+// send the per-area figures. It is still server-rendered on first load, so the
+// area links work without JS. Each shape is defined once in <defs> and reused
+// with <use>, which keeps the HTML small.
+// Both layers are always rendered; ImpactExplorer shows/hides them via
+// data-layer, draws the hover card, and turns link clicks into router.replace.
+import { memo } from "react";
 
-import neighborhoodShapes from "@/lib/geo/boston-neighborhoods.json";
-import townShapes from "@/lib/geo/ma-towns.json";
-import { MIN_GROUP_SIZE } from "@/lib/chart-definitions";
+import { MAP_GEOMETRY } from "@/lib/impact/mapGeometry";
 import {
     BOSTON,
     formatPct,
@@ -27,25 +24,9 @@ import {
     SIDE_COLOR,
     smallRadius,
     step,
+    type MapArea,
+    type MapView,
 } from "@/lib/impact/mapShared";
-
-type Shapes = ExtendedFeatureCollection<
-    ExtendedFeature<GeoGeometryObjects, { name: string }>
->;
-
-export type MapView = "state" | "boston";
-export type MapArea = {
-    place: string;
-    /** Share of families as a whole-number percent, or null if not published. */
-    impactPct: number | null;
-    /** Fewer than MIN_GROUP_SIZE families: a small hollow ring, never a number. */
-    impactSmall: boolean;
-    /** Enough families, but too few elsewhere to publish a share: no fill. */
-    impactHidden: boolean;
-    need: number | null;
-    /** Filter link, or null if the area can't be selected. */
-    href: string | null;
-};
 
 const BORDER = "#3F3F3F";
 // Always labeled on the state map, spread across MA so visitors can orient themselves.
@@ -62,79 +43,19 @@ const LANDMARKS = [
 ];
 const OUTSIDE = "#F1F1F1";
 
-// ---- Geometry (computed once per server process) --------------------------
-
-const VIEWS = {
-    state: {
-        shapes: townShapes as unknown as Shapes,
-        w: 800,
-        h: 500,
-        font: 10,
-    },
-    boston: {
-        shapes: neighborhoodShapes as unknown as Shapes,
-        w: 640,
-        h: 560,
-        font: 11,
-    },
-} as const;
-
-const GEOMETRY = Object.fromEntries(
-    (Object.keys(VIEWS) as MapView[]).map((view) => {
-        const { shapes, w, h } = VIEWS[view];
-        const projection = geoMercator().fitExtent(
-            [
-                [10, 10],
-                [w - 10, h - 10],
-            ],
-            shapes
-        );
-        const path = geoPath(projection).digits(1);
-        const areas = shapes.features.map((f, i) => ({
-            name: f.properties.name,
-            id: `${view}-${i}`,
-            d: path(f) ?? "",
-            centroid: path.centroid(f),
-            size: path.area(f),
-        }));
-        return [view, areas];
-    })
-) as Record<
-    MapView,
-    {
-        name: string;
-        id: string;
-        d: string;
-        centroid: [number, number];
-        size: number;
-    }[]
->;
-
-/** CSS aspect-ratio of a view's viewBox. */
-export const mapAspect = (view: MapView) =>
-    `${VIEWS[view].w} / ${VIEWS[view].h}`;
-
-/** Boston's centre as a CSS transform-origin on the state map, for the drill-down zoom. */
-export const BOSTON_ORIGIN = (() => {
-    const b = GEOMETRY.state.find((s) => s.name === BOSTON);
-    const { w, h } = VIEWS.state;
-    return b
-        ? `${((b.centroid[0] / w) * 100).toFixed(1)}% ${((b.centroid[1] / h) * 100).toFixed(1)}%`
-        : "50% 50%";
-})();
-
 // Screen-reader text for an area: every value, whatever layer is showing.
 function describe(
     name: string,
     area: MapArea | undefined,
     needLabel: string,
-    shareOf: string
+    shareOf: string,
+    minGroupSize: number
 ) {
     const parts: string[] = [];
     if (area?.impactPct != null)
         parts.push(`${formatPct(area.impactPct)} of ${shareOf}`);
     else if (area?.impactSmall)
-        parts.push(`fewer than ${MIN_GROUP_SIZE} families`);
+        parts.push(`fewer than ${minGroupSize} families`);
     else if (area?.impactHidden) parts.push("share hidden for privacy");
     else parts.push("no families recorded");
     if (area?.need != null) parts.push(`${needLabel} ${area.need}`);
@@ -143,23 +64,29 @@ function describe(
 
 // ---- Map ------------------------------------------------------------------
 
-export default function ImpactMap({
+// Memoized: ImpactExplorer re-renders on every pointer move (the hover card),
+// and redrawing ~1,400 SVG elements each time would make hovering stutter.
+// Every prop is a primitive or the server's `areas` array, so they stay equal.
+export default memo(function ImpactMap({
     view,
     areas,
     selected,
     needLabel,
     shareOf,
+    minGroupSize,
 }: {
     view: MapView;
     areas: MapArea[];
+    /** Outlined and always labeled. Pass the optimistic selection so it shows instantly. */
     selected: string;
     /** e.g. "need index (sample)" */
     needLabel: string;
     /** what impact percentages are a share of, e.g. "families with a known town" */
     shareOf: string;
+    /** Privacy threshold (MIN_GROUP_SIZE), for the screen-reader text. */
+    minGroupSize: number;
 }) {
-    const { w, h, font } = VIEWS[view];
-    const shapes = GEOMETRY[view];
+    const { w, h, font, shapes } = MAP_GEOMETRY[view];
     const byPlace = new Map(areas.map((a) => [a.place, a]));
 
     // Label the selected area, the top impact areas, and a few big cities so the
@@ -211,6 +138,7 @@ export default function ImpactMap({
                 .hit:hover use { fill: rgba(0,0,0,.10); }
                 .hit:focus { outline: none; }
                 .hit:focus-visible use { stroke: #111; stroke-width: 3px; fill: rgba(0,0,0,.10); }
+                .hit.selected use { stroke: #111; stroke-width: 3px; }
             `}</style>
             <defs>
                 {shapes.map((s) => (
@@ -265,19 +193,26 @@ export default function ImpactMap({
             {/* 4. hit targets. data-place drives the hover card and click handling. */}
             {shapes.map((s) => {
                 const a = byPlace.get(s.name);
+                const hit = s.name === selected ? "hit selected" : "hit";
                 return a?.href ? (
                     <a
                         key={s.id}
                         href={a.href}
-                        className="hit"
+                        className={hit}
                         data-place={s.name}
-                        aria-label={describe(s.name, a, needLabel, shareOf)}
+                        aria-label={describe(
+                            s.name,
+                            a,
+                            needLabel,
+                            shareOf,
+                            minGroupSize
+                        )}
                         aria-current={s.name === selected ? "true" : undefined}
                     >
                         <use href={`#${s.id}`} />
                     </a>
                 ) : (
-                    <g key={s.id} className="hit" data-place={s.name}>
+                    <g key={s.id} className={hit} data-place={s.name}>
                         <use href={`#${s.id}`} />
                     </g>
                 );
@@ -330,4 +265,4 @@ export default function ImpactMap({
             </g>
         </svg>
     );
-}
+});
