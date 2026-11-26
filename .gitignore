@@ -46,6 +46,3 @@ src/app/onboarding-test/page.tsx
 package.json
 pnpm-lock.yaml
 .env*.local
-
-# claude
-CLAUDE.md

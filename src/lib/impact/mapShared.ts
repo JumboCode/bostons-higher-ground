@@ -10,7 +10,7 @@ export const NEED = {
     colors: ["#DCE5F1", "#B3C6E0", "#83A1C8", "#56779F", "#33506F"],
     cuts: [20, 40, 60, 80],
 };
-/** Hatch for areas with 1–9 families. */
+/** Hatch for areas with some families, but fewer than MIN_GROUP_SIZE. */
 export const HATCH = IMPACT.colors[2];
 // Per-layer opacity: lower when both layers share the map so neither hides the other.
 export const OPACITY = { both: 0.75, single: 1 };
@@ -30,8 +30,10 @@ export const tint = (hex: string, alpha: number) =>
         )
         .join("")}`;
 
+// Shares arrive as whole numbers and are only published for groups that clear
+// the privacy threshold, so a 0 here means "under half a percent", not none.
 export const formatPct = (pct: number) =>
-    pct > 0 && pct < 1 ? "<1%" : `${Math.round(pct)}%`;
+    pct < 1 ? "<1%" : `${Math.round(pct)}%`;
 
 export const LAYERS = ["both", "impact", "need"] as const;
 export type Layer = (typeof LAYERS)[number];

@@ -88,7 +88,8 @@ function cleanCity(city: string | null | undefined): string | null {
     const k = city
         ?.trim()
         .toLowerCase()
-        .replace(/,?\s*(ma|mass|massachusetts)\.?$/, "")
+        // Needs a comma or space first, or "Tacoma" would become "Taco".
+        .replace(/(?:,\s*|\s+)(?:ma|mass|massachusetts)\.?$/, "")
         .trim();
     if (!k) return null;
     if (k in CITY_FIXES) return CITY_FIXES[k];

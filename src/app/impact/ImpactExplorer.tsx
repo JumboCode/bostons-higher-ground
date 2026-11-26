@@ -78,12 +78,15 @@ function Stat({
     icon: Icon,
     className,
     badge,
+    emptyText = "Too few to show",
 }: {
     value: string | null;
     label: string;
     icon: typeof House;
     className: string;
     badge?: React.ReactNode;
+    /** Shown under "—" when value is null. */
+    emptyText?: string;
 }) {
     return (
         <div className={`relative rounded-xl p-4 ${className}`}>
@@ -100,7 +103,7 @@ function Stat({
                 {badge}
             </p>
             {value === null && (
-                <p className="mt-0.5 text-[11px] opacity-70">Too few to show</p>
+                <p className="mt-0.5 text-[11px] opacity-70">{emptyText}</p>
             )}
         </div>
     );
@@ -216,7 +219,9 @@ export default function ImpactExplorer({
     areas,
     placeOptions,
     timeframes,
+    needEnabled,
     needIsSample,
+    minGroupSize,
     stats,
 }: {
     /** The server-rendered <ImpactMap> SVG. */
@@ -233,7 +238,11 @@ export default function ImpactExplorer({
     areas: MapArea[];
     placeOptions: SelectItem[];
     timeframes: { value: string; label: string }[];
+    /** false hides everything about the need layer (e.g. sample data in production). */
+    needEnabled: boolean;
     needIsSample: boolean;
+    /** Privacy threshold (MIN_GROUP_SIZE), for the "Under N families" labels. */
+    minGroupSize: number;
     stats: ImpactStats;
 }) {
     const router = useRouter();
@@ -247,7 +256,7 @@ export default function ImpactExplorer({
     const [leaving, setLeaving] = useState<MapView | null>(null);
 
     const showImpact = layer !== "need";
-    const showNeed = layer !== "impact";
+    const showNeed = needEnabled && layer !== "impact";
     const alpha = layer === "both" ? OPACITY.both : OPACITY.single;
     const byPlace = new Map(areas.map((a) => [a.place, a]));
     const viewOf = (t: string): MapView =>
@@ -362,7 +371,9 @@ export default function ImpactExplorer({
         >
             {shown.place !== ALL && (
                 // Selection outline, drawn client-side so it appears instantly.
-                <style>{`.impact-map .hit[data-place=${JSON.stringify(shown.place)}] use { stroke: #111; stroke-width: 3px; }`}</style>
+                // "Other places" come from free-text Salesforce cities, so escape
+                // "<" (CSS \3c) as well as quotes: the name can't close the tag.
+                <style>{`.impact-map .hit[data-place=${JSON.stringify(shown.place).replace(/</g, "\\3c ")}] use { stroke: #111; stroke-width: 3px; }`}</style>
             )}
 
             {/* ---- Stats column. Phones: housing above the map, education below. ---- */}
@@ -382,13 +393,16 @@ export default function ImpactExplorer({
                     </button>
                 )}
                 <h2 className="col-span-2 text-xl font-semibold">Housing</h2>
-                <Stat
-                    value={stats.need === null ? null : String(stats.need)}
-                    label={stats.needLabel}
-                    icon={Gauge}
-                    badge={needIsSample && <SampleBadge />}
-                    className="col-span-2 bg-[#E3EAF4]"
-                />
+                {needEnabled && (
+                    <Stat
+                        value={stats.need === null ? null : String(stats.need)}
+                        label={stats.needLabel}
+                        icon={Gauge}
+                        badge={needIsSample && <SampleBadge />}
+                        emptyText="No data"
+                        className="col-span-2 bg-[#E3EAF4]"
+                    />
+                )}
                 <Stat
                     value={stats.housed === null ? null : `${stats.housed}%`}
                     label="Families housed"
@@ -437,27 +451,29 @@ export default function ImpactExplorer({
 
                     {/* top-left: layers + back */}
                     <div className="absolute left-2 top-2 flex flex-col items-start gap-1.5">
-                        <div
-                            role="group"
-                            aria-label="Map layers"
-                            className={`${panel} flex rounded-full p-0.5 text-xs font-medium`}
-                        >
-                            {LAYERS.map((l) => (
-                                <button
-                                    key={l}
-                                    type="button"
-                                    aria-pressed={l === layer}
-                                    onClick={() => pickLayer(l)}
-                                    className={`rounded-full px-2.5 py-1 transition-colors ${
-                                        l === layer
-                                            ? "bg-bhg-gray-300 text-white"
-                                            : "hover:bg-bhg-gray-100"
-                                    }`}
-                                >
-                                    {LAYER_LABEL[l]}
-                                </button>
-                            ))}
-                        </div>
+                        {needEnabled && (
+                            <div
+                                role="group"
+                                aria-label="Map layers"
+                                className={`${panel} flex rounded-full p-0.5 text-xs font-medium`}
+                            >
+                                {LAYERS.map((l) => (
+                                    <button
+                                        key={l}
+                                        type="button"
+                                        aria-pressed={l === layer}
+                                        onClick={() => pickLayer(l)}
+                                        className={`rounded-full px-2.5 py-1 transition-colors ${
+                                            l === layer
+                                                ? "bg-bhg-gray-300 text-white"
+                                                : "hover:bg-bhg-gray-100"
+                                        }`}
+                                    >
+                                        {LAYER_LABEL[l]}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                         {view === "boston" && (
                             <button
                                 type="button"
@@ -507,7 +523,7 @@ export default function ImpactExplorer({
                                             background: `repeating-linear-gradient(45deg, ${HATCH} 0 2px, #fff 2px 5px)`,
                                         }}
                                     />
-                                    Under 10 families
+                                    Under {minGroupSize} families
                                 </p>
                             )}
                         </div>
@@ -542,7 +558,7 @@ export default function ImpactExplorer({
                                         {cardArea?.impactPct != null
                                             ? formatPct(cardArea.impactPct)
                                             : cardArea?.impactSmall
-                                              ? "Under 10"
+                                              ? `Under ${minGroupSize}`
                                               : "—"}
                                     </span>
                                 </p>

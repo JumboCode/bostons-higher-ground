@@ -16,7 +16,15 @@ import {
 
 import neighborhoodShapes from "@/lib/geo/boston-neighborhoods.json";
 import townShapes from "@/lib/geo/ma-towns.json";
-import { formatPct, HATCH, IMPACT, NEED, step } from "@/lib/impact/mapShared";
+import { MIN_GROUP_SIZE } from "@/lib/chart-definitions";
+import {
+    formatPct,
+    HATCH,
+    IMPACT,
+    NEED,
+    OPACITY,
+    step,
+} from "@/lib/impact/mapShared";
 
 type Shapes = ExtendedFeatureCollection<
     ExtendedFeature<GeoGeometryObjects, { name: string }>
@@ -25,10 +33,12 @@ type Shapes = ExtendedFeatureCollection<
 export type MapView = "state" | "boston";
 export type MapArea = {
     place: string;
-    /** Share of families (0–100, unrounded), or null if hidden. */
+    /** Share of families as a whole-number percent, or null if not published. */
     impactPct: number | null;
-    /** 1–9 families: shown as a hatch, never as a number. */
+    /** Fewer than MIN_GROUP_SIZE families: shown as a hatch, never as a number. */
     impactSmall: boolean;
+    /** Enough families, but too few elsewhere to publish a share: no fill. */
+    impactHidden: boolean;
     need: number | null;
     /** Filter link, or null if the area can't be selected. */
     href: string | null;
@@ -120,7 +130,9 @@ function describe(
     const parts: string[] = [];
     if (area?.impactPct != null)
         parts.push(`${formatPct(area.impactPct)} of ${shareOf}`);
-    else if (area?.impactSmall) parts.push("fewer than 10 families");
+    else if (area?.impactSmall)
+        parts.push(`fewer than ${MIN_GROUP_SIZE} families`);
+    else if (area?.impactHidden) parts.push("share hidden for privacy");
     else parts.push("no families recorded");
     if (area?.need != null) parts.push(`${needLabel} ${area.need}`);
     return `${name}: ${parts.join("; ")}`;
@@ -175,7 +187,7 @@ export default function ImpactMap({
             <style>{`
                 .impact-map use { transition: fill .2s; }
                 .impact-map .lyr { transition: opacity .2s; mix-blend-mode: multiply; }
-                [data-layer=both] .impact-map .lyr { opacity: .75; }
+                [data-layer=both] .impact-map .lyr { opacity: ${OPACITY.both}; }
                 [data-layer=impact] .impact-map .lyr-need,
                 [data-layer=need] .impact-map .lyr-impact { opacity: 0; }
                 .hit use { fill: transparent; }

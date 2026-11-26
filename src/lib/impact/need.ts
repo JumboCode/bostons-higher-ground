@@ -74,6 +74,21 @@ export const SAMPLE_NEED: NeedMetric = {
     valueFor: sampleNeed,
 };
 
+/**
+ * The metric the public page may show, or null to hide the need layer.
+ * Sample metrics are for layout only, so they never reach the production site.
+ * Off Vercel (no VERCEL_ENV), a production build counts as production.
+ */
+export function publicNeedMetric(
+    metric: NeedMetric,
+    env: { VERCEL_ENV?: string; NODE_ENV?: string } = process.env
+): NeedMetric | null {
+    const deployment =
+        env.VERCEL_ENV ??
+        (env.NODE_ENV === "production" ? "production" : "development");
+    return metric.isSample && deployment === "production" ? null : metric;
+}
+
 /** Rounded average of a metric over places that have a value. */
 export function averageNeed(metric: NeedMetric, places: string[]) {
     const values = places
