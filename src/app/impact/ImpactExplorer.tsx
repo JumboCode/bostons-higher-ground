@@ -35,7 +35,7 @@ import {
 import type { StatSection } from "@/lib/impact/stats";
 
 import FilterSelect, { type SelectItem } from "./FilterSelect";
-import { SampleBadge, StatKey, StatSectionCard } from "./StatRows";
+import { HowWeCount, SampleBadge, StatKey, StatSectionCard } from "./StatRows";
 
 const LAYER_LABEL: Record<Layer, string> = {
     both: "Both",
@@ -288,8 +288,8 @@ export default function ImpactExplorer({
                 className={`${statsCol} lg:col-start-2 lg:row-start-1`}
             >
                 {/* The selected place and period, and the color key that ties the
-                    column to the map. Rows whose scope differs (the places list,
-                    Education) say so with their own note. */}
+                    column to the map. Sections whose scope differs carry a chip
+                    (Education: "All years"); details are in "How we count". */}
                 <header className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                         <p className="text-base font-semibold">
@@ -312,7 +312,7 @@ export default function ImpactExplorer({
                             </button>
                         )}
                     </div>
-                    {/* One series needs no key: with need off, every bar is BHG's. */}
+                    {/* One series needs no key: with need off, every ring is BHG's. */}
                     {needEnabled && <StatKey />}
                 </header>
                 {housing && (
@@ -477,6 +477,7 @@ export default function ImpactExplorer({
                         onSelect={selectPlace}
                     />
                 ))}
+                <HowWeCount sections={sections} />
             </section>
         </div>
     );

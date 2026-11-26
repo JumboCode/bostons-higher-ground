@@ -1,10 +1,22 @@
-// The /impact stats column: one white card per section, every value on a
-// 0-100 track. Blue = community need (the whole area), pink = BHG families,
-// matching the map. Numbers stay in text color; the bar beside a number says
-// which side it belongs to, and every row's label names what it measures, so
-// identity never rests on color alone. Bars are aria-hidden: the label and the
-// number next to each one are real text.
+// The /impact stats column, laid out like a "by the numbers" infographic:
+// a dark pill heading per section, then a white card of tiles split by dotted
+// yellow dividers. Every value is a 0-100 ring (Ring.tsx) with the number in
+// the middle and a 2-4 word label under it. Pink = BHG families, blue =
+// community need, matching the map.
+//
+// Only `short` labels are on the surface. The full labels, scopes and
+// definitions are in the "How we count" block (privacy is in the page footer), and every tile carries an
+// sr-only sentence with the full label, so the rings and short labels are
+// aria-hidden and nothing is announced twice.
 // Plain components (no hooks), rendered inside the client ImpactExplorer.
+
+import {
+    ChevronDown,
+    GraduationCap,
+    House,
+    Info,
+    type LucideIcon,
+} from "lucide-react";
 
 import { formatPct, SIDE_COLOR } from "@/lib/impact/mapShared";
 import type {
@@ -15,10 +27,23 @@ import type {
     StatSection,
 } from "@/lib/impact/stats";
 
+import Ring from "./Ring";
+
 const SIDE_NAME: Record<Side, string> = {
     need: "Community need",
     impact: "BHG families",
 };
+
+const SECTION_ICON: Record<StatSection["title"], LucideIcon> = {
+    Housing: House,
+    Education: GraduationCap,
+};
+
+/** Dotted brand-yellow rules between tiles, like the reference infographics. */
+const DIVIDE_Y = "divide-y-2 divide-dotted divide-bhg-yellow";
+const DIVIDE_X = "divide-x-2 divide-dotted divide-bhg-yellow";
+const TILE_LABEL =
+    "text-[11px] font-bold uppercase leading-tight tracking-wide";
 
 export function SampleBadge() {
     return (
@@ -31,61 +56,33 @@ export function SampleBadge() {
 const show = (value: number | null, unit: string) =>
     value === null ? "—" : unit === "%" ? formatPct(value) : `${value}${unit}`;
 
-/** Small color chip: the same swatch the map legend and the bars use. */
-function Swatch({ side, round }: { side: Side; round?: boolean }) {
+/** The whole row as one sentence for screen readers. */
+function srText(row: MeterRow) {
+    const label = row.note ? `${row.label} (${row.note})` : row.label;
+    if (row.value === null) return `${label}: ${row.emptyText}.`;
+    const ref = row.ref
+        ? `, ${row.ref.label} ${show(row.ref.value, row.unit)}`
+        : "";
+    return `${label}: ${show(row.value, row.unit)}${ref}${row.sample ? ", sample data" : ""}.`;
+}
+
+function Dot({ side }: { side: Side }) {
     return (
         <span
             aria-hidden
-            className={`inline-block shrink-0 ${round ? "size-2 rounded-full" : "h-2 w-3.5 rounded-sm"}`}
+            className="inline-block size-2 shrink-0 rounded-full"
             style={{ background: SIDE_COLOR[side] }}
         />
     );
 }
 
-/** A 0-100 track with an optional reference tick (e.g. the Boston average). */
-function Track({
-    value,
-    side,
-    refValue,
-    thin,
-}: {
-    value: number | null;
-    side: Side;
-    refValue?: number;
-    thin?: boolean;
-}) {
-    return (
-        <span
-            aria-hidden
-            className={`relative block rounded-full bg-bhg-gray-100 ${thin ? "h-1.5" : "h-2.5"}`}
-        >
-            {value !== null && (
-                <span
-                    className="block h-full rounded-full transition-[width] duration-300"
-                    // 2% floor so a published "<1%" still shows a sliver.
-                    style={{
-                        width: `${Math.min(100, Math.max(2, value))}%`,
-                        background: SIDE_COLOR[side],
-                    }}
-                />
-            )}
-            {refValue !== undefined && (
-                <span
-                    className="absolute -bottom-1 -top-1 w-0.5 rounded-full bg-bhg-gray-300 ring-2 ring-white"
-                    style={{ left: `calc(${refValue}% - 1px)` }}
-                />
-            )}
-        </span>
-    );
-}
-
-/** "Community need ▬  BHG families ▬", the same key as the map legend. */
+/** "● Community need  ● BHG families", the same key as the map legend. */
 export function StatKey() {
     return (
         <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium">
-            {(["need", "impact"] as const).map((side) => (
+            {(["impact", "need"] as const).map((side) => (
                 <span key={side} className="inline-flex items-center gap-1.5">
-                    <Swatch side={side} />
+                    <Dot side={side} />
                     {SIDE_NAME[side]}
                 </span>
             ))}
@@ -93,54 +90,83 @@ export function StatKey() {
     );
 }
 
-function Meter({ row }: { row: MeterRow }) {
+/** Ring with the number inside and a short uppercase label under it. */
+function RingTile({ row, delay }: { row: MeterRow; delay: number }) {
     return (
-        <div
-            className={
-                row.nested ? "ml-3 border-l-2 border-bhg-gray-100 pl-3" : ""
-            }
-        >
-            <div className="mb-1.5 flex items-end justify-between gap-3">
-                <p className="flex flex-wrap items-center gap-x-1.5 text-xs font-medium">
-                    {row.label}
-                    {row.note && (
-                        <span className="font-normal text-gray-600">
-                            {row.note}
-                        </span>
-                    )}
-                    {row.sample && <SampleBadge />}
-                </p>
-                <p
-                    className={`shrink-0 font-bold leading-none ${row.nested ? "text-xl" : "text-3xl"}`}
+        <div className="flex min-w-0 flex-col items-center px-2 text-center">
+            <div aria-hidden className="flex flex-col items-center">
+                <Ring
+                    value={row.value}
+                    color={SIDE_COLOR[row.side]}
+                    refValue={row.ref?.value}
+                    delay={delay}
                 >
-                    {show(row.value, row.unit)}
-                </p>
+                    <span
+                        className={`text-xl font-bold tabular-nums ${row.value === null ? "text-gray-400" : ""}`}
+                    >
+                        {show(row.value, row.unit)}
+                    </span>
+                </Ring>
+                <p className={`mt-2 ${TILE_LABEL}`}>{row.short}</p>
+                {row.value === null ? (
+                    <p className="mt-0.5 text-[10px] text-gray-600">
+                        {row.emptyText}
+                    </p>
+                ) : (
+                    row.ref && (
+                        <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-gray-600">
+                            <span className="inline-block h-2.5 w-0.5 rounded-full bg-bhg-gray-300" />
+                            avg {show(row.ref.value, row.unit)}
+                        </p>
+                    )
+                )}
+                {row.sample && (
+                    <span className="mt-1">
+                        <SampleBadge />
+                    </span>
+                )}
             </div>
-            <Track
-                value={row.value}
-                side={row.side}
-                refValue={row.ref?.value}
-                thin={row.nested}
-            />
-            {(row.value === null || row.ref) && (
-                <p className="mt-1.5 flex justify-between gap-2 text-[11px] text-gray-600">
-                    <span>{row.value === null ? row.emptyText : ""}</span>
-                    {row.ref && (
-                        <span className="inline-flex items-center gap-1">
-                            <span
-                                aria-hidden
-                                className="inline-block h-2.5 w-0.5 rounded-full bg-bhg-gray-300"
-                            />
-                            {row.ref.label} {show(row.ref.value, row.unit)}
-                        </span>
-                    )}
-                </p>
-            )}
+            <span className="sr-only">{srText(row)}</span>
         </div>
     );
 }
 
-function List({
+/** A big ring beside a phrase: "71% | of students attend / 90%+ of school days". */
+function SentenceTile({ row }: { row: MeterRow }) {
+    const [before, after] = row.sentence!;
+    return (
+        <div className="flex items-center gap-4">
+            <div aria-hidden className="flex items-center gap-4">
+                <Ring value={row.value} color={SIDE_COLOR[row.side]} size="lg">
+                    <span
+                        className={`text-2xl font-bold tabular-nums ${row.value === null ? "text-gray-400" : ""}`}
+                    >
+                        {show(row.value, row.unit)}
+                    </span>
+                </Ring>
+                {row.value === null ? (
+                    <p>
+                        <span className={`block ${TILE_LABEL}`}>
+                            {row.short}
+                        </span>
+                        <span className="text-xs text-gray-600">
+                            {row.emptyText}
+                        </span>
+                    </p>
+                ) : (
+                    <p className="text-lg leading-snug">
+                        {before}
+                        <strong className="block font-bold">{after}</strong>
+                    </p>
+                )}
+            </div>
+            <span className="sr-only">{srText(row)}</span>
+        </div>
+    );
+}
+
+/** Up to five small rings in a row, e.g. the places with the most BHG families. */
+function MiniRingStrip({
     row,
     selected,
     onSelect,
@@ -149,71 +175,75 @@ function List({
     selected: string;
     onSelect: (name: string) => void;
 }) {
-    if (!row.items.length) return null;
-    const cols = row.showNeed
-        ? "grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)_2.5rem_2.5rem]"
-        : "grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)_2.5rem]";
     return (
         <div>
-            <div
-                className={`mb-1.5 grid items-end gap-x-2 text-xs font-semibold ${cols}`}
+            <h3 className={`mb-2 text-center ${TILE_LABEL}`}>{row.short}</h3>
+            {/* Up to 72px per item, centered, so one or two items don't sit in a corner. */}
+            <ol
+                className="grid justify-center gap-1"
+                style={{
+                    gridTemplateColumns: `repeat(${row.items.length}, minmax(0, 72px))`,
+                }}
             >
-                <h3 className="col-span-3 flex items-center gap-1.5">
-                    {row.title}
-                </h3>
-                {row.showNeed && (
-                    <span className="inline-flex items-center justify-end gap-1 text-[11px] font-medium text-gray-600">
-                        <Swatch side="need" round />
-                        Need
-                    </span>
-                )}
-            </div>
-            {row.note && (
-                <p className="-mt-1 mb-1.5 text-[11px] text-gray-600">
-                    {row.note}
-                </p>
-            )}
-            <ol className="text-xs">
-                {row.items.map((item) => {
+                {row.items.map((item, i) => {
                     const isSelected = item.name === selected;
-                    const cells = (
-                        <>
-                            <span
-                                className={`truncate ${isSelected ? "font-bold" : ""}`}
-                            >
-                                {item.name}
-                            </span>
-                            <Track value={item.pct} side="impact" thin />
-                            <span className="text-right tabular-nums">
-                                {formatPct(item.pct)}
-                            </span>
-                            {row.showNeed && (
-                                <span className="text-right tabular-nums">
-                                    {item.need ?? "—"}
-                                </span>
-                            )}
-                        </>
-                    );
-                    const grid = `grid min-h-7 w-full items-center gap-x-2 ${cols}`;
                     const desc = `${item.name}: ${formatPct(item.pct)} of BHG families${
                         row.showNeed && item.need !== null
                             ? `, need ${item.need}`
                             : ""
                     }`;
+                    const cells = (
+                        <>
+                            <Ring
+                                value={item.pct}
+                                color={SIDE_COLOR.impact}
+                                size="sm"
+                                delay={150 + i * 60}
+                            >
+                                <span className="text-[11px] font-bold tabular-nums">
+                                    {formatPct(item.pct)}
+                                </span>
+                            </Ring>
+                            <span
+                                className={`mt-1 block w-full truncate text-[11px] leading-tight ${isSelected ? "font-bold" : ""}`}
+                            >
+                                {item.name}
+                            </span>
+                            {row.showNeed && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-gray-600">
+                                    <Dot side="need" />
+                                    {item.need ?? "—"}
+                                </span>
+                            )}
+                        </>
+                    );
+                    const tile =
+                        "flex w-full min-w-0 flex-col items-center rounded-lg p-1 text-center";
                     return (
-                        <li key={item.name}>
+                        <li key={item.name} className="min-w-0">
                             {row.selectable ? (
                                 <button
                                     type="button"
                                     onClick={() => onSelect(item.name)}
                                     aria-pressed={isSelected}
                                     aria-label={desc}
-                                    className={`${grid} rounded text-left hover:bg-bhg-gray-100/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-bhg-gray-300`}
+                                    title={item.name}
+                                    className={`${tile} transition-colors hover:bg-bhg-gray-100/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-bhg-gray-300 ${isSelected ? "bg-bhg-pink-100" : ""}`}
                                 >
                                     {cells}
                                 </button>
                             ) : (
-                                <div className={grid}>{cells}</div>
+                                <div
+                                    className={tile}
+                                    title={item.name}
+                                    role="img"
+                                    aria-label={desc.replace(
+                                        "BHG families",
+                                        "BHG students"
+                                    )}
+                                >
+                                    {cells}
+                                </div>
                             )}
                         </li>
                     );
@@ -223,17 +253,26 @@ function List({
     );
 }
 
-function Row(props: {
-    row: StatRow;
-    selected: string;
-    onSelect: (name: string) => void;
-}) {
-    const { row } = props;
-    if (row.kind === "meter") return <Meter row={row} />;
-    return <List {...props} row={row} />;
+type Block =
+    | { kind: "rings"; rows: MeterRow[] }
+    | { kind: "sentence"; row: MeterRow }
+    | { kind: "list"; row: ListRow };
+
+/** Consecutive plain meters share one divided row; sentence and list rows stand alone. */
+function toBlocks(rows: StatRow[]): Block[] {
+    const blocks: Block[] = [];
+    for (const row of rows) {
+        const last = blocks.at(-1);
+        if (row.kind === "list") {
+            if (row.items.length) blocks.push({ kind: "list", row });
+        } else if (row.sentence) blocks.push({ kind: "sentence", row });
+        else if (last?.kind === "rings") last.rows.push(row);
+        else blocks.push({ kind: "rings", rows: [row] });
+    }
+    return blocks;
 }
 
-/** One section ("Housing", "Education"): a heading and one white card of rows. */
+/** One section ("Housing", "Education"): a pill heading and one card of tiles. */
 export function StatSectionCard({
     section,
     selected,
@@ -243,24 +282,104 @@ export function StatSectionCard({
     selected: string;
     onSelect: (name: string) => void;
 }) {
+    const Icon = SECTION_ICON[section.title];
     return (
         <div>
-            <div className="mb-2">
-                <h2 className="text-xl font-semibold">{section.title}</h2>
-                {section.note && (
-                    <p className="text-xs text-gray-600">{section.note}</p>
+            <div className="mb-2 flex items-center gap-2">
+                <h2 className="inline-flex items-center gap-1.5 rounded-full bg-bhg-gray-300 px-3 py-1 text-sm font-bold uppercase tracking-wider text-white">
+                    <Icon size={15} aria-hidden />
+                    {section.title}
+                </h2>
+                {section.chip && (
+                    <span className="rounded-full bg-bhg-yellow-100 px-2 py-0.5 text-[11px] font-medium ring-1 ring-bhg-yellow">
+                        {section.chip}
+                    </span>
                 )}
             </div>
-            <div className="space-y-5 rounded-xl bg-white p-4 shadow-sm">
-                {section.rows.map((row) => (
-                    <Row
-                        key={row.id}
-                        row={row}
-                        selected={selected}
-                        onSelect={onSelect}
-                    />
+            <div className={`rounded-xl bg-white px-4 shadow-sm ${DIVIDE_Y}`}>
+                {toBlocks(section.rows).map((block) => (
+                    <div
+                        key={
+                            block.kind === "rings"
+                                ? block.rows[0].id
+                                : block.row.id
+                        }
+                        className="py-4"
+                    >
+                        {block.kind === "rings" ? (
+                            <div
+                                className={`grid ${DIVIDE_X}`}
+                                style={{
+                                    gridTemplateColumns: `repeat(${block.rows.length}, minmax(0, 1fr))`,
+                                }}
+                            >
+                                {block.rows.map((row, i) => (
+                                    <RingTile
+                                        key={row.id}
+                                        row={row}
+                                        delay={i * 80}
+                                    />
+                                ))}
+                            </div>
+                        ) : block.kind === "sentence" ? (
+                            <SentenceTile row={block.row} />
+                        ) : (
+                            <MiniRingStrip
+                                row={block.row}
+                                selected={selected}
+                                onSelect={onSelect}
+                            />
+                        )}
+                    </div>
                 ))}
             </div>
         </div>
+    );
+}
+
+/** Definitions for every tile, folded away so the column stays numbers-first. */
+export function HowWeCount({ sections }: { sections: StatSection[] }) {
+    return (
+        <details className="group rounded-xl bg-white px-4 py-3 text-xs shadow-sm">
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 font-semibold [&::-webkit-details-marker]:hidden">
+                <Info size={14} aria-hidden />
+                How we count
+                <ChevronDown
+                    size={14}
+                    aria-hidden
+                    className="ml-auto transition-transform group-open:rotate-180"
+                />
+            </summary>
+            <dl className="mt-3 space-y-2.5">
+                {sections.flatMap((section) => [
+                    ...section.rows.map((row) => (
+                        <div key={row.id}>
+                            <dt className="font-semibold">{row.short}</dt>
+                            <dd className="text-gray-600">
+                                {row.hint}
+                                {row.kind === "meter" &&
+                                    row.ref &&
+                                    ` The tick marks the ${row.ref.label} (${show(row.ref.value, row.unit)}).`}
+                                {row.kind === "meter" &&
+                                    row.sample &&
+                                    " Sample data, for layout only."}
+                            </dd>
+                        </div>
+                    )),
+                    ...(section.note
+                        ? [
+                              <div key={`${section.title}-note`}>
+                                  <dt className="font-semibold">
+                                      {section.title}
+                                  </dt>
+                                  <dd className="text-gray-600">
+                                      {section.note}.
+                                  </dd>
+                              </div>,
+                          ]
+                        : []),
+                ])}
+            </dl>
+        </details>
     );
 }

@@ -240,11 +240,17 @@ export function buildImpactView(
     const impactMeter = (
         id: string,
         label: string,
-        value: number | null
+        short: string,
+        hint: string,
+        value: number | null,
+        sentence?: [string, string]
     ): StatRow => ({
         kind: "meter",
         id,
         label,
+        short,
+        hint,
+        sentence,
         side: "impact",
         value,
         unit: "%",
@@ -270,6 +276,8 @@ export function buildImpactView(
                 place === ALL
                     ? `${need.label}, average across MA towns`
                     : need.label,
+            short: place === ALL ? "Avg community need" : "Community need",
+            hint: `${need.label} for the whole area, not just BHG families (0-100, higher means more need).`,
             side: "need",
             value: needOf(need),
             unit: need.unit,
@@ -285,12 +293,16 @@ export function buildImpactView(
         impactMeter(
             "housed",
             "Families housed",
+            "Families housed",
+            "Share of BHG families with a recorded outcome who are now housed.",
             publishablePct(housed.length, recorded.length)
         ),
         {
             kind: "meter",
             id: "housedFast",
             label: "Housed within 6 months",
+            short: "Housed in 6 months",
+            hint: "Of the housed families, the share housed within 6 months of joining BHG.",
             note: "of housed",
             side: "impact",
             value: publishablePct(housedFast.length, housingDays.length),
@@ -302,6 +314,8 @@ export function buildImpactView(
             kind: "list",
             id: "topPlaces",
             title: "Where BHG families live",
+            short: "Where families live",
+            hint: `The places with the largest share of ${shareOf}${listScope}. Tap one to see it.`,
             note: `Share of ${shareOf}${listScope}`,
             items: topPlaces,
             selectable: true,
@@ -315,16 +329,22 @@ export function buildImpactView(
             title: "Education",
             // Student rows carry no dates, so the time period can't apply.
             note: "All years · not filtered by time period",
+            chip: "All years",
             rows: [
                 impactMeter(
                     "attendance",
                     "Students at 90%+ attendance",
-                    publishablePct(regular.length, studentAda.length)
+                    "90%+ attendance",
+                    "Share of BHG students whose average daily attendance is 90% or higher.",
+                    publishablePct(regular.length, studentAda.length),
+                    ["of students attend", "90%+ of school days"]
                 ),
                 {
                     kind: "list",
                     id: "schools",
                     title: "Students by school",
+                    short: "Top schools",
+                    hint: "The schools with the largest share of BHG students.",
                     items: schools,
                     selectable: false,
                     showNeed: false,

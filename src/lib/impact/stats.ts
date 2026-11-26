@@ -1,11 +1,12 @@
 // Shape of the /impact stats column. Built on the server (aggregate.ts), drawn
 // on the client (StatRows.tsx). Types only, so it's free to import anywhere.
 //
-// Design rules (see the stats design plan):
+// Design rules (see docs/impact-stats-rings-plan.md):
 //   - side "need" is blue (the whole area), side "impact" is pink (BHG families);
-//   - every value sits on a 0-100 track so length can be compared before reading;
-//   - need and impact values each get their own meter (they answer different
-//     questions), with a reference tick for context.
+//   - every value is 0-100 and drawn as a ring that fills to it, so a fuller
+//     ring always means a bigger number (counts never go on a ring);
+//   - the surface shows only `short` labels; the long `label`/`note`/`ref`
+//     text is read in the column's "How we count" block.
 
 export type Side = "need" | "impact";
 
@@ -14,7 +15,17 @@ export type MeterRow = {
     kind: "meter";
     /** Stable key; also what tests look rows up by. */
     id: string;
+    /** Full label, for "How we count" and screen readers. */
     label: string;
+    /** Tile label on the ring, at most 4 words. */
+    short: string;
+    /** One plain sentence for "How we count": what the number measures. */
+    hint: string;
+    /**
+     * Draw as a sentence tile: "[value] before after", e.g. "71% of students
+     * attend / 90%+ of school days". Absent = a plain ring tile.
+     */
+    sentence?: [string, string];
     side: Side;
     /** 0-100, or null when suppressed / unknown. */
     value: number | null;
@@ -36,6 +47,10 @@ export type ListRow = {
     kind: "list";
     id: string;
     title: string;
+    /** Strip heading on the surface, at most 4 words. */
+    short: string;
+    /** One plain sentence for "How we count". */
+    hint: string;
     /** What the percentages are a share of, e.g. "Share of Boston families...". */
     note?: string;
     items: { name: string; pct: number; need: number | null }[];
@@ -48,7 +63,9 @@ export type ListRow = {
 export type StatRow = MeterRow | ListRow;
 export type StatSection = {
     title: "Housing" | "Education";
-    /** Shown under the title when the section's scope differs from the header's. */
+    /** Read in "How we count" when the section's scope differs from the header's. */
     note?: string;
+    /** A word or two beside the section heading for that scope, e.g. "All years". */
+    chip?: string;
     rows: StatRow[];
 };
